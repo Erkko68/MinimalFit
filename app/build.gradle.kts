@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -57,10 +58,13 @@ dependencies {
     // Koin for Dependency Injection
     implementation(libs.koin.android)
     implementation(libs.koin.androidx.compose)
+    implementation(libs.koin.androidx.navigation)
 
     // Jetpack Navigation Compose
     implementation(libs.androidx.navigation.compose)
 
     // DataStore for local storage
     implementation(libs.androidx.datastore.preferences)
+    
+    implementation(libs.kotlinx.serialization.json)
 }

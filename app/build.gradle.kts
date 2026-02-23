@@ -53,4 +53,14 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+
+    // Koin for Dependency Injection
+    implementation(libs.koin.android)
+    implementation(libs.koin.androidx.compose)
+
+    // Jetpack Navigation Compose
+    implementation(libs.androidx.navigation.compose)
+
+    // DataStore for local storage
+    implementation(libs.androidx.datastore.preferences)
 }

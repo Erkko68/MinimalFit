@@ -1,9 +1,9 @@
 package eric.bitria.minimalfit.navigation
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.FitnessCenter
-import androidx.compose.material.icons.filled.MonitorWeight
-import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material.icons.filled.RestaurantMenu
 import androidx.compose.ui.graphics.vector.ImageVector
 
 enum class QuickAction(
@@ -11,7 +11,7 @@ enum class QuickAction(
     val label: String,
     val icon: ImageVector,
 ) {
-    ADD_WORKOUT(Route.Home, "Add Workout", Icons.Default.FitnessCenter),
-    ADD_MEAL(Route.Home, "Add Meal", Icons.Default.Restaurant),
-    LOG_WEIGHT(Route.Home, "Log Weight", Icons.Default.MonitorWeight),
+    LOG_ACTIVITY(Route.IndoorActivities, "Log Activity", Icons.Default.FitnessCenter),
+    LOG_MEAL(Route.Food, "Log Meal", Icons.Default.RestaurantMenu),
+    LOG_ROUTE(Route.OutdoorActivities, "Log Route", Icons.AutoMirrored.Filled.DirectionsWalk)
 }

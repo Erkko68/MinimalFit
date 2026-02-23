@@ -11,7 +11,8 @@ import androidx.navigation.compose.rememberNavController
 import eric.bitria.minimalfit.navigation.BottomNavigationBar
 import eric.bitria.minimalfit.navigation.FloatingActionMenu
 import eric.bitria.minimalfit.navigation.Route
-import eric.bitria.minimalfit.ui.screens.HomeScreen
+import eric.bitria.minimalfit.ui.screens.FoodScreen
+import eric.bitria.minimalfit.ui.screens.ProfileScreen
 import eric.bitria.minimalfit.ui.screens.SettingsScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -25,11 +26,14 @@ fun App() {
     ) { contentPadding ->
         NavHost(
             navController = navController,
-            startDestination = Route.Home,
+            startDestination = Route.Profile,
             modifier = Modifier.padding(contentPadding)
         ) {
-            composable<Route.Home> { HomeScreen() }
+            composable<Route.Profile> { ProfileScreen() }
             composable<Route.Settings> { SettingsScreen() }
+            composable<Route.Food> { FoodScreen() }
+            composable<Route.OutdoorActivities> { FoodScreen() }
+            composable<Route.IndoorActivities> { FoodScreen() }
         }
     }
 }

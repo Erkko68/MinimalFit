@@ -6,7 +6,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
-import eric.bitria.minimalfit.koin.appModule
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -16,7 +15,6 @@ class MainActivity : ComponentActivity() {
         // Initialize Koin
         startKoin {
             androidContext(this@MainActivity)
-            modules(appModule)
         }
 
         setContent {

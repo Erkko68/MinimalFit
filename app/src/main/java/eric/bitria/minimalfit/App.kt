@@ -9,8 +9,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import eric.bitria.minimalfit.navigation.BottomNavigationBar
-import eric.bitria.minimalfit.navigation.Screens
 import eric.bitria.minimalfit.navigation.FloatingActionMenu
+import eric.bitria.minimalfit.navigation.Route
 import eric.bitria.minimalfit.ui.screens.HomeScreen
 import eric.bitria.minimalfit.ui.screens.SettingsScreen
 
@@ -20,24 +20,16 @@ fun App() {
     val navController = rememberNavController()
 
     Scaffold(
-        bottomBar = {
-            BottomNavigationBar(navController)
-        },
-        floatingActionButton = {
-            FloatingActionMenu(navController)
-        }
-    ) { innerPadding ->
+        bottomBar = { BottomNavigationBar(navController) },
+        floatingActionButton = { FloatingActionMenu(navController) }
+    ) { contentPadding ->
         NavHost(
             navController = navController,
-            startDestination = Screens.Home,
-            modifier = Modifier.padding(innerPadding)
+            startDestination = Route.Home,
+            modifier = Modifier.padding(contentPadding)
         ) {
-            composable<Screens.Home> {
-                HomeScreen()
-            }
-            composable<Screens.Settings> {
-                SettingsScreen()
-            }
+            composable<Route.Home> { HomeScreen() }
+            composable<Route.Settings> { SettingsScreen() }
         }
     }
 }

@@ -5,41 +5,31 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.navigation.NavController
-import eric.bitria.minimalfit.navigation.components.QuickActionItems
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun FloatingActionMenu(
-    navController: NavController
-) {
+fun FloatingActionMenu(navController: NavController) {
     var expanded by remember { mutableStateOf(false) }
-    val items = listOf(
-        QuickActionItems.AddWorkout,
-        QuickActionItems.AddMeal,
-        QuickActionItems.LogWeight,
-    )
 
     FloatingActionButtonMenu(
         expanded = expanded,
         button = {
-            FloatingActionButton(
-                onClick = { expanded = !expanded }
-            ) {
+            FloatingActionButton(onClick = { expanded = !expanded }) {
                 Icon(Icons.Default.Add, contentDescription = "Quick Actions")
             }
         }
     ) {
-        items.forEach { item ->
+        QuickAction.entries.forEach { action ->
             FloatingActionButtonMenuItem(
                 icon = {
-                    Icon(item.icon, contentDescription = item.label)
+                    Icon(action.icon, contentDescription = action.label)
                 },
                 text = {
-                    Text(item.label)
+                    Text(action.label)
                 },
                 onClick = {
                     expanded = false
-                    navController.navigate(item.route)
+                    navController.navigate(action.route)
                 }
             )
         }

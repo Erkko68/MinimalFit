@@ -1,56 +1,43 @@
 package eric.bitria.minimalfit.navigation
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.material3.BottomAppBarScrollBehavior
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FlexibleBottomAppBar
 import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
-import eric.bitria.minimalfit.navigation.components.BottomNavigationItems
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun BottomNavigationBar(
     navController: NavController,
-    modifier: Modifier = Modifier,
-    scrollBehavior: BottomAppBarScrollBehavior? = null
 ) {
-    val items = listOf(
-        BottomNavigationItems.Home,
-        BottomNavigationItems.Settings,
-    )
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
 
     FlexibleBottomAppBar(
-        modifier = modifier,
-        scrollBehavior = scrollBehavior,
-        horizontalArrangement = Arrangement.SpaceEvenly,
+        windowInsets = NavigationBarDefaults.windowInsets,
     ) {
-        val navBackStackEntry by navController.currentBackStackEntryAsState()
-        val currentRoute = navBackStackEntry?.destination?.route
-
-        items.forEach { screen ->
-            val routeString = screen.route::class.qualifiedName
+        NavDestination.entries.forEach { destination ->
             NavigationBarItem(
-                icon = { Icon(screen.icon, contentDescription = screen.label) },
-                label = { Text(screen.label) },
-                selected = currentRoute == routeString,
+                selected = currentRoute == destination.route::class.qualifiedName,
                 onClick = {
-                    navController.navigate(screen.route) {
+                    navController.navigate(destination.route) {
                         popUpTo(navController.graph.findStartDestination().id) {
                             saveState = true
                         }
                         launchSingleTop = true
                         restoreState = true
                     }
-                }
+                },
+                icon = { Icon(destination.icon, contentDescription = destination.label) },
+                label = { Text(destination.label) }
             )
         }
     }

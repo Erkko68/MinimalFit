@@ -13,16 +13,15 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -48,6 +47,11 @@ fun FoodScreen(viewModel: FoodViewModel = koinViewModel()) {
     val savedMeals by viewModel.savedMeals.collectAsState()
     val dates by viewModel.mockDates.collectAsState()
 
+    val pagerState = rememberPagerState(
+        initialPage = if (dates.isNotEmpty()) dates.size - 1 else 0,
+        pageCount = { dates.size }
+    )
+
     SharedTransitionLayout {
         AnimatedContent(
             targetState = activeRegistrationDate,
@@ -68,7 +72,8 @@ fun FoodScreen(viewModel: FoodViewModel = koinViewModel()) {
                     onRegisterClick = { clickedDate -> activeRegistrationDate = clickedDate },
                     animatedVisibilityScope = this@AnimatedContent,
                     meals = savedMeals,
-                    dates = dates
+                    dates = dates,
+                    pagerState = pagerState
                 )
             }
         }
@@ -81,10 +86,9 @@ fun SharedTransitionScope.FoodScreenContent(
     onRegisterClick: (String) -> Unit,
     animatedVisibilityScope: AnimatedVisibilityScope,
     meals: List<SavedMeal>,
-    dates: List<String>
+    dates: List<String>,
+    pagerState: PagerState
 ) {
-    val pagerState = rememberPagerState(initialPage = 2, pageCount = { dates.size })
-
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         val width = maxWidth
         val height = maxHeight

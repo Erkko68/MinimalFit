@@ -9,34 +9,28 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import eric.bitria.minimalfit.ui.components.food.MealSelectionScreen
 import eric.bitria.minimalfit.ui.components.food.RegisterMealCard
 import eric.bitria.minimalfit.ui.components.food.SavedMealCard
+import eric.bitria.minimalfit.ui.viewmodels.FoodItemType
 import eric.bitria.minimalfit.ui.viewmodels.FoodViewModel
+import eric.bitria.minimalfit.ui.viewmodels.MealCategory
 import eric.bitria.minimalfit.ui.viewmodels.SavedMeal
 import org.koin.androidx.compose.koinViewModel
 
@@ -44,8 +38,10 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun FoodScreen(viewModel: FoodViewModel = koinViewModel()) {
     var activeRegistrationDate by remember { mutableStateOf<String?>(null) }
-    val savedMeals by viewModel.savedMeals.collectAsState()
     val dates by viewModel.mockDates.collectAsState()
+    val filteredMeals by viewModel.filteredMeals.collectAsState()
+    val selectedCategory by viewModel.categoryFilter.collectAsState()
+    val selectedType by viewModel.typeFilter.collectAsState()
 
     val pagerState = rememberPagerState(
         initialPage = if (dates.isNotEmpty()) dates.size - 1 else 0,
@@ -71,23 +67,38 @@ fun FoodScreen(viewModel: FoodViewModel = koinViewModel()) {
                 FoodScreenContent(
                     onRegisterClick = { clickedDate -> activeRegistrationDate = clickedDate },
                     animatedVisibilityScope = this@AnimatedContent,
-                    meals = savedMeals,
+                    meals = filteredMeals,
                     dates = dates,
-                    pagerState = pagerState
+                    pagerState = pagerState,
+                    selectedCategory = selectedCategory,
+                    onCategorySelected = { viewModel.setCategoryFilter(it) },
+                    selectedType = selectedType,
+                    onTypeToggle = {
+                        val nextType = when (selectedType) {
+                            FoodItemType.All -> FoodItemType.Meal
+                            FoodItemType.Meal -> FoodItemType.Ingredient
+                            FoodItemType.Ingredient -> FoodItemType.All
+                        }
+                        viewModel.setTypeFilter(nextType)
+                    }
                 )
             }
         }
     }
 }
 
-@OptIn(ExperimentalSharedTransitionApi::class)
+@OptIn(ExperimentalSharedTransitionApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun SharedTransitionScope.FoodScreenContent(
     onRegisterClick: (String) -> Unit,
     animatedVisibilityScope: AnimatedVisibilityScope,
     meals: List<SavedMeal>,
     dates: List<String>,
-    pagerState: PagerState
+    pagerState: PagerState,
+    selectedCategory: MealCategory,
+    onCategorySelected: (MealCategory) -> Unit,
+    selectedType: FoodItemType,
+    onTypeToggle: () -> Unit
 ) {
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         val width = maxWidth
@@ -105,7 +116,7 @@ fun SharedTransitionScope.FoodScreenContent(
                 pageSpacing = width * 0.04f,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .fillMaxHeight(0.35f) // Reserve 35% of height for the pager
+                    .fillMaxHeight(0.35f)
             ) { page ->
                 RegisterMealCard(
                     date = dates[page],
@@ -115,14 +126,51 @@ fun SharedTransitionScope.FoodScreenContent(
                 )
             }
 
-            Text(
-                text = "Your Saved Meals",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
+            // Filter Section
+            Column(
                 modifier = Modifier
-                    .padding(horizontal = width * 0.05f)
-                    .padding(bottom = height * 0.01f)
-            )
+                    .fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = width * 0.05f),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = when(selectedType) {
+                            FoodItemType.All -> "Your Saved Items"
+                            FoodItemType.Meal -> "Your Saved Meals"
+                            FoodItemType.Ingredient -> "Your Ingredients"
+                        },
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                    
+                    IconButton(onClick = onTypeToggle) {
+                        Icon(
+                            imageVector = Icons.Default.FilterList,
+                            contentDescription = "Filter Type",
+                            tint = if (selectedType != FoodItemType.All) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = width * 0.05f),
+                    horizontalArrangement = Arrangement.spacedBy(width * 0.02f),
+                ) {
+                    items(MealCategory.entries) { category ->
+                        FilterChip(
+                            selected = selectedCategory == category,
+                            onClick = { onCategorySelected(category) },
+                            label = { Text(category.name) },
+                            shape = RoundedCornerShape(percent = 50)
+                        )
+                    }
+                }
+            }
 
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(height * 0.015f),

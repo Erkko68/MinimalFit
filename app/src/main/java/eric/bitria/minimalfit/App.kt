@@ -12,6 +12,9 @@ import eric.bitria.minimalfit.navigation.BottomNavigationBar
 import eric.bitria.minimalfit.navigation.FloatingActionMenu
 import eric.bitria.minimalfit.navigation.Route
 import eric.bitria.minimalfit.ui.screens.FoodScreen
+import eric.bitria.minimalfit.ui.screens.FoodScreenContainer
+import eric.bitria.minimalfit.ui.screens.IndoorActivitiesScreen
+import eric.bitria.minimalfit.ui.screens.OutdoorActivitiesScreen
 import eric.bitria.minimalfit.ui.screens.ProfileScreen
 import eric.bitria.minimalfit.ui.screens.SettingsScreen
 
@@ -22,18 +25,19 @@ fun App() {
 
     Scaffold(
         bottomBar = { BottomNavigationBar(navController) },
-        floatingActionButton = { FloatingActionMenu(navController) }
+        //floatingActionButton = { FloatingActionMenu(navController) }
     ) { contentPadding ->
         NavHost(
             navController = navController,
             startDestination = Route.Profile,
-            modifier = Modifier.padding(contentPadding)
+            modifier = Modifier
+                .padding(bottom = contentPadding.calculateBottomPadding())
         ) {
             composable<Route.Profile> { ProfileScreen() }
             composable<Route.Settings> { SettingsScreen() }
-            composable<Route.Food> { FoodScreen() }
-            composable<Route.OutdoorActivities> { FoodScreen() }
-            composable<Route.IndoorActivities> { FoodScreen() }
+            composable<Route.Food> { FoodScreenContainer() }
+            composable<Route.OutdoorActivities> { OutdoorActivitiesScreen() }
+            composable<Route.IndoorActivities> { IndoorActivitiesScreen() }
         }
     }
 }

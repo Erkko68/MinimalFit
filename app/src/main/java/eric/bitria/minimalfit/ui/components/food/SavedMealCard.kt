@@ -38,7 +38,6 @@ fun SavedMealCard(
         
         OutlinedCard(
             onClick = { isExpanded = !isExpanded },
-            shape = RoundedCornerShape(percent = 15),
             modifier = Modifier
                 .fillMaxWidth()
                 .animateContentSize()

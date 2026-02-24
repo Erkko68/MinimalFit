@@ -111,8 +111,6 @@ fun SharedTransitionScope.FoodScreenContent(
                 )
             }
 
-            Spacer(modifier = Modifier.height(height * 0.04f))
-
             Text(
                 text = "Your Saved Meals",
                 style = MaterialTheme.typography.titleLarge,

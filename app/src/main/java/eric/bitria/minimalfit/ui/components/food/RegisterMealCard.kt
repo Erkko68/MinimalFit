@@ -36,7 +36,6 @@ fun SharedTransitionScope.RegisterMealCard(
                     sharedContentState = rememberSharedContentState(key = "meal_container_$date"),
                     animatedVisibilityScope = animatedVisibilityScope
                 ),
-            shape = RoundedCornerShape(percent = 10),
             colors = CardDefaults.elevatedCardColors(
                 containerColor = MaterialTheme.colorScheme.surfaceContainerLow
             )

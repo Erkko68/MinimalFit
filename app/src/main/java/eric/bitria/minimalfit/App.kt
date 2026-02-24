@@ -9,10 +9,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import eric.bitria.minimalfit.navigation.BottomNavigationBar
-import eric.bitria.minimalfit.navigation.FloatingActionMenu
 import eric.bitria.minimalfit.navigation.Route
 import eric.bitria.minimalfit.ui.screens.FoodScreen
-import eric.bitria.minimalfit.ui.screens.FoodScreenContainer
 import eric.bitria.minimalfit.ui.screens.IndoorActivitiesScreen
 import eric.bitria.minimalfit.ui.screens.OutdoorActivitiesScreen
 import eric.bitria.minimalfit.ui.screens.ProfileScreen
@@ -25,7 +23,6 @@ fun App() {
 
     Scaffold(
         bottomBar = { BottomNavigationBar(navController) },
-        //floatingActionButton = { FloatingActionMenu(navController) }
     ) { contentPadding ->
         NavHost(
             navController = navController,
@@ -35,7 +32,7 @@ fun App() {
         ) {
             composable<Route.Profile> { ProfileScreen() }
             composable<Route.Settings> { SettingsScreen() }
-            composable<Route.Food> { FoodScreenContainer() }
+            composable<Route.Food> { FoodScreen() }
             composable<Route.OutdoorActivities> { OutdoorActivitiesScreen() }
             composable<Route.IndoorActivities> { IndoorActivitiesScreen() }
         }

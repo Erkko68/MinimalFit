@@ -98,7 +98,7 @@ fun SavedMealCard(
                         }
 
                         Text(
-                            text = meal.category.name,
+                            text = meal.tags.joinToString(" · "),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                             fontWeight = FontWeight.Medium

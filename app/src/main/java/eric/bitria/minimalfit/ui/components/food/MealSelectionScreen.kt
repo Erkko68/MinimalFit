@@ -11,12 +11,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import eric.bitria.minimalfit.ui.viewmodels.FoodViewModel
@@ -31,7 +29,7 @@ fun SharedTransitionScope.MealSelectionScreen(
     modifier: Modifier = Modifier,
     viewModel: FoodViewModel = koinViewModel()
 ) {
-    val mealsByCategory by remember(viewModel) { mutableStateOf(viewModel.getMealsByCategory()) }
+    val mealsByTag by remember(viewModel) { mutableStateOf(viewModel.getMealsByTag()) }
 
     BoxWithConstraints(modifier = modifier
         .fillMaxSize()
@@ -81,10 +79,10 @@ fun SharedTransitionScope.MealSelectionScreen(
                 )
 
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(height * 0.02f)) {
-                    mealsByCategory.forEach { (category, meals) ->
+                    mealsByTag.forEach { (tag, meals) ->
                         item {
                             Text(
-                                text = category.name,
+                                text = tag,
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.SemiBold,
                                 modifier = Modifier.padding(bottom = height * 0.01f)

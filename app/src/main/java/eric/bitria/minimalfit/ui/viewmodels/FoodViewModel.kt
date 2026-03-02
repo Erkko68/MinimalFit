@@ -29,6 +29,8 @@ data class SavedMeal(
 
 class FoodViewModel : ViewModel() {
 
+    val savedMeals: StateFlow<List<SavedMeal>> get() = _savedMeals
+
     private val _savedMeals = MutableStateFlow(listOf(
         SavedMeal("Oatmeal & Berries", 350, "Rolled oats, almond milk, strawberries.", listOf("Breakfast"), Vivid8, Icons.Filled.BreakfastDining),
         SavedMeal("Greek Yogurt", 200, "Low fat yogurt with honey.", listOf("Breakfast"), Vivid7, Icons.Filled.BreakfastDining),

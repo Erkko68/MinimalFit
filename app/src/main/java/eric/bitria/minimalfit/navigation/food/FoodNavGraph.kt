@@ -14,6 +14,7 @@ import androidx.navigation.toRoute
 import eric.bitria.minimalfit.navigation.Route
 import eric.bitria.minimalfit.ui.components.food.MealSelectionScreen
 import eric.bitria.minimalfit.ui.screens.FoodScreen
+import eric.bitria.minimalfit.ui.screens.FoodSearchScreen
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalSharedTransitionApi::class)
@@ -34,7 +35,8 @@ fun FoodNavHost(modifier: Modifier = Modifier) {
             ) {
                 FoodScreen(
                     animatedVisibilityScope = this@composable,
-                    onRegisterClick = { date: String -> navController.navigate(Route.MealSelection(date)) }
+                    onRegisterClick = { date: String -> navController.navigate(Route.MealSelection(date)) },
+                    onSearchClick = { navController.navigate(Route.FoodSearch) }
                 )
             }
 
@@ -50,6 +52,17 @@ fun FoodNavHost(modifier: Modifier = Modifier) {
                     onBack = { navController.popBackStack() },
                     animatedVisibilityScope = this@composable,
                     viewModel = koinViewModel()
+                )
+            }
+
+            composable<Route.FoodSearch>(
+                enterTransition = { fadeIn(tween(300)) },
+                exitTransition = { fadeOut(tween(300)) },
+                popEnterTransition = { fadeIn(tween(300)) },
+                popExitTransition = { fadeOut(tween(300)) }
+            ) {
+                FoodSearchScreen(
+                    onBack = { navController.popBackStack() }
                 )
             }
         }

@@ -5,13 +5,14 @@ import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import eric.bitria.minimalfit.ui.components.food.RegisterMealCard
@@ -24,12 +25,11 @@ import org.koin.androidx.compose.koinViewModel
 fun SharedTransitionScope.FoodScreen(
     animatedVisibilityScope: AnimatedVisibilityScope,
     onRegisterClick: (String) -> Unit,
+    onSearchClick: () -> Unit,
     viewModel: FoodViewModel = koinViewModel()
 ) {
     val dates by viewModel.mockDates.collectAsState()
     val filteredMeals by viewModel.filteredMeals.collectAsState()
-    val availableTags by viewModel.availableTags.collectAsState()
-    val selectedTag by viewModel.tagFilter.collectAsState()
 
     val pagerState = rememberPagerState(
         initialPage = if (dates.isNotEmpty()) dates.size - 1 else 0,
@@ -62,42 +62,29 @@ fun SharedTransitionScope.FoodScreen(
                 )
             }
 
-            // Filter Section
-            Column(
+            // Section header
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = height * 0.02f)
+                    .padding(
+                        start = width * 0.05f,
+                        end = width * 0.03f,
+                        top = height * 0.02f,
+                        bottom = height * 0.008f
+                    ),
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     text = "Your Saved Meals",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(
-                        horizontal = width * 0.05f,
-                        vertical = height * 0.008f
-                    )
+                    modifier = Modifier.weight(1f)
                 )
-
-                LazyRow(
-                    contentPadding = PaddingValues(horizontal = width * 0.05f),
-                    horizontalArrangement = Arrangement.spacedBy(width * 0.02f),
-                ) {
-                    item {
-                        FilterChip(
-                            selected = selectedTag == null,
-                            onClick = { viewModel.setTagFilter(null) },
-                            label = { Text("All") },
-                            shape = RoundedCornerShape(percent = 50)
-                        )
-                    }
-                    items(availableTags) { tag ->
-                        FilterChip(
-                            selected = selectedTag == tag,
-                            onClick = { viewModel.setTagFilter(tag) },
-                            label = { Text(tag) },
-                            shape = RoundedCornerShape(percent = 50)
-                        )
-                    }
+                IconButton(onClick = onSearchClick) {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "Search meals"
+                    )
                 }
             }
 
@@ -116,3 +103,5 @@ fun SharedTransitionScope.FoodScreen(
         }
     }
 }
+
+

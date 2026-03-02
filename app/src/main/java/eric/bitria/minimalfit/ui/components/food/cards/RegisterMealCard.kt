@@ -1,4 +1,4 @@
-package eric.bitria.minimalfit.ui.components.food
+package eric.bitria.minimalfit.ui.components.food.cards
 
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
@@ -40,11 +40,10 @@ fun SharedTransitionScope.RegisterMealCard(
             )
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
-                // Top Section: Adapts to take all remaining space
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .weight(1f) // Let this fill whatever space the bottom Row doesn't need
+                        .weight(1f)
                         .sharedElement(
                             sharedContentState = rememberSharedContentState(key = "meal_image_$date"),
                             animatedVisibilityScope = animatedVisibilityScope
@@ -61,11 +60,10 @@ fun SharedTransitionScope.RegisterMealCard(
                     )
                 }
 
-                // Bottom Section: Wraps its content based on text and padding size
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .wrapContentHeight() // Ensures the row takes exactly what it needs
+                        .wrapContentHeight()
                         .padding(horizontal = width * 0.05f, vertical = width * 0.04f),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
@@ -95,3 +93,4 @@ fun SharedTransitionScope.RegisterMealCard(
         }
     }
 }
+

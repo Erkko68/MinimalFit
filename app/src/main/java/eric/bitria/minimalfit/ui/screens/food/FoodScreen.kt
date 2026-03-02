@@ -1,4 +1,4 @@
-package eric.bitria.minimalfit.ui.screens
+package eric.bitria.minimalfit.ui.screens.food
 
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
@@ -15,8 +15,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import eric.bitria.minimalfit.ui.components.food.RegisterMealCard
-import eric.bitria.minimalfit.ui.components.food.SavedMealCard
+import eric.bitria.minimalfit.ui.components.food.cards.RegisterMealCard
+import eric.bitria.minimalfit.ui.components.food.cards.SavedMealCard
 import eric.bitria.minimalfit.ui.viewmodels.FoodViewModel
 import org.koin.androidx.compose.koinViewModel
 
@@ -29,7 +29,7 @@ fun SharedTransitionScope.FoodScreen(
     viewModel: FoodViewModel = koinViewModel()
 ) {
     val dates by viewModel.mockDates.collectAsState()
-    val filteredMeals by viewModel.filteredMeals.collectAsState()
+    val savedMeals by viewModel.savedMeals.collectAsState()
 
     val pagerState = rememberPagerState(
         initialPage = if (dates.isNotEmpty()) dates.size - 1 else 0,
@@ -96,7 +96,7 @@ fun SharedTransitionScope.FoodScreen(
                 ),
                 modifier = Modifier.fillMaxSize()
             ) {
-                items(filteredMeals) { meal ->
+                items(savedMeals) { meal ->
                     SavedMealCard(meal)
                 }
             }

@@ -1,33 +1,13 @@
-package eric.bitria.minimalfit.ui.components.food
+package eric.bitria.minimalfit.ui.components.food.cards
 
 import androidx.compose.animation.animateContentSize
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedCard
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -44,7 +24,7 @@ fun SavedMealCard(
 
     BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
         val width = maxWidth
-        
+
         OutlinedCard(
             onClick = { isExpanded = !isExpanded },
             modifier = Modifier
@@ -59,11 +39,11 @@ fun SavedMealCard(
                     .fillMaxWidth()
                     .padding(width * 0.04f)
             ) {
+                // Header row
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Icon Section
                     Box(modifier = Modifier.padding(end = width * 0.04f)) {
                         Icon(
                             imageVector = meal.icon,
@@ -73,7 +53,6 @@ fun SavedMealCard(
                         )
                     }
 
-                    // Content Section
                     Column(modifier = Modifier.weight(1f)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -106,6 +85,7 @@ fun SavedMealCard(
                     }
                 }
 
+                // Expanded details
                 if (isExpanded) {
                     HorizontalDivider(
                         modifier = Modifier.padding(vertical = width * 0.03f),
@@ -113,7 +93,6 @@ fun SavedMealCard(
                     )
 
                     Column(modifier = Modifier.fillMaxWidth()) {
-                        // Description Section
                         Text(
                             text = "Description",
                             style = MaterialTheme.typography.labelLarge,
@@ -127,7 +106,6 @@ fun SavedMealCard(
                             modifier = Modifier.padding(bottom = width * 0.03f)
                         )
 
-                        // Placeholder for additional info
                         Text(
                             text = "Nutritional Information",
                             style = MaterialTheme.typography.labelLarge,
@@ -190,3 +168,4 @@ fun SavedMealCard(
         }
     }
 }
+

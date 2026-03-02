@@ -12,9 +12,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import eric.bitria.minimalfit.navigation.Route
-import eric.bitria.minimalfit.ui.components.food.MealSelectionScreen
-import eric.bitria.minimalfit.ui.screens.FoodScreen
-import eric.bitria.minimalfit.ui.screens.FoodSearchScreen
+import eric.bitria.minimalfit.ui.screens.food.MealSelectionScreen
+import eric.bitria.minimalfit.ui.screens.food.FoodScreen
+import eric.bitria.minimalfit.ui.screens.food.FoodSearchScreen
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalSharedTransitionApi::class)

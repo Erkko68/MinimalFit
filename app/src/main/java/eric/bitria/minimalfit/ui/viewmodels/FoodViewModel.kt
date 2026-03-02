@@ -14,7 +14,6 @@ import eric.bitria.minimalfit.ui.theme.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
@@ -39,7 +38,6 @@ class FoodViewModel : ViewModel() {
         SavedMeal("Salmon & Asparagus", 500, "Baked salmon with grilled asparagus.", listOf("Dinner"), Vivid4, Icons.Filled.DinnerDining),
         SavedMeal("Protein Shake", 150, "Whey protein with water.", listOf("Snack"), Vivid3, Icons.Filled.Restaurant),
         SavedMeal("Apple & Peanut Butter", 180, "Sliced apple with 1 tbsp peanut butter.", listOf("Snack"), Vivid2, Icons.Filled.Restaurant),
-        // Ingredients
         SavedMeal("Egg", 70, "1 large boiled egg.", listOf("Breakfast", "Ingredient"), Vivid1, Icons.Filled.Egg),
         SavedMeal("Chicken Breast", 165, "100g grilled chicken breast.", listOf("Lunch", "Ingredient"), Vivid2, Icons.Filled.Restaurant),
         SavedMeal("Almonds", 160, "28g of raw almonds.", listOf("Snack", "Ingredient"), Vivid3, Icons.Filled.Restaurant)
@@ -49,24 +47,24 @@ class FoodViewModel : ViewModel() {
         meals.flatMap { it.tags }.distinct().sorted()
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    private val _tagFilter = MutableStateFlow<String?>(null)
-    val tagFilter: StateFlow<String?> = _tagFilter
-
-    val filteredMeals: StateFlow<List<SavedMeal>> = combine(
-        _savedMeals, _tagFilter
-    ) { meals, tag ->
-        if (tag == null) meals
-        else meals.filter { meal -> meal.tags.contains(tag) }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-
-    fun setTagFilter(tag: String?) {
-        _tagFilter.value = tag
-    }
-
     private val _mockDates = MutableStateFlow(listOf("Sun, 22 Feb", "Mon, 23 Feb", "Tue, 24 Feb", "Wed, 25 Feb", "Today, 26 Feb"))
     val mockDates: StateFlow<List<String>> = _mockDates
 
-    fun getMealsByTag() = _savedMeals.value
-        .flatMap { meal -> meal.tags.map { tag -> tag to meal } }
-        .groupBy({ it.first }, { it.second })
+    // Diary: map of date -> list of meals added for that day
+    private val _diaryMeals = MutableStateFlow<Map<String, List<SavedMeal>>>(emptyMap())
+    val diaryMeals: StateFlow<Map<String, List<SavedMeal>>> = _diaryMeals
+
+    fun addMealToDiary(date: String, meal: SavedMeal) {
+        val current = _diaryMeals.value.toMutableMap()
+        current[date] = (current[date] ?: emptyList()) + meal
+        _diaryMeals.value = current
+    }
+
+    fun removeMealFromDiary(date: String, index: Int) {
+        val current = _diaryMeals.value.toMutableMap()
+        val list = current[date]?.toMutableList() ?: return
+        list.removeAt(index)
+        current[date] = list
+        _diaryMeals.value = current
+    }
 }

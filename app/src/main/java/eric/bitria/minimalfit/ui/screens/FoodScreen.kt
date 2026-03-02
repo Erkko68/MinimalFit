@@ -1,37 +1,31 @@
 package eric.bitria.minimalfit.ui.screens
 
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
-import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import eric.bitria.minimalfit.ui.components.food.MealSelectionScreen
 import eric.bitria.minimalfit.ui.components.food.RegisterMealCard
 import eric.bitria.minimalfit.ui.components.food.SavedMealCard
 import eric.bitria.minimalfit.ui.viewmodels.FoodViewModel
-import eric.bitria.minimalfit.ui.viewmodels.SavedMeal
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-fun FoodScreen(viewModel: FoodViewModel = koinViewModel()) {
-    var activeRegistrationDate by remember { mutableStateOf<String?>(null) }
+fun SharedTransitionScope.FoodScreen(
+    animatedVisibilityScope: AnimatedVisibilityScope,
+    onRegisterClick: (String) -> Unit,
+    viewModel: FoodViewModel = koinViewModel()
+) {
     val dates by viewModel.mockDates.collectAsState()
     val filteredMeals by viewModel.filteredMeals.collectAsState()
     val availableTags by viewModel.availableTags.collectAsState()
@@ -42,49 +36,6 @@ fun FoodScreen(viewModel: FoodViewModel = koinViewModel()) {
         pageCount = { dates.size }
     )
 
-    SharedTransitionLayout {
-        AnimatedContent(
-            targetState = activeRegistrationDate,
-            label = "container_transform_transition",
-            transitionSpec = {
-                fadeIn(tween(300)) togetherWith fadeOut(tween(300))
-            },
-        ) { targetDate ->
-            if (targetDate != null) {
-                MealSelectionScreen(
-                    date = targetDate,
-                    onBack = { activeRegistrationDate = null },
-                    animatedVisibilityScope = this@AnimatedContent,
-                    viewModel = viewModel
-                )
-            } else {
-                FoodScreenContent(
-                    onRegisterClick = { clickedDate -> activeRegistrationDate = clickedDate },
-                    animatedVisibilityScope = this@AnimatedContent,
-                    meals = filteredMeals,
-                    dates = dates,
-                    pagerState = pagerState,
-                    availableTags = availableTags,
-                    selectedTag = selectedTag,
-                    onTagSelected = { viewModel.setTagFilter(it) }
-                )
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalSharedTransitionApi::class, ExperimentalMaterial3Api::class)
-@Composable
-fun SharedTransitionScope.FoodScreenContent(
-    onRegisterClick: (String) -> Unit,
-    animatedVisibilityScope: AnimatedVisibilityScope,
-    meals: List<SavedMeal>,
-    dates: List<String>,
-    pagerState: PagerState,
-    availableTags: List<String>,
-    selectedTag: String?,
-    onTagSelected: (String?) -> Unit
-) {
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         val width = maxWidth
         val height = maxHeight
@@ -101,7 +52,7 @@ fun SharedTransitionScope.FoodScreenContent(
                 pageSpacing = width * 0.04f,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .fillMaxHeight(0.35f)
+                    .fillMaxHeight(0.25f)
             ) { page ->
                 RegisterMealCard(
                     date = dates[page],
@@ -115,12 +66,16 @@ fun SharedTransitionScope.FoodScreenContent(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .padding(top = height * 0.02f)
             ) {
                 Text(
                     text = "Your Saved Meals",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = width * 0.05f)
+                    modifier = Modifier.padding(
+                        horizontal = width * 0.05f,
+                        vertical = height * 0.008f
+                    )
                 )
 
                 LazyRow(
@@ -130,7 +85,7 @@ fun SharedTransitionScope.FoodScreenContent(
                     item {
                         FilterChip(
                             selected = selectedTag == null,
-                            onClick = { onTagSelected(null) },
+                            onClick = { viewModel.setTagFilter(null) },
                             label = { Text("All") },
                             shape = RoundedCornerShape(percent = 50)
                         )
@@ -138,7 +93,7 @@ fun SharedTransitionScope.FoodScreenContent(
                     items(availableTags) { tag ->
                         FilterChip(
                             selected = selectedTag == tag,
-                            onClick = { onTagSelected(tag) },
+                            onClick = { viewModel.setTagFilter(tag) },
                             label = { Text(tag) },
                             shape = RoundedCornerShape(percent = 50)
                         )
@@ -154,12 +109,10 @@ fun SharedTransitionScope.FoodScreenContent(
                 ),
                 modifier = Modifier.fillMaxSize()
             ) {
-                items(meals) { meal ->
+                items(filteredMeals) { meal ->
                     SavedMealCard(meal)
                 }
             }
         }
     }
 }
-
-

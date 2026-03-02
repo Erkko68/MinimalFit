@@ -24,14 +24,13 @@ fun SharedTransitionScope.RegisterMealCard(
     animatedVisibilityScope: AnimatedVisibilityScope,
     modifier: Modifier = Modifier
 ) {
-    BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
+    BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         val width = maxWidth
-        val height = maxHeight // This might be constrained by the pager
 
         ElevatedCard(
             onClick = onClick,
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxSize()
                 .sharedBounds(
                     sharedContentState = rememberSharedContentState(key = "meal_container_$date"),
                     animatedVisibilityScope = animatedVisibilityScope
@@ -40,11 +39,12 @@ fun SharedTransitionScope.RegisterMealCard(
                 containerColor = MaterialTheme.colorScheme.surfaceContainerLow
             )
         ) {
-            Column {
+            Column(modifier = Modifier.fillMaxSize()) {
+                // Top Section: Adapts to take all remaining space
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .fillMaxHeight(0.6f) // Takes 60% of card height
+                        .weight(1f) // Let this fill whatever space the bottom Row doesn't need
                         .sharedElement(
                             sharedContentState = rememberSharedContentState(key = "meal_image_$date"),
                             animatedVisibilityScope = animatedVisibilityScope
@@ -61,9 +61,11 @@ fun SharedTransitionScope.RegisterMealCard(
                     )
                 }
 
+                // Bottom Section: Wraps its content based on text and padding size
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .wrapContentHeight() // Ensures the row takes exactly what it needs
                         .padding(horizontal = width * 0.05f, vertical = width * 0.04f),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically

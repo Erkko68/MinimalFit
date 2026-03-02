@@ -1,5 +1,6 @@
 package eric.bitria.minimalfit
 
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
@@ -10,7 +11,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import eric.bitria.minimalfit.navigation.BottomNavigationBar
 import eric.bitria.minimalfit.navigation.Route
-import eric.bitria.minimalfit.ui.screens.FoodScreen
+import eric.bitria.minimalfit.navigation.food.FoodNavHost
 import eric.bitria.minimalfit.ui.screens.IndoorActivitiesScreen
 import eric.bitria.minimalfit.ui.screens.OutdoorActivitiesScreen
 import eric.bitria.minimalfit.ui.screens.ProfileScreen
@@ -32,7 +33,7 @@ fun App() {
         ) {
             composable<Route.Profile> { ProfileScreen() }
             composable<Route.Settings> { SettingsScreen() }
-            composable<Route.Food> { FoodScreen() }
+            composable<Route.Food> { FoodNavHost(modifier = Modifier.fillMaxSize()) }
             composable<Route.OutdoorActivities> { OutdoorActivitiesScreen() }
             composable<Route.IndoorActivities> { IndoorActivitiesScreen() }
         }

@@ -12,12 +12,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import eric.bitria.minimalfit.ui.viewmodels.SavedMeal
+import eric.bitria.minimalfit.data.model.Meal
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SavedMealCard(
-    meal: SavedMeal,
+    meal: Meal,
     modifier: Modifier = Modifier
 ) {
     var isExpanded by remember { mutableStateOf(false) }

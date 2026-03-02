@@ -19,7 +19,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import eric.bitria.minimalfit.ui.components.food.cards.SavedMealCard
-import eric.bitria.minimalfit.ui.viewmodels.SavedMeal
+import eric.bitria.minimalfit.data.model.Meal
 
 /**
  * Reusable search UI: text field + filter chips + results list.
@@ -29,10 +29,10 @@ import eric.bitria.minimalfit.ui.viewmodels.SavedMeal
  */
 @Composable
 fun FoodSearchContent(
-    savedMeals: List<SavedMeal>,
+    savedMeals: List<Meal>,
     availableTags: List<String>,
     modifier: Modifier = Modifier,
-    onMealClick: ((SavedMeal) -> Unit)? = null,
+    onMealClick: ((Meal) -> Unit)? = null,
     autoFocus: Boolean = false
 ) {
     var query by remember { mutableStateOf("") }

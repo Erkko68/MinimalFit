@@ -15,15 +15,25 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalSharedTransitionApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun SharedTransitionScope.RegisterMealCard(
-    date: String,
+    date: LocalDate,
     onClick: () -> Unit,
     animatedVisibilityScope: AnimatedVisibilityScope,
     modifier: Modifier = Modifier
 ) {
+    val today = LocalDate.now()
+    val label = when (date) {
+        today -> "Today"
+        today.minusDays(1) -> "Yesterday"
+        else -> date.format(DateTimeFormatter.ofPattern("EEE, d MMM"))
+    }
+    // Use the ISO key as the stable shared-element key
+    val dateKey = date.toString()
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         val width = maxWidth
 
@@ -32,7 +42,7 @@ fun SharedTransitionScope.RegisterMealCard(
             modifier = Modifier
                 .fillMaxSize()
                 .sharedBounds(
-                    sharedContentState = rememberSharedContentState(key = "meal_container_$date"),
+                    sharedContentState = rememberSharedContentState(key = "meal_container_$dateKey"),
                     animatedVisibilityScope = animatedVisibilityScope
                 ),
             colors = CardDefaults.elevatedCardColors(
@@ -45,7 +55,7 @@ fun SharedTransitionScope.RegisterMealCard(
                         .fillMaxWidth()
                         .weight(1f)
                         .sharedElement(
-                            sharedContentState = rememberSharedContentState(key = "meal_image_$date"),
+                            sharedContentState = rememberSharedContentState(key = "meal_image_$dateKey"),
                             animatedVisibilityScope = animatedVisibilityScope
                         )
                         .clip(RoundedCornerShape(10))
@@ -70,7 +80,7 @@ fun SharedTransitionScope.RegisterMealCard(
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = date,
+                            text = label,
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface

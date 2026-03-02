@@ -13,14 +13,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import eric.bitria.minimalfit.ui.components.food.search.FoodSearchContent
-import eric.bitria.minimalfit.ui.viewmodels.SavedMeal
+import eric.bitria.minimalfit.data.model.Meal
 
 @Composable
 fun AddFoodDialog(
-    savedMeals: List<SavedMeal>,
+    savedMeals: List<Meal>,
     availableTags: List<String>,
     onDismiss: () -> Unit,
-    onMealSelected: (SavedMeal) -> Unit
+    onMealSelected: (Meal) -> Unit
 ) {
     Dialog(
         onDismissRequest = onDismiss,

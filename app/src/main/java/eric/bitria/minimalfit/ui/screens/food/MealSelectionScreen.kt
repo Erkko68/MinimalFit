@@ -6,7 +6,7 @@ import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -22,11 +22,13 @@ import eric.bitria.minimalfit.ui.components.food.cards.EmptyMealCard
 import eric.bitria.minimalfit.ui.components.food.dialog.AddFoodDialog
 import eric.bitria.minimalfit.ui.viewmodels.FoodViewModel
 import org.koin.androidx.compose.koinViewModel
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun SharedTransitionScope.MealSelectionScreen(
-    date: String,
+    date: LocalDate,
     onBack: () -> Unit,
     animatedVisibilityScope: AnimatedVisibilityScope,
     modifier: Modifier = Modifier,
@@ -34,8 +36,15 @@ fun SharedTransitionScope.MealSelectionScreen(
 ) {
     val savedMeals by viewModel.savedMeals.collectAsState()
     val availableTags by viewModel.availableTags.collectAsState()
-    val diaryMeals by viewModel.diaryMeals.collectAsState()
-    val mealsForDate = diaryMeals[date] ?: emptyList()
+    val journal by remember(date) { viewModel.getJournalForDate(date) }.collectAsState()
+
+    val dateKey = date.toString()
+    val today = LocalDate.now()
+    val dateLabel = when (date) {
+        today -> "Today"
+        today.minusDays(1) -> "Yesterday"
+        else -> date.format(DateTimeFormatter.ofPattern("EEE, d MMM"))
+    }
 
     var showAddDialog by remember { mutableStateOf(false) }
 
@@ -43,7 +52,7 @@ fun SharedTransitionScope.MealSelectionScreen(
         modifier = modifier
             .fillMaxSize()
             .sharedBounds(
-                sharedContentState = rememberSharedContentState(key = "meal_container_$date"),
+                sharedContentState = rememberSharedContentState(key = "meal_container_$dateKey"),
                 animatedVisibilityScope = animatedVisibilityScope
             )
     ) {
@@ -51,14 +60,13 @@ fun SharedTransitionScope.MealSelectionScreen(
         val height = maxHeight
 
         Column(modifier = Modifier.fillMaxSize()) {
-            // Header box with date title
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .fillMaxHeight(0.25f)
                     .background(MaterialTheme.colorScheme.primaryContainer)
                     .sharedElement(
-                        sharedContentState = rememberSharedContentState(key = "meal_image_$date"),
+                        sharedContentState = rememberSharedContentState(key = "meal_image_$dateKey"),
                         animatedVisibilityScope = animatedVisibilityScope
                     )
             ) {
@@ -76,7 +84,7 @@ fun SharedTransitionScope.MealSelectionScreen(
                     )
                 }
                 Text(
-                    text = date,
+                    text = dateLabel,
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -103,19 +111,17 @@ fun SharedTransitionScope.MealSelectionScreen(
                     verticalArrangement = Arrangement.spacedBy(height * 0.015f),
                     modifier = Modifier.weight(1f)
                 ) {
-                    if (mealsForDate.isEmpty()) {
-                        // Empty state card
+                    if (journal.entries.isEmpty()) {
                         item {
                             EmptyMealCard(onClick = { showAddDialog = true })
                         }
                     } else {
-                        itemsIndexed(mealsForDate) { index, meal ->
+                        items(journal.entries, key = { it.id }) { entry ->
                             DiaryMealRow(
-                                meal = meal,
-                                onRemove = { viewModel.removeMealFromDiary(date, index) }
+                                entry = entry,
+                                onRemove = { viewModel.removeMealFromDiary(date, entry.id) }
                             )
                         }
-                        // Add more button row
                         item {
                             OutlinedButton(
                                 onClick = { showAddDialog = true },
@@ -137,7 +143,6 @@ fun SharedTransitionScope.MealSelectionScreen(
         }
     }
 
-    // Add food dialog
     if (showAddDialog) {
         AddFoodDialog(
             savedMeals = savedMeals,

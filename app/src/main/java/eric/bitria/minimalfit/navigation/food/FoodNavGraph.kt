@@ -12,10 +12,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import eric.bitria.minimalfit.navigation.Route
-import eric.bitria.minimalfit.ui.screens.food.MealSelectionScreen
 import eric.bitria.minimalfit.ui.screens.food.FoodScreen
 import eric.bitria.minimalfit.ui.screens.food.FoodSearchScreen
+import eric.bitria.minimalfit.ui.screens.food.MealSelectionScreen
 import org.koin.androidx.compose.koinViewModel
+import java.time.LocalDate
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
@@ -23,10 +24,8 @@ fun FoodNavHost(modifier: Modifier = Modifier) {
     val navController = rememberNavController()
 
     SharedTransitionLayout(modifier = modifier) {
-        NavHost(
-            navController = navController,
-            startDestination = Route.Food
-        ) {
+        NavHost(navController = navController, startDestination = Route.Food) {
+
             composable<Route.Food>(
                 enterTransition = { fadeIn(tween(300)) },
                 exitTransition = { fadeOut(tween(300)) },
@@ -35,7 +34,9 @@ fun FoodNavHost(modifier: Modifier = Modifier) {
             ) {
                 FoodScreen(
                     animatedVisibilityScope = this@composable,
-                    onRegisterClick = { date: String -> navController.navigate(Route.MealSelection(date)) },
+                    onRegisterClick = { date: LocalDate ->
+                        navController.navigate(Route.MealSelection(date.toString()))
+                    },
                     onSearchClick = { navController.navigate(Route.FoodSearch) }
                 )
             }
@@ -47,8 +48,9 @@ fun FoodNavHost(modifier: Modifier = Modifier) {
                 popExitTransition = { fadeOut(tween(300)) }
             ) { backStackEntry ->
                 val route = backStackEntry.toRoute<Route.MealSelection>()
+                val date = LocalDate.parse(route.date)
                 MealSelectionScreen(
-                    date = route.date,
+                    date = date,
                     onBack = { navController.popBackStack() },
                     animatedVisibilityScope = this@composable,
                     viewModel = koinViewModel()
@@ -61,9 +63,7 @@ fun FoodNavHost(modifier: Modifier = Modifier) {
                 popEnterTransition = { fadeIn(tween(300)) },
                 popExitTransition = { fadeOut(tween(300)) }
             ) {
-                FoodSearchScreen(
-                    onBack = { navController.popBackStack() }
-                )
+                FoodSearchScreen(onBack = { navController.popBackStack() })
             }
         }
     }

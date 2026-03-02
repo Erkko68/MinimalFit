@@ -19,20 +19,21 @@ import eric.bitria.minimalfit.ui.components.food.cards.RegisterMealCard
 import eric.bitria.minimalfit.ui.components.food.cards.SavedMealCard
 import eric.bitria.minimalfit.ui.viewmodels.FoodViewModel
 import org.koin.androidx.compose.koinViewModel
+import java.time.LocalDate
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun SharedTransitionScope.FoodScreen(
     animatedVisibilityScope: AnimatedVisibilityScope,
-    onRegisterClick: (String) -> Unit,
+    onRegisterClick: (LocalDate) -> Unit,
     onSearchClick: () -> Unit,
     viewModel: FoodViewModel = koinViewModel()
 ) {
-    val dates by viewModel.mockDates.collectAsState()
     val savedMeals by viewModel.savedMeals.collectAsState()
+    val dates = remember { viewModel.recentDays() }
 
     val pagerState = rememberPagerState(
-        initialPage = if (dates.isNotEmpty()) dates.size - 1 else 0,
+        initialPage = dates.size - 1,
         pageCount = { dates.size }
     )
 
@@ -54,9 +55,10 @@ fun SharedTransitionScope.FoodScreen(
                     .fillMaxWidth()
                     .fillMaxHeight(0.25f)
             ) { page ->
+                val date = dates[page]
                 RegisterMealCard(
-                    date = dates[page],
-                    onClick = { onRegisterClick(dates[page]) },
+                    date = date,
+                    onClick = { onRegisterClick(date) },
                     animatedVisibilityScope = animatedVisibilityScope,
                     modifier = Modifier.fillMaxSize()
                 )
@@ -103,5 +105,3 @@ fun SharedTransitionScope.FoodScreen(
         }
     }
 }
-
-

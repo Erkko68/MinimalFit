@@ -6,12 +6,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import eric.bitria.minimalfit.ui.viewmodels.SavedMeal
+import eric.bitria.minimalfit.data.model.Meal
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MealPickerRow(
-    meal: SavedMeal,
+    meal: Meal,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {

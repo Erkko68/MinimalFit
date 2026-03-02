@@ -10,16 +10,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import eric.bitria.minimalfit.ui.viewmodels.SavedMeal
+import eric.bitria.minimalfit.data.model.MealEntry
 
 @Composable
 fun DiaryMealRow(
-    meal: SavedMeal,
+    entry: MealEntry,
     onRemove: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
         val width = maxWidth
+        val meal = entry.meal
 
         Surface(
             shape = RoundedCornerShape(12.dp),
@@ -46,8 +47,9 @@ fun DiaryMealRow(
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold
                     )
+                    val servingsLabel = if (entry.servings != 1f) " · ${entry.servings}x" else ""
                     Text(
-                        text = "${meal.calories} kcal · ${meal.tags.joinToString(" · ")}",
+                        text = "${entry.totalCalories} kcal$servingsLabel · ${meal.tags.joinToString(" · ")}",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -63,4 +65,3 @@ fun DiaryMealRow(
         }
     }
 }
-

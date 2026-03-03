@@ -4,17 +4,18 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import eric.bitria.minimalfit.data.model.FoodJournal
 import eric.bitria.minimalfit.data.model.Meal
+import eric.bitria.minimalfit.data.model.UnitType
 import eric.bitria.minimalfit.data.repository.journal.FoodJournalRepository
 import eric.bitria.minimalfit.data.repository.meal.MealRepository
 import eric.bitria.minimalfit.data.repository.tag.TagRepository
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.LocalDate
-
-// UI-layer typealias so existing composables need no changes
-typealias SavedMeal = Meal
+import java.util.UUID
 
 class FoodViewModel(
     private val mealRepository: MealRepository,
@@ -31,6 +32,29 @@ class FoodViewModel(
     fun addMeal(meal: Meal) = viewModelScope.launch { mealRepository.addMeal(meal) }
     fun updateMeal(meal: Meal) = viewModelScope.launch { mealRepository.updateMeal(meal) }
     fun deleteMeal(id: String) = viewModelScope.launch { mealRepository.deleteMeal(id) }
+
+    fun createMeal(
+        name: String,
+        calories: Int,
+        description: String,
+        tags: List<String>,
+        color: Color,
+        icon: ImageVector,
+        unitType: UnitType
+    ) = viewModelScope.launch {
+        mealRepository.addMeal(
+            Meal(
+                id = UUID.randomUUID().toString(),
+                name = name,
+                calories = calories,
+                description = description,
+                tags = tags,
+                color = color,
+                icon = icon,
+                unitType = unitType
+            )
+        )
+    }
 
     // ── Tags ──────────────────────────────────────────────────────────────────
 

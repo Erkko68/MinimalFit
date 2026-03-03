@@ -13,6 +13,7 @@ data class Meal(
     val description: String,
     val tags: List<String>,
     val color: Color,
-    val icon: ImageVector
+    val icon: ImageVector,
+    val unitType: UnitType = UnitType.GRAMS
 )
 

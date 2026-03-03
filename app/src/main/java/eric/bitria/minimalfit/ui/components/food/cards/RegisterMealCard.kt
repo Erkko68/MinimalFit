@@ -28,8 +28,7 @@ fun SharedTransitionScope.RegisterMealCard(
 ) {
     val today = LocalDate.now()
     val label = when (date) {
-        today -> "Today"
-        today.minusDays(1) -> "Yesterday"
+        today -> "Today, ${date.format(DateTimeFormatter.ofPattern("EEE, d MMM"))}"
         else -> date.format(DateTimeFormatter.ofPattern("EEE, d MMM"))
     }
     // Use the ISO key as the stable shared-element key

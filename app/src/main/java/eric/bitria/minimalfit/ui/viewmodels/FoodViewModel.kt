@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import eric.bitria.minimalfit.data.model.FoodJournal
 import eric.bitria.minimalfit.data.model.Meal
+import eric.bitria.minimalfit.data.model.Nutrient
 import eric.bitria.minimalfit.data.model.UnitType
 import eric.bitria.minimalfit.data.repository.journal.FoodJournalRepository
 import eric.bitria.minimalfit.data.repository.meal.MealRepository
@@ -35,23 +36,25 @@ class FoodViewModel(
 
     fun createMeal(
         name: String,
-        calories: Int,
         description: String,
         tags: List<String>,
         color: Color,
         icon: ImageVector,
-        unitType: UnitType
+        unitType: UnitType,
+        servingSize: Float = 100f,
+        nutrition: Map<Nutrient, Float> = emptyMap()
     ) = viewModelScope.launch {
         mealRepository.addMeal(
             Meal(
                 id = UUID.randomUUID().toString(),
                 name = name,
-                calories = calories,
                 description = description,
                 tags = tags,
                 color = color,
                 icon = icon,
-                unitType = unitType
+                unitType = unitType,
+                servingSize = servingSize,
+                nutrition = nutrition
             )
         )
     }

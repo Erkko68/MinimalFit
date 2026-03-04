@@ -10,7 +10,7 @@ package eric.bitria.minimalfit.data.model
  */
 enum class UnitType(val label: String, val symbol: String) {
     GRAMS(label = "Grams", symbol = "g"),
-    LITERS(label = "Liters", symbol = "L"),
+    MILLILITERS(label = "Milliliters", symbol = "mL"),
     IMPERIAL(label = "Imperial", symbol = "oz"),
     SERVING(label = "Serving", symbol = "srv")
 }

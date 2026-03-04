@@ -9,8 +9,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import eric.bitria.minimalfit.navigation.BottomNavigationBar
-import eric.bitria.minimalfit.navigation.QuickActionFab
+import eric.bitria.minimalfit.navigation.composables.BottomNavigationBar
+import eric.bitria.minimalfit.navigation.composables.QuickActionFab
 import eric.bitria.minimalfit.navigation.Route
 import eric.bitria.minimalfit.navigation.food.FoodNavHost
 import eric.bitria.minimalfit.ui.screens.IndoorActivitiesScreen

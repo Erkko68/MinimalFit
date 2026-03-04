@@ -1,4 +1,4 @@
-package eric.bitria.minimalfit.navigation
+package eric.bitria.minimalfit.navigation.composables
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -20,13 +20,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
+import eric.bitria.minimalfit.navigation.QuickAction
 
 /**
  * Global quick-action FAB.
  *
  * Renders a circular toggle FAB. When expanded, it reveals one
- * [ExtendedFloatingActionButton] per [QuickAction] entry.
- * Navigation is fully handled by [QuickAction.navigate] — no routing
+ * [ExtendedFloatingActionButton] per [eric.bitria.minimalfit.navigation.QuickAction] entry.
+ * Navigation is fully handled by [eric.bitria.minimalfit.navigation.QuickAction.navigate] — no routing
  * logic lives here.
  *
  * @param expanded          Whether the action list is open.

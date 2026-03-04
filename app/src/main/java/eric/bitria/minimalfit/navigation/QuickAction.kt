@@ -13,7 +13,7 @@ import androidx.navigation.NavHostController
  * - [icon]       — icon displayed on the action button
  * - [navigate]   — executes the navigation given the available nav controllers
  *
- * Navigation is self-contained here so [QuickActionFab] needs no routing logic,
+ * Navigation is self-contained here so [eric.bitria.minimalfit.navigation.composables.QuickActionFab] needs no routing logic,
  * and the host composable only needs to supply the nav controllers.
  */
 enum class QuickAction(

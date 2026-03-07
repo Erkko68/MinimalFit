@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -26,10 +25,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
+import eric.bitria.minimalfit.ui.theme.Spacing
 import eric.bitria.minimalfit.ui.viewmodels.FoodUiState
 import kotlin.math.absoluteValue
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun DailyProgressPager(uiState: FoodUiState, modifier: Modifier = Modifier) {
     val pagerState = rememberPagerState(pageCount = { uiState.weeklyProgress.size })
@@ -42,24 +41,23 @@ fun DailyProgressPager(uiState: FoodUiState, modifier: Modifier = Modifier) {
             state = pagerState,
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(0.9f),
-            contentPadding = PaddingValues(horizontal = 64.dp),
-            pageSpacing = 16.dp
+                .weight(1f),
+            contentPadding = PaddingValues(horizontal = Spacing.xl * 2),
+            pageSpacing = Spacing.m
         ) { pageIndex ->
             val dailyData = uiState.weeklyProgress[pageIndex]
             val progress = if (dailyData.goalCalories > 0) {
                 dailyData.currentCalories.toFloat() / dailyData.goalCalories
             } else 0f
 
-            val pageOffset = (
-                    (pagerState.currentPage - pageIndex) + pagerState.currentPageOffsetFraction
-                    ).absoluteValue
-
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(vertical = 16.dp)
+                    .padding(vertical = Spacing.m)
                     .graphicsLayer {
+                        val pageOffset = (
+                                (pagerState.currentPage - pageIndex) + pagerState.currentPageOffsetFraction
+                                ).absoluteValue
                         val scale = lerp(
                             start = 0.85f,
                             stop = 1f,
@@ -67,7 +65,6 @@ fun DailyProgressPager(uiState: FoodUiState, modifier: Modifier = Modifier) {
                         )
                         scaleX = scale
                         scaleY = scale
-
                         alpha = lerp(
                             start = 0.5f,
                             stop = 1f,
@@ -79,11 +76,11 @@ fun DailyProgressPager(uiState: FoodUiState, modifier: Modifier = Modifier) {
             }
         }
 
+        // Pill indicator row
         Row(
-            Modifier
+            modifier = Modifier
                 .fillMaxWidth()
-                .weight(0.1f)
-                .padding(bottom = 16.dp),
+                .padding(bottom = Spacing.m),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -94,21 +91,21 @@ fun DailyProgressPager(uiState: FoodUiState, modifier: Modifier = Modifier) {
                     targetValue = if (isSelected)
                         MaterialTheme.colorScheme.primary
                     else
-                        MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.25f),
                     animationSpec = tween(durationMillis = 300),
                     label = "IndicatorColor"
                 )
 
                 val indicatorWidth by animateDpAsState(
-                    targetValue = if (isSelected) 32.dp else 10.dp,
+                    targetValue = if (isSelected) 28.dp else 8.dp,
                     animationSpec = tween(durationMillis = 300),
                     label = "IndicatorWidth"
                 )
 
                 Surface(
                     modifier = Modifier
-                        .padding(horizontal = 4.dp)
-                        .height(10.dp)
+                        .padding(horizontal = Spacing.xs)
+                        .height(8.dp)
                         .width(indicatorWidth),
                     shape = CircleShape,
                     color = color

@@ -2,13 +2,17 @@ package eric.bitria.minimalfit
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -25,12 +29,6 @@ import eric.bitria.minimalfit.ui.screens.food.FoodScreen
 @Composable
 fun App() {
     val navController = rememberNavController()
-
-    // Inner food nav controller — captured when the food graph is composed
-    var foodNavController by remember { mutableStateOf<NavHostController?>(null) }
-
-    // FAB expansion state
-    var fabExpanded by remember { mutableStateOf(false) }
 
     Scaffold(
         bottomBar = { BottomNavigationBar(navController) },

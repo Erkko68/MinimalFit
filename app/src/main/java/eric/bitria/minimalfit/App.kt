@@ -1,22 +1,25 @@
 package eric.bitria.minimalfit
 
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import eric.bitria.minimalfit.navigation.composables.BottomNavigationBar
-import eric.bitria.minimalfit.navigation.composables.QuickActionFab
 import eric.bitria.minimalfit.navigation.Route
-import eric.bitria.minimalfit.navigation.food.FoodNavHost
+import eric.bitria.minimalfit.navigation.composables.BottomNavigationBar
 import eric.bitria.minimalfit.ui.screens.IndoorActivitiesScreen
 import eric.bitria.minimalfit.ui.screens.OutdoorActivitiesScreen
 import eric.bitria.minimalfit.ui.screens.ProfileScreen
 import eric.bitria.minimalfit.ui.screens.SettingsScreen
+import eric.bitria.minimalfit.ui.screens.food.FoodScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,15 +34,7 @@ fun App() {
 
     Scaffold(
         bottomBar = { BottomNavigationBar(navController) },
-        floatingActionButton = {
-            QuickActionFab(
-                expanded = fabExpanded,
-                onToggle = { fabExpanded = !fabExpanded },
-                rootNavController = navController,
-                foodNavController = foodNavController,
-                onActionDispatched = { fabExpanded = false }
-            )
-        }
+        //floatingActionButton = {}
     ) { contentPadding ->
         NavHost(
             navController = navController,
@@ -49,12 +44,7 @@ fun App() {
         ) {
             composable<Route.Profile> { ProfileScreen() }
             composable<Route.Settings> { SettingsScreen() }
-            composable<Route.Food> {
-                FoodNavHost(
-                    modifier = Modifier.fillMaxSize(),
-                    controllerRef = { foodNavController = it }
-                )
-            }
+            composable<Route.Food> { FoodScreen() }
             composable<Route.OutdoorActivities> { OutdoorActivitiesScreen() }
             composable<Route.IndoorActivities> { IndoorActivitiesScreen() }
         }

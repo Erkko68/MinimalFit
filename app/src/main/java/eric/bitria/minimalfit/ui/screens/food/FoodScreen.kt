@@ -20,6 +20,7 @@ import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun FoodScreen(
+    onNavigateToDailyLog: (Int) -> Unit,
     viewModel: FoodViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -28,6 +29,7 @@ fun FoodScreen(
 
         DailyProgressPager(
             uiState = uiState,
+            onDayClick = onNavigateToDailyLog,
             modifier = Modifier.weight(0.42f)
         )
 

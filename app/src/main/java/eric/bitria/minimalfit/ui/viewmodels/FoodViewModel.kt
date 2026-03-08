@@ -77,7 +77,7 @@ class FoodViewModel : ViewModel() {
                 ),
                 Meal(
                     7, "Beef Stir Fry", 550,
-                    imageUrl = "https://images.unsplash.com/photo-1512058560366-cd2427ff56f3?q=80&w=500&auto=format&fit=crop",
+                    imageUrl = null,
                     description = "Lunch"
                 )
             )

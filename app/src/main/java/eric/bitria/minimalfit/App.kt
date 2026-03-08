@@ -9,12 +9,14 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import eric.bitria.minimalfit.navigation.Route
 import eric.bitria.minimalfit.navigation.composables.BottomNavigationBar
 import eric.bitria.minimalfit.ui.screens.IndoorActivitiesScreen
 import eric.bitria.minimalfit.ui.screens.OutdoorActivitiesScreen
 import eric.bitria.minimalfit.ui.screens.ProfileScreen
 import eric.bitria.minimalfit.ui.screens.SettingsScreen
+import eric.bitria.minimalfit.ui.screens.food.DailyLogScreen
 import eric.bitria.minimalfit.ui.screens.food.FoodScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -34,9 +36,22 @@ fun App() {
         ) {
             composable<Route.Profile> { ProfileScreen() }
             composable<Route.Settings> { SettingsScreen() }
-            composable<Route.Food> { FoodScreen() }
+            composable<Route.Food> {
+                FoodScreen(
+                    onNavigateToDailyLog = { dayIndex ->
+                        navController.navigate(Route.DailyLog(dayIndex))
+                    }
+                )
+            }
             composable<Route.OutdoorActivities> { OutdoorActivitiesScreen() }
             composable<Route.IndoorActivities> { IndoorActivitiesScreen() }
+            composable<Route.DailyLog> { backStackEntry ->
+                val dailyLog = backStackEntry.toRoute<Route.DailyLog>()
+                DailyLogScreen(
+                    dayIndex = dailyLog.dayIndex,
+                    onBackClick = { navController.popBackStack() }
+                )
+            }
         }
     }
 }

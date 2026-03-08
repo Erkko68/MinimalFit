@@ -5,11 +5,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import eric.bitria.minimalfit.navigation.QuickAction
@@ -22,29 +20,18 @@ import eric.bitria.minimalfit.ui.screens.ProfileScreen
 import eric.bitria.minimalfit.ui.screens.SettingsScreen
 import eric.bitria.minimalfit.ui.screens.food.DailyLogScreen
 import eric.bitria.minimalfit.ui.screens.food.FoodScreen
-import eric.bitria.minimalfit.ui.viewmodels.DailyLogViewModel
-import eric.bitria.minimalfit.ui.viewmodels.FoodViewModel
-import org.koin.androidx.compose.koinViewModel
+
+private const val TODAY_INDEX = 6
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun App() {
     val navController = rememberNavController()
-    val dailyLogViewModel: DailyLogViewModel = koinViewModel()
-    val foodViewModel: FoodViewModel = koinViewModel()
-
-    val backStackEntry by navController.currentBackStackEntryAsState()
 
     fun handleQuickAction(action: QuickAction) {
         when (action) {
             QuickAction.ADD_MEAL -> {
-                val currentRoute = backStackEntry?.destination?.route ?: ""
-                if (currentRoute.contains("DailyLog")) {
-                    dailyLogViewModel.openSearchDialog()
-                } else {
-                    navController.navigate(Route.DailyLog(dailyLogViewModel.todayIndex()))
-                    dailyLogViewModel.openSearchDialog()
-                }
+                navController.navigate(Route.DailyLog(dayIndex = TODAY_INDEX, openSearch = true))
             }
             QuickAction.START_WORKOUT -> {
                 navController.navigate(Route.IndoorActivities)
@@ -82,9 +69,8 @@ fun App() {
                 val dailyLog = backStackEntry.toRoute<Route.DailyLog>()
                 DailyLogScreen(
                     dayIndex = dailyLog.dayIndex,
-                    onBackClick = { navController.popBackStack() },
-                    foodViewModel = foodViewModel,
-                    dailyLogViewModel = dailyLogViewModel
+                    openSearch = dailyLog.openSearch,
+                    onBackClick = { navController.popBackStack() }
                 )
             }
         }

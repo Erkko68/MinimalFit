@@ -2,6 +2,7 @@ package eric.bitria.minimalfit.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import eric.bitria.minimalfit.data.datasource.FoodDatabase
 import eric.bitria.minimalfit.data.model.Meal
 import eric.bitria.minimalfit.data.repository.JournalRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,11 +14,15 @@ import java.time.LocalDate
 
 data class DailyLogUiState(
     val meals: List<Meal> = emptyList(),
+    val savedMeals: List<Meal> = emptyList(),
     val calorieGoal: Int = 2500,
     val showSearchDialog: Boolean = false
 )
 
-class DailyLogViewModel(private val journal: JournalRepository) : ViewModel() {
+class DailyLogViewModel(
+    private val journal: JournalRepository,
+    private val foodDatabase: FoodDatabase
+) : ViewModel() {
 
     private val _showDialog = MutableStateFlow(false)
 
@@ -27,6 +32,7 @@ class DailyLogViewModel(private val journal: JournalRepository) : ViewModel() {
             val log = journal.getLog(date)
             DailyLogUiState(
                 meals = log.meals,
+                savedMeals = foodDatabase.meals,
                 calorieGoal = log.calorieGoal,
                 showSearchDialog = showDialog
             )
@@ -35,6 +41,7 @@ class DailyLogViewModel(private val journal: JournalRepository) : ViewModel() {
             started = SharingStarted.WhileSubscribed(5_000),
             initialValue = DailyLogUiState(
                 meals = journal.getLog(date).meals,
+                savedMeals = foodDatabase.meals,
                 calorieGoal = journal.getLog(date).calorieGoal
             )
         )
@@ -51,8 +58,6 @@ class DailyLogViewModel(private val journal: JournalRepository) : ViewModel() {
     fun addMeal(dayIndex: Int, meal: Meal) {
         journal.addMeal(dateForIndex(dayIndex), meal)
     }
-
-    fun todayIndex(): Int = journal.todayIndex()
 
     private fun dateForIndex(dayIndex: Int): LocalDate =
         journal.last7Days().getOrElse(dayIndex) { LocalDate.now() }

@@ -2,6 +2,7 @@ package eric.bitria.minimalfit.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import eric.bitria.minimalfit.data.datasource.FoodDatabase
 import eric.bitria.minimalfit.data.model.Meal
 import eric.bitria.minimalfit.data.repository.JournalRepository
 import kotlinx.coroutines.flow.SharingStarted
@@ -21,7 +22,10 @@ data class FoodUiState(
     val savedMeals: List<Meal> = emptyList()
 )
 
-class FoodViewModel(private val journal: JournalRepository) : ViewModel() {
+class FoodViewModel(
+    private val journal: JournalRepository,
+    private val foodDatabase: FoodDatabase
+) : ViewModel() {
 
     val uiState: StateFlow<FoodUiState> = journal.logs
         .map { _ ->
@@ -36,7 +40,7 @@ class FoodViewModel(private val journal: JournalRepository) : ViewModel() {
                         goalCalories = log.calorieGoal
                     )
                 },
-                savedMeals = journal.catalogue
+                savedMeals = foodDatabase.meals
             )
         }
         .stateIn(
@@ -51,7 +55,7 @@ class FoodViewModel(private val journal: JournalRepository) : ViewModel() {
                         goalCalories = 2500
                     )
                 },
-                savedMeals = journal.catalogue
+                savedMeals = foodDatabase.meals
             )
         )
 }

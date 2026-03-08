@@ -9,6 +9,6 @@ enum class QuickAction(
     val label: String,
     val icon: ImageVector
 ) {
-    ADD_MEAL("Register Meal", Icons.Default.Restaurant),
+    ADD_MEAL("Register Today's Meal", Icons.Default.Restaurant),
     START_WORKOUT("Start Workout", Icons.AutoMirrored.Filled.DirectionsRun)
 }

@@ -49,7 +49,7 @@ fun DailyProgressPager(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f),
-            contentPadding = PaddingValues(horizontal = Spacing.xl * 2),
+            contentPadding = PaddingValues(horizontal = Spacing.xxxl),
             pageSpacing = Spacing.m
         ) { pageIndex ->
             val dailyData = uiState.weeklyProgress[pageIndex]

@@ -30,15 +30,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
 import eric.bitria.minimalfit.ui.theme.Spacing
 import eric.bitria.minimalfit.ui.viewmodels.FoodUiState
+import java.time.LocalDate
 import kotlin.math.absoluteValue
 
 @Composable
 fun DailyProgressPager(
     uiState: FoodUiState,
-    onDayClick: (Int) -> Unit,
+    dates: List<LocalDate>,
+    onDayClick: (LocalDate) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val pagerState = rememberPagerState(pageCount = { uiState.weeklyProgress.size })
+    val pagerState = rememberPagerState(
+        initialPage = (uiState.weeklyProgress.size - 1).coerceAtLeast(0),
+        pageCount = { uiState.weeklyProgress.size }
+    )
 
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -81,7 +86,7 @@ fun DailyProgressPager(
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null,
-                        onClick = { onDayClick(pageIndex) }
+                        onClick = { onDayClick(dates[pageIndex]) }
                     )
             ) {
                 DailyCalorieCircleCard(dailyData, progress)

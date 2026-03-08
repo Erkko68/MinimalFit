@@ -7,23 +7,36 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.em
+import eric.bitria.minimalfit.data.repository.FoodCatalogRepository
 import eric.bitria.minimalfit.ui.components.food.DailyProgressPager
 import eric.bitria.minimalfit.ui.components.food.MealsStaggeredGrid
 import eric.bitria.minimalfit.ui.theme.Spacing
+import eric.bitria.minimalfit.ui.util.WeekViewHelper
 import eric.bitria.minimalfit.ui.viewmodels.FoodViewModel
 import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
+import java.time.LocalDate
 
 @Composable
 fun FoodScreen(
-    onNavigateToDailyLog: (Int) -> Unit,
-    viewModel: FoodViewModel = koinViewModel()
+    onNavigateToDailyLog: (LocalDate) -> Unit,
+    viewModel: FoodViewModel = koinViewModel(),
+    weekViewHelper: WeekViewHelper = koinInject(),
+    foodCatalog: FoodCatalogRepository = koinInject()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val weekDates = weekViewHelper.last7Days()
+
+    // Refresh data when screen becomes visible
+    LaunchedEffect(Unit) {
+        viewModel.refresh()
+    }
 
     Column(
         modifier = Modifier
@@ -32,6 +45,7 @@ fun FoodScreen(
     ) {
         DailyProgressPager(
             uiState = uiState,
+            dates = weekDates,
             onDayClick = onNavigateToDailyLog,
             modifier = Modifier.weight(0.42f)
         )
@@ -48,7 +62,7 @@ fun FoodScreen(
         )
 
         MealsStaggeredGrid(
-            meals = uiState.savedMeals,
+            meals = foodCatalog.getAllMeals(),
             modifier = Modifier
                 .weight(1f)
         )

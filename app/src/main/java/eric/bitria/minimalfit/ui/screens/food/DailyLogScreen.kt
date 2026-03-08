@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.em
+import eric.bitria.minimalfit.data.repository.FoodCatalogRepository
 import eric.bitria.minimalfit.ui.components.food.AddEntryFab
 import eric.bitria.minimalfit.ui.components.food.DailyCalorieCircleCard
 import eric.bitria.minimalfit.ui.components.food.EmptyMealsPlaceholder
@@ -30,19 +31,20 @@ import eric.bitria.minimalfit.ui.components.food.dialogs.MealSearchDialog
 import eric.bitria.minimalfit.ui.theme.Spacing
 import eric.bitria.minimalfit.ui.viewmodels.DailyCalorieData
 import eric.bitria.minimalfit.ui.viewmodels.DailyLogViewModel
-import eric.bitria.minimalfit.ui.viewmodels.FoodViewModel
 import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
+import org.koin.core.parameter.parametersOf
+import java.time.LocalDate
 
 @Composable
 fun DailyLogScreen(
-    dayIndex: Int,
+    date: LocalDate,
     openSearch: Boolean = false,
     onBackClick: () -> Unit,
-    foodViewModel: FoodViewModel = koinViewModel(),
-    dailyLogViewModel: DailyLogViewModel = koinViewModel()
+    dailyLogViewModel: DailyLogViewModel = koinViewModel { parametersOf(date) },
+    foodCatalog: FoodCatalogRepository = koinInject()
 ) {
-    val foodState by foodViewModel.uiState.collectAsState()
-    val dailyLogState by dailyLogViewModel.buildUiState(dayIndex).collectAsState()
+    val uiState by dailyLogViewModel.uiState.collectAsState()
 
     LaunchedEffect(openSearch) {
         if (openSearch) {
@@ -50,12 +52,16 @@ fun DailyLogScreen(
         }
     }
 
-    val dailyData: DailyCalorieData? = foodState.weeklyProgress.getOrNull(dayIndex)
+    val progress = if (uiState.calorieGoal > 0) {
+        uiState.meals.sumOf { it.calories }.toFloat() / uiState.calorieGoal
+    } else 0f
 
-    if (dailyData != null) {
-        val progress = if (dailyData.goalCalories > 0) {
-            dailyData.currentCalories.toFloat() / dailyData.goalCalories
-        } else 0f
+    val dailyData = DailyCalorieData(
+        dayLabel = date.dayOfWeek.name.take(3),
+        dayNumber = date.dayOfMonth,
+        currentCalories = uiState.meals.sumOf { it.calories },
+        goalCalories = uiState.calorieGoal
+    )
 
         Scaffold(
             floatingActionButtonPosition = FabPosition.Center,
@@ -104,23 +110,23 @@ fun DailyLogScreen(
                     modifier = Modifier.padding(bottom = Spacing.s)
                 )
 
-                if (dailyLogState.meals.isEmpty()) {
+                if (uiState.meals.isEmpty()) {
                     EmptyMealsPlaceholder()
                 } else {
                     MealsStaggeredGrid(
-                        meals = dailyLogState.meals,
+                        meals = uiState.meals,
                         modifier = Modifier.fillMaxSize()
                     )
                 }
             }
         }
-    }
 
-    if (dailyLogState.showSearchDialog) {
+
+    if (uiState.showSearchDialog) {
         MealSearchDialog(
-            savedMeals = dailyLogState.savedMeals,
+            savedMeals = foodCatalog.getAllMeals(),
             onDismiss = { dailyLogViewModel.dismissSearchDialog() },
-            onAddMeal = { meal -> dailyLogViewModel.addMeal(dayIndex, meal) }
+            onAddMeal = { meal -> dailyLogViewModel.addMeal(meal) }
         )
     }
 }

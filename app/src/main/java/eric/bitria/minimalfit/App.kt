@@ -24,8 +24,7 @@ import eric.bitria.minimalfit.ui.screens.ProfileScreen
 import eric.bitria.minimalfit.ui.screens.SettingsScreen
 import eric.bitria.minimalfit.ui.screens.food.DailyLogScreen
 import eric.bitria.minimalfit.ui.screens.food.FoodScreen
-
-private const val TODAY_INDEX = 6
+import java.time.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,7 +36,7 @@ fun App() {
     fun handleQuickAction(action: QuickAction) {
         when (action) {
             QuickAction.ADD_MEAL -> {
-                navController.navigate(Route.DailyLog(dayIndex = TODAY_INDEX, openSearch = true))
+                navController.navigate(Route.DailyLog(date = LocalDate.now().toString(), openSearch = true))
             }
             QuickAction.START_WORKOUT -> {
                 navController.navigate(Route.IndoorActivities)
@@ -70,8 +69,8 @@ fun App() {
             composable<Route.Settings> { SettingsScreen() }
             composable<Route.Food> {
                 FoodScreen(
-                    onNavigateToDailyLog = { dayIndex ->
-                        navController.navigate(Route.DailyLog(dayIndex))
+                    onNavigateToDailyLog = { date ->
+                        navController.navigate(Route.DailyLog(date = date.toString()))
                     }
                 )
             }
@@ -80,7 +79,7 @@ fun App() {
             composable<Route.DailyLog> { backStackEntry ->
                 val dailyLog = backStackEntry.toRoute<Route.DailyLog>()
                 DailyLogScreen(
-                    dayIndex = dailyLog.dayIndex,
+                    date = LocalDate.parse(dailyLog.date),
                     openSearch = dailyLog.openSearch,
                     onBackClick = { navController.popBackStack() }
                 )

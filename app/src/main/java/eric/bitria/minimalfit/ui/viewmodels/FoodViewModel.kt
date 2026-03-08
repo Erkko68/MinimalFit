@@ -1,14 +1,12 @@
 package eric.bitria.minimalfit.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import eric.bitria.minimalfit.data.datasource.FoodDatabase
-import eric.bitria.minimalfit.data.model.Meal
 import eric.bitria.minimalfit.data.repository.JournalRepository
-import kotlinx.coroutines.flow.SharingStarted
+import eric.bitria.minimalfit.ui.util.WeekViewHelper
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 
 data class DailyCalorieData(
     val dayLabel: String,
@@ -18,44 +16,34 @@ data class DailyCalorieData(
 )
 
 data class FoodUiState(
-    val weeklyProgress: List<DailyCalorieData> = emptyList(),
-    val savedMeals: List<Meal> = emptyList()
+    val weeklyProgress: List<DailyCalorieData> = emptyList()
 )
 
 class FoodViewModel(
     private val journal: JournalRepository,
-    private val foodDatabase: FoodDatabase
+    private val weekViewHelper: WeekViewHelper
 ) : ViewModel() {
 
-    val uiState: StateFlow<FoodUiState> = journal.logs
-        .map { _ ->
-            val days = journal.last7Days()
-            FoodUiState(
-                weeklyProgress = days.map { date ->
-                    val log = journal.getLog(date)
-                    DailyCalorieData(
-                        dayLabel = journal.dayLabel(date),
-                        dayNumber = date.dayOfMonth,
-                        currentCalories = log.totalCalories,
-                        goalCalories = log.calorieGoal
-                    )
-                },
-                savedMeals = foodDatabase.meals
-            )
-        }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = FoodUiState(
-                weeklyProgress = journal.last7Days().map { date ->
-                    DailyCalorieData(
-                        dayLabel = journal.dayLabel(date),
-                        dayNumber = date.dayOfMonth,
-                        currentCalories = 0,
-                        goalCalories = 2500
-                    )
-                },
-                savedMeals = foodDatabase.meals
-            )
+    private val _uiState = MutableStateFlow(buildInitialState())
+    val uiState: StateFlow<FoodUiState> = _uiState.asStateFlow()
+
+    private fun buildInitialState(): FoodUiState {
+        val days = weekViewHelper.last7Days()
+        return FoodUiState(
+            weeklyProgress = days.map { date ->
+                val log = journal.getLog(date)
+                DailyCalorieData(
+                    dayLabel = weekViewHelper.dayLabel(date),
+                    dayNumber = date.dayOfMonth,
+                    currentCalories = log.totalCalories,
+                    goalCalories = log.calorieGoal
+                )
+            }
         )
+    }
+
+    /** Call this to refresh the weekly data after mutations. */
+    fun refresh() {
+        _uiState.update { buildInitialState() }
+    }
 }

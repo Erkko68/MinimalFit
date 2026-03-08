@@ -5,8 +5,6 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
@@ -25,59 +23,51 @@ import eric.bitria.minimalfit.ui.viewmodels.DailyCalorieData
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun DailyCalorieCircleCard(dailyData: DailyCalorieData, progress: Float, modifier: Modifier = Modifier) {
-    Card(
+    BoxWithConstraints(
         modifier = modifier.fillMaxSize(),
-        shape = MaterialTheme.shapes.extraLarge,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
-        ),
+        contentAlignment = Alignment.Center
     ) {
-        BoxWithConstraints(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
+        val cardSize = min(maxWidth, maxHeight)
+        val indicatorSize = cardSize * 0.95f
+        val strokeWidthPx = with(LocalDensity.current) { (cardSize * 0.05f).toPx() }
+        val waveLengthDp = cardSize * 0.25f
+
+        CircularWavyProgressIndicator(
+            progress = { progress.coerceIn(0f, 1f) },
+            modifier = Modifier.size(indicatorSize),
+            color = MaterialTheme.colorScheme.primary,
+            trackColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+            stroke = Stroke(width = strokeWidthPx),
+            trackStroke = Stroke(width = strokeWidthPx),
+            wavelength = waveLengthDp
+        )
+
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(Spacing.xs)
         ) {
-            val cardSize = min(maxWidth, maxHeight)
-            val indicatorSize = cardSize * 0.95f
-            val strokeWidthPx = with(LocalDensity.current) { (cardSize * 0.05f).toPx() }
-            val waveLengthDp = cardSize * 0.25f
-
-            CircularWavyProgressIndicator(
-                progress = { progress.coerceIn(0f, 1f) },
-                modifier = Modifier.size(indicatorSize),
+            Text(
+                text = dailyData.dayLabel,
+                style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                stroke = Stroke(width = strokeWidthPx),
-                trackStroke = Stroke(width = strokeWidthPx),
-                wavelength = waveLengthDp
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 0.08.em
             )
-
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(Spacing.xs)
-            ) {
-                Text(
-                    text = dailyData.dayName,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 0.08.em
-                )
-                Text(
-                    text = dailyData.dayNumber.toString(),
-                    style = MaterialTheme.typography.headlineLarge,
-                    fontWeight = FontWeight.Black
-                )
-                Text(
-                    text = "${dailyData.currentCalories}",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.ExtraBold
-                )
-                Text(
-                    text = "kcal",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+            Text(
+                text = dailyData.dayNumber.toString(),
+                style = MaterialTheme.typography.headlineLarge,
+                fontWeight = FontWeight.Black
+            )
+            Text(
+                text = "${dailyData.currentCalories}",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.ExtraBold
+            )
+            Text(
+                text = "kcal",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }

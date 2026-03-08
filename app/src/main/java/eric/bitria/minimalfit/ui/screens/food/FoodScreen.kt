@@ -25,8 +25,11 @@ fun FoodScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    Column(modifier = Modifier.fillMaxSize()) {
-
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = Spacing.m)
+    ) {
         DailyProgressPager(
             uiState = uiState,
             onDayClick = onNavigateToDailyLog,
@@ -41,12 +44,13 @@ fun FoodScreen(
             color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = Spacing.m, vertical = Spacing.s)
+                .padding(vertical = Spacing.s)
         )
 
         MealsStaggeredGrid(
             meals = uiState.savedMeals,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier
+                .weight(1f)
         )
     }
 }

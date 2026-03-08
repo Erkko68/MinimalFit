@@ -20,7 +20,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.em
 import coil.compose.AsyncImage
 import eric.bitria.minimalfit.ui.theme.Spacing
-import eric.bitria.minimalfit.ui.viewmodels.Meal
+import eric.bitria.minimalfit.data.model.Meal
 
 @Composable
 fun MealCard(meal: Meal) {

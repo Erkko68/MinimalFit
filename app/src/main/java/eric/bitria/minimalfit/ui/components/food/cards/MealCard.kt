@@ -1,39 +1,32 @@
 package eric.bitria.minimalfit.ui.components.food.cards
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.em
 import coil.compose.AsyncImage
-import eric.bitria.minimalfit.ui.theme.Spacing
 import eric.bitria.minimalfit.data.model.Meal
+import eric.bitria.minimalfit.ui.theme.Spacing
 
 @Composable
-fun MealCard(meal: Meal) {
+fun MealCard(
+    meal: Meal,
+    modifier: Modifier = Modifier
+) {
     val hasImage = !meal.imageUrl.isNullOrEmpty()
+    val cardShape = if (hasImage) MaterialTheme.shapes.extraLarge else MaterialTheme.shapes.large
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = if (hasImage) MaterialTheme.shapes.medium else MaterialTheme.shapes.large,
+        modifier = modifier,
+        shape = cardShape,
         colors = CardDefaults.cardColors(
-            containerColor = if (hasImage)
-                MaterialTheme.colorScheme.surfaceContainerHigh
-            else
-                MaterialTheme.colorScheme.primaryContainer
+            containerColor =
+                if (hasImage) MaterialTheme.colorScheme.surfaceContainerHigh
+                else MaterialTheme.colorScheme.primaryContainer
         )
     ) {
         Column(
@@ -60,36 +53,28 @@ fun MealCard(meal: Meal) {
             ) {
                 Text(
                     text = meal.name,
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.ExtraBold,
-                    color = if (hasImage)
-                        MaterialTheme.colorScheme.onSurface
-                    else
-                        MaterialTheme.colorScheme.onPrimaryContainer,
+                    color =
+                        if (hasImage) MaterialTheme.colorScheme.onSurface
+                        else MaterialTheme.colorScheme.onPrimaryContainer,
                     maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    lineHeight = 1.1.em,
-                    letterSpacing = (-0.02).em
+                    overflow = TextOverflow.Ellipsis
                 )
 
                 Surface(
-                    color = if (hasImage)
-                        MaterialTheme.colorScheme.primaryContainer
-                    else
-                        MaterialTheme.colorScheme.surface,
+                    color =
+                        if (hasImage) MaterialTheme.colorScheme.primaryContainer
+                        else MaterialTheme.colorScheme.surface,
                     shape = CircleShape
                 ) {
                     Text(
                         text = "${meal.calories} kcal",
-                        style = MaterialTheme.typography.labelMedium,
+                        style = MaterialTheme.typography.labelLarge,
                         modifier = Modifier.padding(
                             horizontal = Spacing.m,
                             vertical = Spacing.xs
                         ),
-                        color = if (hasImage)
-                            MaterialTheme.colorScheme.onPrimaryContainer
-                        else
-                            MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold
                     )
                 }

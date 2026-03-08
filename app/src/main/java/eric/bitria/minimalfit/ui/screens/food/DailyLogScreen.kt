@@ -25,8 +25,9 @@ import androidx.compose.ui.unit.em
 import eric.bitria.minimalfit.data.repository.FoodCatalogRepository
 import eric.bitria.minimalfit.ui.components.food.actions.AddEntryFab
 import eric.bitria.minimalfit.ui.components.food.cards.DailyCalorieCircleCard
+import eric.bitria.minimalfit.ui.components.food.cards.SwipeableMealCard
 import eric.bitria.minimalfit.ui.components.food.lists.EmptyMealsPlaceholder
-import eric.bitria.minimalfit.ui.components.food.lists.MealsStaggeredGrid
+import eric.bitria.minimalfit.ui.components.food.lists.StaggeredGrid
 import eric.bitria.minimalfit.ui.components.food.dialogs.MealSearchDialog
 import eric.bitria.minimalfit.ui.theme.Spacing
 import eric.bitria.minimalfit.ui.viewmodels.DailyCalorieData
@@ -113,9 +114,15 @@ fun DailyLogScreen(
             if (uiState.meals.isEmpty()) {
                 EmptyMealsPlaceholder()
             } else {
-                MealsStaggeredGrid(
+                StaggeredGrid(
                     meals = uiState.meals,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
+                    itemContent = { meal ->
+                        SwipeableMealCard(
+                            meal = meal,
+                            onDismiss = { dailyLogViewModel.removeMeal(meal.id) }
+                        )
+                    }
                 )
             }
         }

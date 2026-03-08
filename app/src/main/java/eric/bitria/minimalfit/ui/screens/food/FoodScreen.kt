@@ -14,8 +14,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.em
 import eric.bitria.minimalfit.data.repository.FoodCatalogRepository
+import eric.bitria.minimalfit.ui.components.food.cards.MealCard
 import eric.bitria.minimalfit.ui.components.food.progress.DailyProgressPager
-import eric.bitria.minimalfit.ui.components.food.lists.MealsStaggeredGrid
+import eric.bitria.minimalfit.ui.components.food.lists.StaggeredGrid
 import eric.bitria.minimalfit.ui.theme.Spacing
 import eric.bitria.minimalfit.ui.util.WeekViewHelper
 import eric.bitria.minimalfit.ui.viewmodels.FoodViewModel
@@ -61,10 +62,12 @@ fun FoodScreen(
                 .padding(vertical = Spacing.s)
         )
 
-        MealsStaggeredGrid(
+        StaggeredGrid(
             meals = foodCatalog.getAllMeals(),
-            modifier = Modifier
-                .weight(1f)
+            modifier = Modifier.weight(1f),
+            itemContent = { meal ->
+                MealCard(meal = meal)
+            }
         )
     }
 }

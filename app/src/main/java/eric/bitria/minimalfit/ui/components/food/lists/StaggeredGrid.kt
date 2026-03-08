@@ -7,12 +7,15 @@ import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.itemsIndexed
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import eric.bitria.minimalfit.ui.theme.Spacing
 import eric.bitria.minimalfit.data.model.Meal
-import eric.bitria.minimalfit.ui.components.food.cards.MealCard
+import eric.bitria.minimalfit.ui.theme.Spacing
 
 @Composable
-fun MealsStaggeredGrid(meals: List<Meal>, modifier: Modifier = Modifier) {
+fun StaggeredGrid(
+    meals: List<Meal>,
+    modifier: Modifier = Modifier,
+    itemContent: @Composable (Meal) -> Unit
+) {
     LazyVerticalStaggeredGrid(
         columns = StaggeredGridCells.Fixed(2),
         modifier = modifier.fillMaxSize(),
@@ -20,7 +23,7 @@ fun MealsStaggeredGrid(meals: List<Meal>, modifier: Modifier = Modifier) {
         verticalItemSpacing = Spacing.m
     ) {
         itemsIndexed(meals) { _, meal ->
-            MealCard(meal = meal)
+            itemContent(meal)
         }
     }
 }

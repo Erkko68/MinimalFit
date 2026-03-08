@@ -67,53 +67,50 @@ fun DailyLogScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(bottom = paddingValues.calculateBottomPadding())
+                    .padding(horizontal = Spacing.m)
             ) {
-                IconButton(
-                    onClick = onBackClick,
-                    modifier = Modifier.padding(start = Spacing.s, top = Spacing.s)
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Navigate back"
-                    )
-                }
-
-                Column(
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = Spacing.m)
+                        .padding(top = Spacing.s, bottom = Spacing.m)
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = Spacing.l),
-                        contentAlignment = Alignment.Center
+                    // Back button pinned to the top left
+                    IconButton(
+                        onClick = onBackClick,
+                        modifier = Modifier.align(Alignment.TopStart)
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth(0.55f)
-                                .aspectRatio(1f)
-                        ) {
-                            DailyCalorieCircleCard(dailyData, progress)
-                        }
-                    }
-
-                    Text(
-                        text = "Meals",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.ExtraBold,
-                        letterSpacing = (-0.02).em,
-                        modifier = Modifier.padding(bottom = Spacing.s)
-                    )
-
-                    if (dailyLogState.meals.isEmpty()) {
-                        EmptyMealsPlaceholder()
-                    } else {
-                        MealsStaggeredGrid(
-                            meals = dailyLogState.meals,
-                            modifier = Modifier.fillMaxSize()
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Navigate back"
                         )
                     }
+
+                    // Progress Widget pinned to the top center
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(0.5f)
+                            .aspectRatio(1f)
+                            .align(Alignment.TopCenter)
+                    ) {
+                        DailyCalorieCircleCard(dailyData, progress)
+                    }
+                }
+
+                Text(
+                    text = "Meals",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.ExtraBold,
+                    letterSpacing = (-0.02).em,
+                    modifier = Modifier.padding(bottom = Spacing.s)
+                )
+
+                if (dailyLogState.meals.isEmpty()) {
+                    EmptyMealsPlaceholder()
+                } else {
+                    MealsStaggeredGrid(
+                        meals = dailyLogState.meals,
+                        modifier = Modifier.fillMaxSize()
+                    )
                 }
             }
         }

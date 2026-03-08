@@ -1,4 +1,4 @@
-package eric.bitria.minimalfit.ui.components.food
+package eric.bitria.minimalfit.ui.components.food.actions
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add

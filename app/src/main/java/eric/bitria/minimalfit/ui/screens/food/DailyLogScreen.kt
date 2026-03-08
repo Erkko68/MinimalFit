@@ -23,10 +23,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.em
 import eric.bitria.minimalfit.data.repository.FoodCatalogRepository
-import eric.bitria.minimalfit.ui.components.food.AddEntryFab
-import eric.bitria.minimalfit.ui.components.food.DailyCalorieCircleCard
-import eric.bitria.minimalfit.ui.components.food.EmptyMealsPlaceholder
-import eric.bitria.minimalfit.ui.components.food.MealsStaggeredGrid
+import eric.bitria.minimalfit.ui.components.food.actions.AddEntryFab
+import eric.bitria.minimalfit.ui.components.food.cards.DailyCalorieCircleCard
+import eric.bitria.minimalfit.ui.components.food.lists.EmptyMealsPlaceholder
+import eric.bitria.minimalfit.ui.components.food.lists.MealsStaggeredGrid
 import eric.bitria.minimalfit.ui.components.food.dialogs.MealSearchDialog
 import eric.bitria.minimalfit.ui.theme.Spacing
 import eric.bitria.minimalfit.ui.viewmodels.DailyCalorieData
@@ -63,63 +63,63 @@ fun DailyLogScreen(
         goalCalories = uiState.calorieGoal
     )
 
-        Scaffold(
-            floatingActionButtonPosition = FabPosition.Center,
-            floatingActionButton = {
-                AddEntryFab(onClick = { dailyLogViewModel.openSearchDialog() })
-            }
-        ) { paddingValues ->
-            Column(
+    Scaffold(
+        floatingActionButtonPosition = FabPosition.Center,
+        floatingActionButton = {
+            AddEntryFab(onClick = { dailyLogViewModel.openSearchDialog() })
+        }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = paddingValues.calculateBottomPadding())
+                .padding(horizontal = Spacing.m)
+        ) {
+            Box(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(bottom = paddingValues.calculateBottomPadding())
-                    .padding(horizontal = Spacing.m)
+                    .fillMaxWidth()
+                    .padding(top = Spacing.s, bottom = Spacing.m)
             ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = Spacing.s, bottom = Spacing.m)
+                // Back button pinned to the top left
+                IconButton(
+                    onClick = onBackClick,
+                    modifier = Modifier.align(Alignment.TopStart)
                 ) {
-                    // Back button pinned to the top left
-                    IconButton(
-                        onClick = onBackClick,
-                        modifier = Modifier.align(Alignment.TopStart)
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Navigate back"
-                        )
-                    }
-
-                    // Progress Widget pinned to the top center
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth(0.5f)
-                            .aspectRatio(1f)
-                            .align(Alignment.TopCenter)
-                    ) {
-                        DailyCalorieCircleCard(dailyData, progress)
-                    }
-                }
-
-                Text(
-                    text = "Meals",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.ExtraBold,
-                    letterSpacing = (-0.02).em,
-                    modifier = Modifier.padding(bottom = Spacing.s)
-                )
-
-                if (uiState.meals.isEmpty()) {
-                    EmptyMealsPlaceholder()
-                } else {
-                    MealsStaggeredGrid(
-                        meals = uiState.meals,
-                        modifier = Modifier.fillMaxSize()
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Navigate back"
                     )
                 }
+
+                // Progress Widget pinned to the top center
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(0.5f)
+                        .aspectRatio(1f)
+                        .align(Alignment.TopCenter)
+                ) {
+                    DailyCalorieCircleCard(dailyData, progress)
+                }
+            }
+
+            Text(
+                text = "Meals",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.ExtraBold,
+                letterSpacing = (-0.02).em,
+                modifier = Modifier.padding(bottom = Spacing.s)
+            )
+
+            if (uiState.meals.isEmpty()) {
+                EmptyMealsPlaceholder()
+            } else {
+                MealsStaggeredGrid(
+                    meals = uiState.meals,
+                    modifier = Modifier.fillMaxSize()
+                )
             }
         }
+    }
 
 
     if (uiState.showSearchDialog) {

@@ -1,4 +1,4 @@
-package eric.bitria.minimalfit.ui.components.food
+package eric.bitria.minimalfit.ui.components.food.lists
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import eric.bitria.minimalfit.ui.theme.Spacing
 import eric.bitria.minimalfit.data.model.Meal
+import eric.bitria.minimalfit.ui.components.food.cards.MealCard
 
 @Composable
 fun MealsStaggeredGrid(meals: List<Meal>, modifier: Modifier = Modifier) {

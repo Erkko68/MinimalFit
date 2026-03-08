@@ -1,4 +1,4 @@
-package eric.bitria.minimalfit.ui.components.food
+package eric.bitria.minimalfit.ui.components.food.progress
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
+import eric.bitria.minimalfit.ui.components.food.cards.DailyCalorieCircleCard
 import eric.bitria.minimalfit.ui.theme.Spacing
 import eric.bitria.minimalfit.ui.viewmodels.FoodUiState
 import java.time.LocalDate

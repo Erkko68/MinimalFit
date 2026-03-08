@@ -1,6 +1,5 @@
 package eric.bitria.minimalfit.ui.components.food.cards
 
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -27,6 +26,7 @@ import androidx.compose.ui.layout.onSizeChanged
 import eric.bitria.minimalfit.data.model.Meal
 import eric.bitria.minimalfit.ui.theme.Spacing
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 // ─── Delete background ────────────────────────────────────────────────────────
@@ -42,13 +42,8 @@ private fun SwipeDeleteBackground(
     val alignment = if (offsetX > 0) Alignment.CenterStart else Alignment.CenterEnd
 
     // Dynamic background color that intensifies as user drags closer to threshold
-    val backgroundColor by animateColorAsState(
-        targetValue = if (progress >= 1f) {
-            MaterialTheme.colorScheme.error
-        } else {
-            MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.6f + (progress * 0.4f))
-        },
-        label = "BackgroundColor"
+    val backgroundColor = MaterialTheme.colorScheme.errorContainer.copy(
+        alpha = 0.6f + (progress * 0.4f)
     )
 
     val iconScale by animateFloatAsState(
@@ -79,7 +74,7 @@ private fun SwipeDeleteBackground(
         Icon(
             imageVector = Icons.Outlined.Delete,
             contentDescription = "Delete",
-            tint = if (progress >= 1f) MaterialTheme.colorScheme.onError else MaterialTheme.colorScheme.onErrorContainer,
+            tint = MaterialTheme.colorScheme.onErrorContainer,
             modifier = Modifier
                 .scale(iconScale)
                 .graphicsLayer { rotationZ = iconRotation }
@@ -114,6 +109,14 @@ fun SwipeableMealCard(
         animationSpec = tween(durationMillis = 300),
         label = "BackgroundFadeOut"
     )
+
+    // Fire onDismiss after the slide-off and fade-out animations finish
+    LaunchedEffect(isDismissed) {
+        if (isDismissed) {
+            delay(300)
+            onDismiss()
+        }
+    }
 
     Box(
         modifier = modifier
@@ -166,7 +169,6 @@ fun SwipeableMealCard(
                                                 stiffness = Spring.StiffnessMedium
                                             )
                                         )
-                                        onDismiss()
                                     }
                                 } else {
                                     launch {

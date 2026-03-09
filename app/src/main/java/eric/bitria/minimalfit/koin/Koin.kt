@@ -10,6 +10,7 @@ import eric.bitria.minimalfit.data.repository.TrackRepository
 import eric.bitria.minimalfit.ui.util.WeekViewHelper
 import eric.bitria.minimalfit.ui.viewmodels.food.DailyLogViewModel
 import eric.bitria.minimalfit.ui.viewmodels.food.FoodViewModel
+import eric.bitria.minimalfit.ui.viewmodels.track.TrackDetailViewModel
 import eric.bitria.minimalfit.ui.viewmodels.track.TrackScreen
 import org.koin.core.context.startKoin
 import org.koin.core.module.dsl.singleOf
@@ -37,6 +38,9 @@ val viewModels = module {
         DailyLogViewModel(date = date, journal = get())
     }
     viewModelOf(::TrackScreen)
+    viewModel { (trackId: String) ->
+        TrackDetailViewModel(trackId = trackId, repository = get())
+    }
 }
 
 fun initKoin(appDeclaration: KoinAppDeclaration = {}) {

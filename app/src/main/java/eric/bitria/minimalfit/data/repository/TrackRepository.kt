@@ -14,8 +14,14 @@ interface TrackRepository {
     /** Returns activities for a specific date. */
     fun getActivitiesForDate(date: LocalDate): List<Track>
 
+    /** Returns a specific activity by id. */
+    fun getTrackById(id: String): Track?
+
     /** Adds a new activity. */
     fun addActivity(activity: Track)
+
+    /** Updates an existing activity. */
+    fun updateActivity(activity: Track)
 
     /** Deletes an activity by id. */
     fun deleteActivity(id: String)

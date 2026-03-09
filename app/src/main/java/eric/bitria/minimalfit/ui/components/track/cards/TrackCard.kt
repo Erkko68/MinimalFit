@@ -31,9 +31,11 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun TrackCard(
     track: Track,
+    onClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Card(
+        onClick = onClick,
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(30),
         colors = CardDefaults.cardColors(

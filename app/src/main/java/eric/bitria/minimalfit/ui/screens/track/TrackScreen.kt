@@ -23,6 +23,7 @@ import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun TrackScreen(
+    onTrackClick: (String) -> Unit = {},
     viewModel: TrackScreen = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -52,7 +53,10 @@ fun TrackScreen(
                 SwipeToDeleteCard(
                     onDismiss = { viewModel.deleteActivity(track.id) }
                 ) {
-                    TrackCard(track = track)
+                    TrackCard(
+                        track = track,
+                        onClick = { onTrackClick(track.id) }
+                    )
                 }
             }
         }

@@ -1,5 +1,6 @@
 package eric.bitria.minimalfit
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -20,6 +21,7 @@ import eric.bitria.minimalfit.navigation.composables.BottomNavigationBar
 import eric.bitria.minimalfit.navigation.composables.QuickActionButton
 import eric.bitria.minimalfit.ui.screens.IndoorActivitiesScreen
 import eric.bitria.minimalfit.ui.screens.track.TrackScreen
+import eric.bitria.minimalfit.ui.screens.track.TrackDetailScreen
 import eric.bitria.minimalfit.ui.screens.ProfileScreen
 import eric.bitria.minimalfit.ui.screens.SettingsScreen
 import eric.bitria.minimalfit.ui.screens.food.DailyLogScreen
@@ -61,28 +63,57 @@ fun App() {
         NavHost(
             navController = navController,
             startDestination = Route.Food,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(contentPadding)
+            modifier = Modifier.fillMaxSize()
         ) {
-            composable<Route.Profile> { ProfileScreen() }
-            composable<Route.Settings> { SettingsScreen() }
+            composable<Route.Profile> {
+                Box(Modifier.padding(contentPadding)) {
+                    ProfileScreen()
+                }
+            }
+            composable<Route.Settings> {
+                Box(Modifier.padding(contentPadding)) {
+                    SettingsScreen()
+                }
+            }
             composable<Route.Food> {
-                FoodScreen(
-                    onNavigateToDailyLog = { date ->
-                        navController.navigate(Route.DailyLog(date = date.toString()))
-                    }
+                Box(Modifier.padding(contentPadding)) {
+                    FoodScreen(
+                        onNavigateToDailyLog = { date ->
+                            navController.navigate(Route.DailyLog(date = date.toString()))
+                        }
+                    )
+                }
+            }
+            composable<Route.OutdoorActivities> {
+                Box(Modifier.padding(contentPadding)) {
+                    TrackScreen(
+                        onTrackClick = { trackId ->
+                            navController.navigate(Route.TrackDetail(trackId = trackId))
+                        }
+                    )
+                }
+            }
+            composable<Route.IndoorActivities> {
+                Box(Modifier.padding(contentPadding)) {
+                    IndoorActivitiesScreen()
+                }
+            }
+            composable<Route.TrackDetail> { backStackEntry ->
+                val trackDetail = backStackEntry.toRoute<Route.TrackDetail>()
+                TrackDetailScreen(
+                    trackId = trackDetail.trackId,
+                    onNavigateBack = { navController.popBackStack() }
                 )
             }
-            composable<Route.OutdoorActivities> { TrackScreen() }
-            composable<Route.IndoorActivities> { IndoorActivitiesScreen() }
             composable<Route.DailyLog> { backStackEntry ->
-                val dailyLog = backStackEntry.toRoute<Route.DailyLog>()
-                DailyLogScreen(
-                    date = LocalDate.parse(dailyLog.date),
-                    openSearch = dailyLog.openSearch,
-                    onBackClick = { navController.popBackStack() }
-                )
+                Box(Modifier.padding(contentPadding)) {
+                    val dailyLog = backStackEntry.toRoute<Route.DailyLog>()
+                    DailyLogScreen(
+                        date = LocalDate.parse(dailyLog.date),
+                        openSearch = dailyLog.openSearch,
+                        onBackClick = { navController.popBackStack() }
+                    )
+                }
             }
         }
     }

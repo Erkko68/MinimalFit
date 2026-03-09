@@ -25,7 +25,7 @@ class InMemoryTrackRepository : TrackRepository {
                     name = "Evening Run",
                     distance = 5.2,
                     duration = 30.minutes,
-                    pace = "5:46 min/km",
+                    pace = "5:46",
                     mapImageUrl = "https://picsum.photos/600/400"
                 ),
                 Track(
@@ -35,7 +35,7 @@ class InMemoryTrackRepository : TrackRepository {
                     name = "Morning Walk",
                     distance = 3.1,
                     duration = 45.minutes,
-                    pace = "14:31 min/km",
+                    pace = "14:31",
                     mapImageUrl = "https://picsum.photos/600/400"
                 )
             )
@@ -47,9 +47,19 @@ class InMemoryTrackRepository : TrackRepository {
     override fun getActivitiesForDate(date: LocalDate): List<Track> =
         activities.filter { it.date == date }
 
+    override fun getTrackById(id: String): Track? =
+        activities.find { it.id == id }
+
     override fun addActivity(activity: Track) {
         val newActivity = activity.copy(id = idCounter.getAndIncrement().toString())
         activities.add(newActivity)
+    }
+
+    override fun updateActivity(activity: Track) {
+        val index = activities.indexOfFirst { it.id == activity.id }
+        if (index != -1) {
+            activities[index] = activity
+        }
     }
 
     override fun deleteActivity(id: String) {

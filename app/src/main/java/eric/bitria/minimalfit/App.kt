@@ -99,11 +99,13 @@ fun App() {
                 }
             }
             composable<Route.TrackDetail> { backStackEntry ->
-                val trackDetail = backStackEntry.toRoute<Route.TrackDetail>()
-                TrackDetailScreen(
-                    trackId = trackDetail.trackId,
-                    onNavigateBack = { navController.popBackStack() }
-                )
+                Box(Modifier.padding(bottom = contentPadding.calculateBottomPadding())) {
+                    val trackDetail = backStackEntry.toRoute<Route.TrackDetail>()
+                    TrackDetailScreen(
+                        trackId = trackDetail.trackId,
+                        onNavigateBack = { navController.popBackStack() }
+                    )
+                }
             }
             composable<Route.DailyLog> { backStackEntry ->
                 Box(Modifier.padding(contentPadding)) {

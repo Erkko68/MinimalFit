@@ -1,4 +1,4 @@
-package eric.bitria.minimalfit.ui.viewmodels
+package eric.bitria.minimalfit.ui.viewmodels.food
 
 import androidx.lifecycle.ViewModel
 import eric.bitria.minimalfit.data.repository.JournalRepository

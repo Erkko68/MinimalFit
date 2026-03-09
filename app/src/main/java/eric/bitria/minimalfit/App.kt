@@ -19,7 +19,7 @@ import eric.bitria.minimalfit.navigation.Route
 import eric.bitria.minimalfit.navigation.composables.BottomNavigationBar
 import eric.bitria.minimalfit.navigation.composables.QuickActionButton
 import eric.bitria.minimalfit.ui.screens.IndoorActivitiesScreen
-import eric.bitria.minimalfit.ui.screens.OutdoorActivitiesScreen
+import eric.bitria.minimalfit.ui.screens.track.TrackScreen
 import eric.bitria.minimalfit.ui.screens.ProfileScreen
 import eric.bitria.minimalfit.ui.screens.SettingsScreen
 import eric.bitria.minimalfit.ui.screens.food.DailyLogScreen
@@ -74,7 +74,7 @@ fun App() {
                     }
                 )
             }
-            composable<Route.OutdoorActivities> { OutdoorActivitiesScreen() }
+            composable<Route.OutdoorActivities> { TrackScreen() }
             composable<Route.IndoorActivities> { IndoorActivitiesScreen() }
             composable<Route.DailyLog> { backStackEntry ->
                 val dailyLog = backStackEntry.toRoute<Route.DailyLog>()

@@ -19,7 +19,7 @@ import eric.bitria.minimalfit.ui.components.food.progress.DailyProgressPager
 import eric.bitria.minimalfit.ui.components.food.lists.StaggeredGrid
 import eric.bitria.minimalfit.ui.theme.Spacing
 import eric.bitria.minimalfit.ui.util.WeekViewHelper
-import eric.bitria.minimalfit.ui.viewmodels.FoodViewModel
+import eric.bitria.minimalfit.ui.viewmodels.food.FoodViewModel
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 import java.time.LocalDate

@@ -18,7 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.min
 import eric.bitria.minimalfit.ui.theme.Spacing
-import eric.bitria.minimalfit.ui.viewmodels.DailyCalorieData
+import eric.bitria.minimalfit.ui.viewmodels.food.DailyCalorieData
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable

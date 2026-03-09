@@ -4,10 +4,13 @@ import eric.bitria.minimalfit.data.datasource.FoodDatabase
 import eric.bitria.minimalfit.data.repository.FoodCatalogRepository
 import eric.bitria.minimalfit.data.repository.InMemoryFoodCatalogRepository
 import eric.bitria.minimalfit.data.repository.InMemoryJournalRepository
+import eric.bitria.minimalfit.data.repository.InMemoryTrackRepository
 import eric.bitria.minimalfit.data.repository.JournalRepository
+import eric.bitria.minimalfit.data.repository.TrackRepository
 import eric.bitria.minimalfit.ui.util.WeekViewHelper
-import eric.bitria.minimalfit.ui.viewmodels.DailyLogViewModel
-import eric.bitria.minimalfit.ui.viewmodels.FoodViewModel
+import eric.bitria.minimalfit.ui.viewmodels.food.DailyLogViewModel
+import eric.bitria.minimalfit.ui.viewmodels.food.FoodViewModel
+import eric.bitria.minimalfit.ui.viewmodels.track.TrackScreen
 import org.koin.core.context.startKoin
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModel
@@ -21,6 +24,7 @@ val dataModule = module {
     singleOf(::FoodDatabase)
     singleOf(::InMemoryJournalRepository) bind JournalRepository::class
     singleOf(::InMemoryFoodCatalogRepository) bind FoodCatalogRepository::class
+    singleOf(::InMemoryTrackRepository) bind TrackRepository::class
 }
 
 val utilModule = module {
@@ -32,6 +36,7 @@ val viewModels = module {
     viewModel { (date: LocalDate) ->
         DailyLogViewModel(date = date, journal = get())
     }
+    viewModelOf(::TrackScreen)
 }
 
 fun initKoin(appDeclaration: KoinAppDeclaration = {}) {

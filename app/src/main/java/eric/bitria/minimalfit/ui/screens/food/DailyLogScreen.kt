@@ -23,15 +23,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.em
 import eric.bitria.minimalfit.data.repository.FoodCatalogRepository
+import eric.bitria.minimalfit.ui.components.animations.SwipeToDeleteCard
 import eric.bitria.minimalfit.ui.components.food.actions.AddEntryFab
 import eric.bitria.minimalfit.ui.components.food.cards.DailyCalorieCircleCard
-import eric.bitria.minimalfit.ui.components.food.cards.SwipeableMealCard
+import eric.bitria.minimalfit.ui.components.food.cards.MealCard
 import eric.bitria.minimalfit.ui.components.food.lists.EmptyMealsPlaceholder
 import eric.bitria.minimalfit.ui.components.food.lists.StaggeredGrid
 import eric.bitria.minimalfit.ui.components.food.dialogs.MealSearchDialog
 import eric.bitria.minimalfit.ui.theme.Spacing
-import eric.bitria.minimalfit.ui.viewmodels.DailyCalorieData
-import eric.bitria.minimalfit.ui.viewmodels.DailyLogViewModel
+import eric.bitria.minimalfit.ui.viewmodels.food.DailyCalorieData
+import eric.bitria.minimalfit.ui.viewmodels.food.DailyLogViewModel
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 import org.koin.core.parameter.parametersOf
@@ -118,10 +119,11 @@ fun DailyLogScreen(
                     meals = uiState.meals,
                     modifier = Modifier.fillMaxSize(),
                     itemContent = { meal ->
-                        SwipeableMealCard(
-                            meal = meal,
+                        SwipeToDeleteCard(
                             onDismiss = { dailyLogViewModel.removeMeal(meal.id) }
-                        )
+                        ) {
+                            MealCard(meal = meal)
+                        }
                     }
                 )
             }

@@ -1,4 +1,4 @@
-package eric.bitria.minimalfit.ui.components.food.cards
+package eric.bitria.minimalfit.ui.components.animations
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
@@ -23,7 +23,6 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.layout.onSizeChanged
-import eric.bitria.minimalfit.data.model.Meal
 import eric.bitria.minimalfit.ui.theme.Spacing
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
@@ -85,14 +84,11 @@ private fun SwipeDeleteBackground(
 // ─── Swipeable wrapper ────────────────────────────────────────────────────────
 
 @Composable
-fun SwipeableMealCard(
-    meal: Meal,
+fun SwipeToDeleteCard(
     onDismiss: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
 ) {
-    val hasImage = !meal.imageUrl.isNullOrEmpty()
-    val cardShape = if (hasImage) MaterialTheme.shapes.extraLarge else MaterialTheme.shapes.large
-
     val offsetX = remember { Animatable(0f) }
     var cardWidth by remember { mutableIntStateOf(0) }
     var isDismissed by remember { mutableStateOf(false) }
@@ -121,7 +117,7 @@ fun SwipeableMealCard(
     Box(
         modifier = modifier
             .onSizeChanged { cardWidth = it.width }
-            .clip(cardShape)
+            .clip(MaterialTheme.shapes.large) // Default shape, can be overridden
             .graphicsLayer { alpha = backgroundAlpha }
     ) {
         // Background fills the same space as the card (matchParentSize = size of the Box
@@ -133,8 +129,7 @@ fun SwipeableMealCard(
         )
 
         // Foreground card slides over the background
-        MealCard(
-            meal = meal,
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .graphicsLayer {
@@ -203,6 +198,8 @@ fun SwipeableMealCard(
                         )
                     }
                 }
-        )
+        ) {
+            content()
+        }
     }
 }

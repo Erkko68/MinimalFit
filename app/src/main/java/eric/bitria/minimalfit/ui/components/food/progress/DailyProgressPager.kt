@@ -30,7 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
 import eric.bitria.minimalfit.ui.components.food.cards.DailyCalorieCircleCard
 import eric.bitria.minimalfit.ui.theme.Spacing
-import eric.bitria.minimalfit.ui.viewmodels.FoodUiState
+import eric.bitria.minimalfit.ui.viewmodels.food.FoodUiState
 import java.time.LocalDate
 import kotlin.math.absoluteValue
 

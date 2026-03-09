@@ -117,7 +117,7 @@ fun SwipeToDeleteCard(
     Box(
         modifier = modifier
             .onSizeChanged { cardWidth = it.width }
-            .clip(MaterialTheme.shapes.large) // Default shape, can be overridden
+            .clip(MaterialTheme.shapes.extraLarge) // Default shape, can be overridden
             .graphicsLayer { alpha = backgroundAlpha }
     ) {
         // Background fills the same space as the card (matchParentSize = size of the Box

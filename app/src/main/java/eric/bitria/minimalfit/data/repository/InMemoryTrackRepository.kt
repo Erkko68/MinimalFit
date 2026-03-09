@@ -36,7 +36,7 @@ class InMemoryTrackRepository : TrackRepository {
                     distance = 3.1,
                     duration = 45.minutes,
                     pace = "14:31",
-                    mapImageUrl = "https://picsum.photos/600/400"
+                    mapImageUrl = "https://picsum.photos/600/600"
                 )
             )
         )

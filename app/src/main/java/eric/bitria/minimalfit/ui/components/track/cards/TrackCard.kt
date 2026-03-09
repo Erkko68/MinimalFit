@@ -11,11 +11,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -31,13 +29,13 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun TrackCard(
     track: Track,
-    onClick: () -> Unit = {},
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit = {}
 ) {
     Card(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(30),
+        shape = MaterialTheme.shapes.extraLarge,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
         )
@@ -97,18 +95,10 @@ fun TrackCard(
                         model = track.mapImageUrl,
                         contentDescription = "Map view of ${track.name}",
                         modifier = Modifier
-                            .fillMaxSize() // Takes up the full relative bounding box
-                            // 30% curve for a super organic, squircle-like shape
-                            .clip(RoundedCornerShape(percent = 30)),
+                            .fillMaxSize()
+                            .clip(MaterialTheme.shapes.extraLarge),
                         contentScale = ContentScale.Crop
                     )
-                } else {
-                    // Fallback placeholder if the image is null so the layout doesn't collapse
-                    Surface(
-                        modifier = Modifier.fillMaxSize(),
-                        shape = RoundedCornerShape(percent = 30),
-                        color = MaterialTheme.colorScheme.surfaceContainerHighest
-                    ) {}
                 }
             }
         }

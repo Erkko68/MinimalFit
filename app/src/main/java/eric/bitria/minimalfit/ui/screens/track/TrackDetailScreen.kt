@@ -227,7 +227,7 @@ private fun ExpressiveStat(label: String, value: String, unit: String) {
                 Text(
                     text = " $unit",
                     style = MaterialTheme.typography.labelSmall,
-                    modifier = Modifier.padding(bottom = Spacing.xs), // Uses 4.dp
+                    modifier = Modifier.padding(bottom = Spacing.xs),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }

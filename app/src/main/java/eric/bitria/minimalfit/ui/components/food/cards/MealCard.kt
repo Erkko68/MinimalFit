@@ -18,7 +18,7 @@ fun MealCard(
     modifier: Modifier = Modifier
 ) {
     val hasImage = !meal.imageUrl.isNullOrEmpty()
-    val cardShape = if (hasImage) MaterialTheme.shapes.extraLarge else MaterialTheme.shapes.large
+    val cardShape = MaterialTheme.shapes.extraLarge
 
     Card(
         modifier = modifier,

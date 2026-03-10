@@ -44,9 +44,4 @@ class InMemoryJournalRepository : JournalRepository {
             meals = existing.meals.map { if (it.id == mealLog.id) mealLog else it }
         ))
     }
-
-    override fun updateCalorieGoal(date: LocalDate, goal: Int) {
-        val existing = _logsFlow.value[date] ?: DailyLog(date = date)
-        _logsFlow.value += (date to existing.copy(calorieGoal = goal))
-    }
 }

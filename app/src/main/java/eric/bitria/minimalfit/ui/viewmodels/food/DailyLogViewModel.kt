@@ -61,8 +61,4 @@ class DailyLogViewModel(
     fun updateMeal(mealLog: MealLog) {
         journal.updateMeal(date, mealLog)
     }
-
-    fun updateCalorieGoal(goal: Int) {
-        journal.updateCalorieGoal(date, goal)
-    }
 }

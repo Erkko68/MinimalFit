@@ -29,7 +29,4 @@ interface JournalRepository {
 
     /** Updates a specific log entry in the given date's log, matched by [MealLog.id]. */
     fun updateMeal(date: LocalDate, mealLog: MealLog)
-
-    /** Updates the calorie goal for the given date. */
-    fun updateCalorieGoal(date: LocalDate, goal: Int)
 }

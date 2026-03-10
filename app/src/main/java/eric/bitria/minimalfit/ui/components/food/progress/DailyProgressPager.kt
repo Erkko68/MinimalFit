@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -45,6 +46,12 @@ fun DailyProgressPager(
         initialPage = (uiState.weeklyProgress.size - 1).coerceAtLeast(0),
         pageCount = { uiState.weeklyProgress.size }
     )
+
+    LaunchedEffect(uiState.weeklyProgress.size) {
+        if (uiState.weeklyProgress.isNotEmpty()) {
+            pagerState.scrollToPage(uiState.weeklyProgress.size - 1)
+        }
+    }
 
     Column(
         modifier = modifier.fillMaxWidth(),

@@ -3,7 +3,7 @@ package eric.bitria.minimalfit.ui.viewmodels.food
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import eric.bitria.minimalfit.data.model.DailyLog
-import eric.bitria.minimalfit.data.repository.JournalRepository
+import eric.bitria.minimalfit.data.repository.food.JournalRepository
 import eric.bitria.minimalfit.ui.util.WeekViewHelper
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow

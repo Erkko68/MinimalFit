@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -15,7 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -38,14 +36,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
-import coil.compose.AsyncImage
+import eric.bitria.minimalfit.ui.components.track.map.TrackMap
 import eric.bitria.minimalfit.ui.theme.Spacing
 import eric.bitria.minimalfit.ui.viewmodels.track.TrackDetailViewModel
 import org.koin.androidx.compose.koinViewModel
@@ -69,30 +65,8 @@ fun TrackDetailScreen(
                 .background(MaterialTheme.colorScheme.surface)
         ) {
 
-            /* ---------------- 1. Full Screen Map with Scrim ---------------- */
-            track.mapImageUrl?.let { imageUrl ->
-                AsyncImage(
-                    model = imageUrl,
-                    contentDescription = "Track route map",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .fillMaxSize()
-                )
+            TrackMap()
 
-                // Top gradient to make title readable against the map
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .fillMaxHeight(0.3f)
-                        .background(
-                            Brush.verticalGradient(
-                                listOf(Color.Black.copy(alpha = 0.6f), Color.Transparent)
-                            )
-                        )
-                )
-            }
-
-            /* ---------------- 2. Floating Header Area ---------------- */
             Column(
                 modifier = Modifier
                     .statusBarsPadding()
@@ -126,7 +100,6 @@ fun TrackDetailScreen(
                     }
                 }
 
-                // Editable Title - click to edit
                 BasicTextField(
                     value = editedName,
                     onValueChange = {
@@ -142,7 +115,6 @@ fun TrackDetailScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                // Restored your original date/time formatting variables
                 val dateTime = "${track.date.format(DateTimeFormatter.ofPattern("EEEE, MMM dd"))} • " +
                         track.time.format(DateTimeFormatter.ofPattern("HH:mm"))
 
@@ -154,7 +126,6 @@ fun TrackDetailScreen(
                 )
             }
 
-            /* ---------------- 3. Floating Glass Stats & Action ---------------- */
             Column(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -166,10 +137,10 @@ fun TrackDetailScreen(
                 // The "Glass" Card
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(Spacing.xl), // Uses 32.dp for extra large rounded corners
+                    shape = MaterialTheme.shapes.extraLarge,
                     color = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
-                    tonalElevation = Spacing.s, // Using your 8.dp spacing
-                    shadowElevation = 12.dp // Keeping standard shadow dp
+                    tonalElevation = Spacing.s,
+                    shadowElevation = 12.dp
                 ) {
                     Row(
                         modifier = Modifier
@@ -202,7 +173,7 @@ fun TrackDetailScreen(
                     modifier = Modifier.fillMaxWidth(),
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary,
-                    shape = CircleShape
+                    shape = MaterialTheme.shapes.extraLarge
                 ) {
                     Icon(Icons.Default.PlayArrow, contentDescription = null)
                     Spacer(Modifier.width(Spacing.s))

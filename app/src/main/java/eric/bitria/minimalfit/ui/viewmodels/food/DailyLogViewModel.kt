@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import eric.bitria.minimalfit.data.model.Meal
 import eric.bitria.minimalfit.data.model.MealLog
-import eric.bitria.minimalfit.data.repository.JournalRepository
+import eric.bitria.minimalfit.data.repository.food.JournalRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow

@@ -3,7 +3,7 @@ package eric.bitria.minimalfit.ui.viewmodels.track
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import eric.bitria.minimalfit.data.model.Track
-import eric.bitria.minimalfit.data.repository.TrackRepository
+import eric.bitria.minimalfit.data.repository.track.TrackRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map

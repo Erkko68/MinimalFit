@@ -9,11 +9,13 @@ activityCompose = "1.12.4"
 kotlin = "2.3.10"
 composeBom = "2026.02.01"
 koin = "4.1.1"
+maplibreCompose = "0.12.1"
 navigation = "2.9.7"
 datastore = "1.2.0"
 kotlinxSerializationJson = "1.10.0"
 material3 = "1.5.0-alpha15"
 coil = "2.7.0"
+playServicesLocation = "21.3.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -46,6 +48,9 @@ androidx-datastore-preferences = { module = "androidx.datastore:datastore-prefer
 
 # Coil
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
+maplibre-compose = { module = "org.maplibre.compose:maplibre-compose", version.ref = "maplibreCompose" }
+maplibre-compose-material3 = { module = "org.maplibre.compose:maplibre-compose-material3", version.ref = "maplibreCompose" }
+play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

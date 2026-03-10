@@ -1,17 +1,27 @@
 package eric.bitria.minimalfit.koin
 
 import eric.bitria.minimalfit.data.datasource.FoodDatabase
-import eric.bitria.minimalfit.data.repository.FoodCatalogRepository
-import eric.bitria.minimalfit.data.repository.InMemoryFoodCatalogRepository
-import eric.bitria.minimalfit.data.repository.InMemoryJournalRepository
-import eric.bitria.minimalfit.data.repository.InMemoryTrackRepository
-import eric.bitria.minimalfit.data.repository.JournalRepository
-import eric.bitria.minimalfit.data.repository.TrackRepository
+import eric.bitria.minimalfit.data.repository.food.FoodCatalogRepository
+import eric.bitria.minimalfit.data.repository.food.InMemoryFoodCatalogRepository
+import eric.bitria.minimalfit.data.repository.food.InMemoryJournalRepository
+import eric.bitria.minimalfit.data.repository.food.JournalRepository
+import eric.bitria.minimalfit.data.repository.track.InMemoryTrackRepository
+import eric.bitria.minimalfit.data.repository.track.LocationRepository
+import eric.bitria.minimalfit.data.repository.track.TrackRepository
+import eric.bitria.minimalfit.data.repository.track.TrackingLocationRepository
+import eric.bitria.minimalfit.data.sensor.ActivitySensor
+import eric.bitria.minimalfit.data.sensor.AndroidActivitySensor
+import eric.bitria.minimalfit.data.sensor.AndroidLocationSensor
+import eric.bitria.minimalfit.data.sensor.LocationSensor
 import eric.bitria.minimalfit.ui.util.WeekViewHelper
 import eric.bitria.minimalfit.ui.viewmodels.food.DailyLogViewModel
 import eric.bitria.minimalfit.ui.viewmodels.food.FoodViewModel
 import eric.bitria.minimalfit.ui.viewmodels.track.TrackDetailViewModel
-import eric.bitria.minimalfit.ui.viewmodels.track.TrackScreen
+import eric.bitria.minimalfit.ui.viewmodels.track.TrackViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModel
@@ -26,6 +36,19 @@ val dataModule = module {
     singleOf(::InMemoryJournalRepository) bind JournalRepository::class
     singleOf(::InMemoryFoodCatalogRepository) bind FoodCatalogRepository::class
     singleOf(::InMemoryTrackRepository) bind TrackRepository::class
+
+    // Sensors
+    single { AndroidLocationSensor(androidContext()) } bind LocationSensor::class
+    single { AndroidActivitySensor(androidContext()) } bind ActivitySensor::class
+
+    // Repositories
+    single {
+        TrackingLocationRepository(
+            locationSensor = get(),
+            activitySensor = get(),
+            coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+        )
+    } bind LocationRepository::class
 }
 
 val utilModule = module {
@@ -37,7 +60,7 @@ val viewModels = module {
     viewModel { (date: LocalDate) ->
         DailyLogViewModel(date = date, journal = get())
     }
-    viewModelOf(::TrackScreen)
+    viewModelOf(::TrackViewModel)
     viewModel { (trackId: String) ->
         TrackDetailViewModel(trackId = trackId, repository = get())
     }

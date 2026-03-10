@@ -1,4 +1,4 @@
-package eric.bitria.minimalfit.data.repository
+package eric.bitria.minimalfit.data.repository.food
 
 import eric.bitria.minimalfit.data.datasource.FoodDatabase
 import eric.bitria.minimalfit.data.model.Meal

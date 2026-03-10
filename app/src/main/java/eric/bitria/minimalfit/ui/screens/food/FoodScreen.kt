@@ -12,7 +12,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.em
-import eric.bitria.minimalfit.data.repository.FoodCatalogRepository
+import eric.bitria.minimalfit.data.repository.food.FoodCatalogRepository
 import eric.bitria.minimalfit.ui.components.food.cards.MealCard
 import eric.bitria.minimalfit.ui.components.food.progress.DailyProgressPager
 import eric.bitria.minimalfit.ui.components.food.lists.StaggeredGrid

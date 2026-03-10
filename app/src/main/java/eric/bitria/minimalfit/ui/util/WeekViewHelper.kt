@@ -16,16 +16,8 @@ class WeekViewHelper {
         return (6 downTo 0).map { today.minusDays(it.toLong()) }
     }
 
-    /** Index within last7Days that corresponds to today (always 6). */
-    fun todayIndex(): Int = 6
-
     /** Human-readable short day label for the given date (e.g., "MON", "TUE"). */
     fun dayLabel(date: LocalDate): String =
         date.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault()).uppercase()
-
-    /** Converts a day index (0-6) to a LocalDate. */
-    fun dateForIndex(index: Int): LocalDate {
-        return last7Days().getOrElse(index) { LocalDate.now() }
-    }
 }
 

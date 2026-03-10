@@ -1,4 +1,4 @@
-package eric.bitria.minimalfit.data.repository
+package eric.bitria.minimalfit.data.repository.track
 
 import eric.bitria.minimalfit.data.model.Track
 import kotlinx.coroutines.flow.Flow

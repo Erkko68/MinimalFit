@@ -40,8 +40,14 @@ fun App() {
             QuickAction.ADD_MEAL -> {
                 navController.navigate(Route.DailyLog(date = LocalDate.now().toString(), openSearch = true))
             }
-            QuickAction.START_WORKOUT -> {
+            QuickAction.REGISTER_WORKOUT -> {
                 navController.navigate(Route.IndoorActivities)
+            }
+            QuickAction.START_TRACK -> {
+                navController.navigate(Route.OutdoorActivities)
+            }
+            QuickAction.START_TIMER -> {
+
             }
         }
     }

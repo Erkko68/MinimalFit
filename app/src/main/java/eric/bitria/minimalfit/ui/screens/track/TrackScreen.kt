@@ -19,13 +19,13 @@ import androidx.compose.ui.unit.em
 import eric.bitria.minimalfit.ui.components.animations.SwipeToDeleteCard
 import eric.bitria.minimalfit.ui.components.track.cards.TrackCard
 import eric.bitria.minimalfit.ui.theme.Spacing
-import eric.bitria.minimalfit.ui.viewmodels.track.TrackScreen
+import eric.bitria.minimalfit.ui.viewmodels.track.TrackViewModel
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun TrackScreen(
     onTrackClick: (String) -> Unit = {},
-    viewModel: TrackScreen = koinViewModel()
+    viewModel: TrackViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val tracks = uiState.activities

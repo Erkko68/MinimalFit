@@ -1,4 +1,4 @@
-package eric.bitria.minimalfit.data.repository
+package eric.bitria.minimalfit.data.repository.track
 
 import eric.bitria.minimalfit.data.model.Track
 import kotlinx.coroutines.flow.Flow
@@ -61,7 +61,7 @@ class InMemoryTrackRepository : TrackRepository {
 
     override fun addActivity(activity: Track) {
         val newActivity = activity.copy(id = idCounter.getAndIncrement().toString())
-        _activitiesFlow.value = _activitiesFlow.value + newActivity
+        _activitiesFlow.value += newActivity
     }
 
     override fun updateActivity(activity: Track) {

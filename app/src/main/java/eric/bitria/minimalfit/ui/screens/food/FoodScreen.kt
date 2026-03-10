@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -34,11 +33,6 @@ fun FoodScreen(
     val uiState by viewModel.uiState.collectAsState()
     val weekDates = weekViewHelper.last7Days()
 
-    // Refresh data when screen becomes visible
-    LaunchedEffect(Unit) {
-        viewModel.refresh()
-    }
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -63,7 +57,8 @@ fun FoodScreen(
         )
 
         StaggeredGrid(
-            meals = foodCatalog.getAllMeals(),
+            items = foodCatalog.getAllMeals(),
+            key = { meal -> meal.id },
             modifier = Modifier.weight(1f),
             itemContent = { meal ->
                 MealCard(meal = meal)

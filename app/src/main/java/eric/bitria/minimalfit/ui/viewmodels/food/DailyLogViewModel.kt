@@ -1,17 +1,20 @@
 package eric.bitria.minimalfit.ui.viewmodels.food
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import eric.bitria.minimalfit.data.model.Meal
+import eric.bitria.minimalfit.data.model.MealLog
 import eric.bitria.minimalfit.data.repository.JournalRepository
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import java.time.LocalDate
 
 data class DailyLogUiState(
     val date: LocalDate,
-    val meals: List<Meal> = emptyList(),
+    val meals: List<MealLog> = emptyList(),
     val calorieGoal: Int = 2500,
     val showSearchDialog: Boolean = false
 )
@@ -21,45 +24,45 @@ class DailyLogViewModel(
     private val journal: JournalRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(
+    private val _showSearchDialog = MutableStateFlow(false)
+
+    val uiState: StateFlow<DailyLogUiState> = combine(
+        journal.getLogFlow(date),
+        _showSearchDialog
+    ) { log, showDialog ->
         DailyLogUiState(
             date = date,
-            meals = journal.getLog(date).meals,
-            calorieGoal = journal.getLog(date).calorieGoal
+            meals = log.meals,
+            calorieGoal = log.calorieGoal,
+            showSearchDialog = showDialog
         )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = DailyLogUiState(date = date)
     )
-    val uiState: StateFlow<DailyLogUiState> = _uiState.asStateFlow()
-
-    private fun refresh() {
-        val log = journal.getLog(date)
-        _uiState.update { it.copy(meals = log.meals, calorieGoal = log.calorieGoal) }
-    }
 
     fun openSearchDialog() {
-        _uiState.update { it.copy(showSearchDialog = true) }
+        _showSearchDialog.value = true
     }
 
     fun dismissSearchDialog() {
-        _uiState.update { it.copy(showSearchDialog = false) }
+        _showSearchDialog.value = false
     }
 
     fun addMeal(meal: Meal) {
         journal.addMeal(date, meal)
-        refresh()
     }
 
-    fun removeMeal(mealId: Int) {
-        journal.removeMeal(date, mealId)
-        refresh()
+    fun removeMeal(mealLog: MealLog) {
+        journal.removeMeal(date, mealLog)
     }
 
-    fun updateMeal(meal: Meal) {
-        journal.updateMeal(date, meal)
-        refresh()
+    fun updateMeal(mealLog: MealLog) {
+        journal.updateMeal(date, mealLog)
     }
 
     fun updateCalorieGoal(goal: Int) {
         journal.updateCalorieGoal(date, goal)
-        refresh()
     }
 }

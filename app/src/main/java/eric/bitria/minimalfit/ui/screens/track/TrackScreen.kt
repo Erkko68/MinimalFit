@@ -1,5 +1,6 @@
 package eric.bitria.minimalfit.ui.screens.track
 
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -49,9 +50,17 @@ fun TrackScreen(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(Spacing.m)
         ) {
-            items(tracks) { track ->
+            items(
+                items = tracks,
+                key = { track -> track.id }
+            ) { track ->
                 SwipeToDeleteCard(
-                    onDismiss = { viewModel.deleteActivity(track.id) }
+                    onDismiss = { viewModel.deleteActivity(track.id) },
+                    modifier = Modifier.animateItem(
+                        fadeInSpec = tween(durationMillis = 300),
+                        fadeOutSpec = tween(durationMillis = 300),
+                        placementSpec = tween(durationMillis = 300)
+                    )
                 ) {
                     TrackCard(
                         track = track,

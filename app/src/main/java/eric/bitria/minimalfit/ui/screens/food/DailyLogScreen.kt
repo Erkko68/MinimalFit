@@ -55,13 +55,13 @@ fun DailyLogScreen(
     }
 
     val progress = if (uiState.calorieGoal > 0) {
-        uiState.meals.sumOf { it.calories }.toFloat() / uiState.calorieGoal
+        uiState.meals.sumOf { it.meal.calories }.toFloat() / uiState.calorieGoal
     } else 0f
 
     val dailyData = DailyCalorieData(
         dayLabel = date.dayOfWeek.name.take(3),
         dayNumber = date.dayOfMonth,
-        currentCalories = uiState.meals.sumOf { it.calories },
+        currentCalories = uiState.meals.sumOf { it.meal.calories },
         goalCalories = uiState.calorieGoal
     )
 
@@ -116,13 +116,14 @@ fun DailyLogScreen(
                 EmptyMealsPlaceholder()
             } else {
                 StaggeredGrid(
-                    meals = uiState.meals,
+                    items = uiState.meals,
+                    key = { mealLog -> mealLog.id },
                     modifier = Modifier.fillMaxSize(),
-                    itemContent = { meal ->
+                    itemContent = { mealLog ->
                         SwipeToDeleteCard(
-                            onDismiss = { dailyLogViewModel.removeMeal(meal.id) }
+                            onDismiss = { dailyLogViewModel.removeMeal(mealLog) }
                         ) {
-                            MealCard(meal = meal)
+                            MealCard(meal = mealLog.meal)
                         }
                     }
                 )

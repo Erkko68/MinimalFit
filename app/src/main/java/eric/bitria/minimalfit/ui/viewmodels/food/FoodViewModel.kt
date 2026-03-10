@@ -1,12 +1,14 @@
 package eric.bitria.minimalfit.ui.viewmodels.food
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import eric.bitria.minimalfit.data.model.DailyLog
 import eric.bitria.minimalfit.data.repository.JournalRepository
 import eric.bitria.minimalfit.ui.util.WeekViewHelper
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 
 data class DailyCalorieData(
     val dayLabel: String,
@@ -24,14 +26,20 @@ class FoodViewModel(
     private val weekViewHelper: WeekViewHelper
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(buildInitialState())
-    val uiState: StateFlow<FoodUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<FoodUiState> = journal
+        .getAllLogsFlow()
+        .map { logs -> buildUiState(logs) }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = FoodUiState()
+        )
 
-    private fun buildInitialState(): FoodUiState {
+    private fun buildUiState(logs: Map<java.time.LocalDate, DailyLog>): FoodUiState {
         val days = weekViewHelper.last7Days()
         return FoodUiState(
             weeklyProgress = days.map { date ->
-                val log = journal.getLog(date)
+                val log = logs[date] ?: DailyLog(date = date)
                 DailyCalorieData(
                     dayLabel = weekViewHelper.dayLabel(date),
                     dayNumber = date.dayOfMonth,
@@ -40,10 +48,5 @@ class FoodViewModel(
                 )
             }
         )
-    }
-
-    /** Call this to refresh the weekly data after mutations. */
-    fun refresh() {
-        _uiState.update { buildInitialState() }
     }
 }

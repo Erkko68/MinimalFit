@@ -1,12 +1,13 @@
 package eric.bitria.minimalfit.ui.viewmodels.track
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import eric.bitria.minimalfit.data.model.Track
 import eric.bitria.minimalfit.data.repository.TrackRepository
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 
 data class TrackDetailUiState(
     val track: Track? = null
@@ -17,29 +18,23 @@ class TrackDetailViewModel(
     private val repository: TrackRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(TrackDetailUiState())
-    val uiState: StateFlow<TrackDetailUiState> = _uiState.asStateFlow()
-
-    init {
-        loadTrack()
-    }
-
-    private fun loadTrack() {
-        val track = repository.getTrackById(trackId)
-        _uiState.update { it.copy(track = track) }
-    }
+    val uiState: StateFlow<TrackDetailUiState> = repository
+        .getTrackByIdFlow(trackId)
+        .map { track -> TrackDetailUiState(track = track) }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = TrackDetailUiState()
+        )
 
     fun deleteTrack() {
-        _uiState.value.track?.let { track ->
-            repository.deleteActivity(track.id)
-        }
+        repository.deleteActivity(trackId)
     }
 
     fun updateTrackName(newName: String) {
-        _uiState.value.track?.let { track ->
+        uiState.value.track?.let { track ->
             val updatedTrack = track.copy(name = newName)
             repository.updateActivity(updatedTrack)
-            _uiState.update { it.copy(track = updatedTrack) }
         }
     }
 }

@@ -1,6 +1,7 @@
 package eric.bitria.minimalfit.data.repository
 
 import eric.bitria.minimalfit.data.model.Track
+import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 
 /**
@@ -8,13 +9,19 @@ import java.time.LocalDate
  */
 interface TrackRepository {
 
-    /** Returns all outdoor activities. */
+    /** Returns all outdoor activities as a Flow that emits on changes. */
+    fun getAllActivitiesFlow(): Flow<List<Track>>
+
+    /** Returns all outdoor activities (snapshot). */
     fun getAllActivities(): List<Track>
 
     /** Returns activities for a specific date. */
     fun getActivitiesForDate(date: LocalDate): List<Track>
 
-    /** Returns a specific activity by id. */
+    /** Returns a specific activity by id as a Flow that emits on changes. */
+    fun getTrackByIdFlow(id: String): Flow<Track?>
+
+    /** Returns a specific activity by id (snapshot). */
     fun getTrackById(id: String): Track?
 
     /** Adds a new activity. */

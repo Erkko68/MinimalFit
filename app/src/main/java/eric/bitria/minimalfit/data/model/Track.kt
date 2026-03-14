@@ -12,5 +12,5 @@ data class Track(
     val distance: Double, // in km
     val duration: Duration,
     val pace: String, // e.g., "5:30 min/km"
-    val mapImageUrl: String? = null
+    val routePoints: List<TrackPoint> = emptyList()
 )

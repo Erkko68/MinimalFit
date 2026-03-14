@@ -12,7 +12,6 @@ import android.os.Looper
 import androidx.core.content.ContextCompat
 import androidx.core.location.LocationManagerCompat
 import com.google.android.gms.location.*
-import com.google.android.gms.location.FusedLocationProviderClient
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
 
@@ -26,39 +25,43 @@ class AndroidLocationSensor(
     private var currentInterval = 10_000L
     private var currentMinDistance = 5f
 
-    private val _location = MutableStateFlow<Location?>(null)
-    override val location: StateFlow<Location?> = _location.asStateFlow()
+    private val _location = MutableStateFlow(Location("Default").apply {
+        latitude = 0.0
+        longitude = 0.0
+    })
+    override val location: StateFlow<Location> = _location.asStateFlow()
 
-    private val _isTracking = MutableStateFlow(false)
-    override val isTracking: StateFlow<Boolean> = _isTracking.asStateFlow()
+    override var isTracking: Boolean = false
+        private set
+
+    override val hasPermission: Boolean
+        get() = hasLocationPermission()
 
     private val locationCallback = object : LocationCallback() {
         override fun onLocationResult(result: LocationResult) {
-            _location.value = result.lastLocation
+            result.lastLocation?.let { _location.value = it }
         }
     }
 
     override fun startUpdates() {
-        if (_isTracking.value) return
+        if (isTracking) return
         if (!hasLocationPermission()) return
 
-        _isTracking.value = true
+        isTracking = true
         requestUpdates()
     }
 
     override fun stopUpdates() {
-        if (!_isTracking.value) return
-        _isTracking.value = false
+        if (!isTracking) return
+        isTracking = false
         fusedClient.removeLocationUpdates(locationCallback)
-        _location.value = null
     }
 
     override fun updateSamplingRate(intervalMillis: Long, minDistanceMeters: Float) {
         currentInterval = intervalMillis
         currentMinDistance = minDistanceMeters
 
-        // If we are currently tracking, update the request immediately
-        if (_isTracking.value && hasLocationPermission()) {
+        if (isTracking && hasLocationPermission()) {
             requestUpdates()
         }
     }
@@ -79,8 +82,6 @@ class AndroidLocationSensor(
     private fun hasLocationPermission(): Boolean {
         return ContextCompat.checkSelfPermission(
             context, Manifest.permission.ACCESS_FINE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(
-            context, Manifest.permission.ACCESS_COARSE_LOCATION
         ) == PackageManager.PERMISSION_GRANTED
     }
 

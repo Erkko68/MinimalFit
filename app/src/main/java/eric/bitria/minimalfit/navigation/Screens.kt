@@ -8,6 +8,7 @@ sealed class Route {
     @Serializable data object Food : Route()
     @Serializable data object OutdoorActivities : Route()
     @Serializable data object IndoorActivities : Route()
+    @Serializable data object TrackRecording : Route()
     @Serializable data class DailyLog(val date: String, val openSearch: Boolean = false) : Route()
     @Serializable data class TrackDetail(val trackId: String) : Route()
 }

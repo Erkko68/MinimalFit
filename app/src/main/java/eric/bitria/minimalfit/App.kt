@@ -1,10 +1,18 @@
 package eric.bitria.minimalfit
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.DirectionsRun
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -26,6 +34,8 @@ import eric.bitria.minimalfit.ui.screens.ProfileScreen
 import eric.bitria.minimalfit.ui.screens.SettingsScreen
 import eric.bitria.minimalfit.ui.screens.food.DailyLogScreen
 import eric.bitria.minimalfit.ui.screens.food.FoodScreen
+import eric.bitria.minimalfit.ui.screens.track.TrackRecordingScreen
+import eric.bitria.minimalfit.ui.theme.Spacing
 import java.time.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -44,7 +54,7 @@ fun App() {
                 navController.navigate(Route.IndoorActivities)
             }
             QuickAction.START_TRACK -> {
-                navController.navigate(Route.OutdoorActivities)
+                navController.navigate(Route.TrackRecording)
             }
             QuickAction.START_TIMER -> {
 
@@ -55,14 +65,25 @@ fun App() {
     val showFab = NavDestination.entries.any { destination ->
         currentDestination?.hasRoute(destination.route::class) == true
     }
+    val showTrackFab = currentDestination?.hasRoute(Route.OutdoorActivities::class) == true
 
     Scaffold(
         bottomBar = { BottomNavigationBar(navController) },
         floatingActionButton = {
-            if (showFab) {
-                QuickActionButton(
-                    onActionClick = { action -> handleQuickAction(action) }
-                )
+            Row {
+                if (showTrackFab) {
+                    ExtendedFloatingActionButton(
+                        onClick = { navController.navigate(Route.TrackRecording) },
+                        icon = { Icon(Icons.AutoMirrored.Filled.DirectionsRun, contentDescription = "Start new track") },
+                        text = { Text(text = "Start new track") }
+                    )
+                    Spacer(modifier = Modifier.width(Spacing.m))
+                }
+                if (showFab) {
+                    QuickActionButton(
+                        onActionClick = { action -> handleQuickAction(action) }
+                    )
+                }
             }
         }
     ) { contentPadding ->
@@ -98,6 +119,11 @@ fun App() {
                         }
                     )
                 }
+            }
+            composable<Route.TrackRecording> {
+                TrackRecordingScreen(
+                    onNavigateBack = { navController.popBackStack() }
+                )
             }
             composable<Route.IndoorActivities> {
                 Box(Modifier.padding(contentPadding)) {

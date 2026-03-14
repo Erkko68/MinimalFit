@@ -15,9 +15,10 @@ class TrackingLocationRepository(
     private val coroutineScope: CoroutineScope
 ) : LocationRepository {
 
-    override val location: StateFlow<Location?> = locationSensor.location
-    override val isTracking: StateFlow<Boolean> = locationSensor.isTracking
+    override val location: StateFlow<Location> = locationSensor.location
+    override val isTracking: Boolean by locationSensor::isTracking
     override val isGpsEnabled: Flow<Boolean> = locationSensor.isGpsEnabled
+    override val hasPermission: Boolean by locationSensor::hasPermission
 
     init {
         coroutineScope.launch {

@@ -5,9 +5,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
 interface LocationRepository {
-    val location: StateFlow<Location?>
-    val isTracking: StateFlow<Boolean>
+    val location: StateFlow<Location>
+    val isTracking: Boolean
     val isGpsEnabled: Flow<Boolean>
+    val hasPermission: Boolean
 
     fun startTracking()
     fun stopTracking()

@@ -1,5 +1,6 @@
 package eric.bitria.minimalfit.ui.components.track.cards
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,9 +20,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import coil.compose.AsyncImage
 import eric.bitria.minimalfit.data.model.Track
 import eric.bitria.minimalfit.ui.theme.Spacing
 import java.time.format.DateTimeFormatter
@@ -86,20 +86,16 @@ fun TrackCard(
             // Map Image Container
             Box(
                 modifier = Modifier
-                    .weight(0.35f) // Takes the remaining 35% of the width
-                    .aspectRatio(1f), // Locks the height to equal the dynamic width
-                contentAlignment = Alignment.Center
+                    .weight(0.35f)
+                    .aspectRatio(1f)
+                    .clip(MaterialTheme.shapes.extraLarge),
+                contentAlignment = Alignment.Center,
             ) {
-                if (track.mapImageUrl != null) {
-                    AsyncImage(
-                        model = track.mapImageUrl,
-                        contentDescription = "Map view of ${track.name}",
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clip(MaterialTheme.shapes.extraLarge),
-                        contentScale = ContentScale.Crop
-                    )
-                }
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black)
+                )
             }
         }
     }

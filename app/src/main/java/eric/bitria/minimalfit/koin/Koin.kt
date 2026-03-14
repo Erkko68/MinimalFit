@@ -17,6 +17,7 @@ import eric.bitria.minimalfit.ui.util.WeekViewHelper
 import eric.bitria.minimalfit.ui.viewmodels.food.DailyLogViewModel
 import eric.bitria.minimalfit.ui.viewmodels.food.FoodViewModel
 import eric.bitria.minimalfit.ui.viewmodels.track.TrackDetailViewModel
+import eric.bitria.minimalfit.ui.viewmodels.track.TrackRecordingViewModel
 import eric.bitria.minimalfit.ui.viewmodels.track.TrackViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -64,6 +65,7 @@ val viewModels = module {
     viewModel { (trackId: String) ->
         TrackDetailViewModel(trackId = trackId, repository = get())
     }
+    viewModelOf(::TrackRecordingViewModel)
 }
 
 fun initKoin(appDeclaration: KoinAppDeclaration = {}) {

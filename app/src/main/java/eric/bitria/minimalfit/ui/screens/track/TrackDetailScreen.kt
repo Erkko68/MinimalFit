@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -41,7 +40,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
-import eric.bitria.minimalfit.ui.components.track.map.TrackMap
+import eric.bitria.minimalfit.ui.components.track.map.StaticRouteMap
 import eric.bitria.minimalfit.ui.theme.Spacing
 import eric.bitria.minimalfit.ui.viewmodels.track.TrackDetailViewModel
 import org.koin.androidx.compose.koinViewModel
@@ -65,7 +64,10 @@ fun TrackDetailScreen(
                 .background(MaterialTheme.colorScheme.surface)
         ) {
 
-            TrackMap()
+            StaticRouteMap(
+                routePoints = track.routePoints,
+                modifier = Modifier.fillMaxSize()
+            )
 
             Column(
                 modifier = Modifier

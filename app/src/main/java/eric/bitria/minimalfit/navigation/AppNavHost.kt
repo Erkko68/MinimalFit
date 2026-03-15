@@ -54,6 +54,9 @@ fun AppNavHost(
                 TrackScreen(
                     onTrackClick = { trackId ->
                         navController.navigate(Route.TrackDetail(trackId = trackId))
+                    },
+                    onNewTrackClick = {
+                        navController.navigate(Route.TrackRecording)
                     }
                 )
             }

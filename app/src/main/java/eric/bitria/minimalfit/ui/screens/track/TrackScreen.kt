@@ -3,6 +3,9 @@ package eric.bitria.minimalfit.ui.screens.track
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -35,44 +38,48 @@ fun TrackScreen(
     val uiState by viewModel.uiState.collectAsState()
     val tracks = uiState.activities
 
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = Spacing.m),
-        verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(Spacing.m)
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = Spacing.m),
     ) {
-        item {
-            Spacer(modifier = Modifier.height(Spacing.xs))
-            NewTrackCard(onClick = onNewTrackClick)
-        }
+        // Fixed top part
+        Spacer(modifier = Modifier.height(Spacing.xs))
+        NewTrackCard(onClick = onNewTrackClick)
+        Text(
+            text = "Your Track History",
+            style = MaterialTheme.typography.titleLarge.copy(
+                fontWeight = FontWeight.ExtraBold
+            ),
+            letterSpacing = (-0.02).em,
+            color = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.surface)
+                .padding(vertical = Spacing.s)
+        )
 
-        stickyHeader {
-            Text(
-                text = "Your Track History",
-                style = MaterialTheme.typography.titleLarge.copy(
-                    fontWeight = FontWeight.ExtraBold
-                ),
-                letterSpacing = (-0.02).em,
-                color = MaterialTheme.colorScheme.onBackground,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.surface)
-                    .padding(vertical = Spacing.s)
-            )
-        }
-
-        items(tracks, key = { it.id }) { track ->
-            SwipeToDeleteCard(
-                onDismiss = { viewModel.deleteActivity(track.id) },
-                modifier = Modifier.animateItem(
-                    fadeInSpec = tween(durationMillis = 300),
-                    fadeOutSpec = tween(durationMillis = 300),
-                    placementSpec = tween(durationMillis = 300)
-                )
-            ) {
-                TrackCard(
-                    track = track,
-                    onClick = { onTrackClick(track.id) }
-                )
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(
+                vertical = Spacing.s
+            ),
+            verticalArrangement = Arrangement.spacedBy(Spacing.m)
+        ) {
+            items(tracks, key = { it.id }) { track ->
+                SwipeToDeleteCard(
+                    onDismiss = { viewModel.deleteActivity(track.id) },
+                    modifier = Modifier.animateItem(
+                        fadeInSpec = tween(durationMillis = 300),
+                        fadeOutSpec = tween(durationMillis = 300),
+                        placementSpec = tween(durationMillis = 300)
+                    )
+                ) {
+                    TrackCard(
+                        track = track,
+                        onClick = { onTrackClick(track.id) }
+                    )
+                }
             }
         }
     }

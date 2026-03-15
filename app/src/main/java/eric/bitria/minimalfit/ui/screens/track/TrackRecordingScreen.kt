@@ -21,14 +21,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import eric.bitria.minimalfit.ui.components.permission.RequireActivityRecognitionPermission
+import eric.bitria.minimalfit.ui.components.permission.RequireBackgroundLocationPermission
 import eric.bitria.minimalfit.ui.components.permission.RequireLocationPermission
+import eric.bitria.minimalfit.ui.components.permission.RequireNotificationPermission
 import eric.bitria.minimalfit.ui.components.track.TrackingToolbar
 import eric.bitria.minimalfit.ui.components.track.map.TrackMap
 import eric.bitria.minimalfit.ui.components.track.map.TrackMapCameraAction
 import eric.bitria.minimalfit.ui.components.track.map.centerOnUser
 import eric.bitria.minimalfit.ui.components.track.map.fitRoute
+import eric.bitria.minimalfit.ui.components.track.stats.FloatingStats
 import eric.bitria.minimalfit.ui.theme.Spacing
-import eric.bitria.minimalfit.ui.viewmodels.track.RecordingState
 import eric.bitria.minimalfit.ui.viewmodels.track.TrackRecordingViewModel
 import org.koin.androidx.compose.koinViewModel
 import org.maplibre.android.geometry.LatLng
@@ -36,7 +38,6 @@ import org.maplibre.compose.camera.CameraMoveReason
 import org.maplibre.compose.camera.CameraPosition
 import org.maplibre.compose.camera.rememberCameraState
 import org.maplibre.spatialk.geojson.Position
-import eric.bitria.minimalfit.ui.components.track.stats.FloatingStats
 
 @Composable
 fun TrackRecordingScreen(
@@ -44,16 +45,26 @@ fun TrackRecordingScreen(
     viewModel: TrackRecordingViewModel = koinViewModel()
 ) {
     var locationPermissionGranted by remember { mutableStateOf(false) }
+    var backgroundLocationPermissionGranted by remember { mutableStateOf(false) }
     var activityPermissionGranted by remember { mutableStateOf(false) }
+    var notificationPermissionGranted by remember { mutableStateOf(false) }
 
-    // 1. Permission Logic without early returns breaking composition
+    // 1. Permission Logic Chain
     if (!locationPermissionGranted) {
         RequireLocationPermission(onPermissionResult = { isGranted ->
             if (isGranted) locationPermissionGranted = true else onNavigateBack()
         })
+    } else if (!backgroundLocationPermissionGranted) {
+        RequireBackgroundLocationPermission(onPermissionResult = { isGranted ->
+            if (isGranted) backgroundLocationPermissionGranted = true else onNavigateBack()
+        })
     } else if (!activityPermissionGranted) {
         RequireActivityRecognitionPermission(onPermissionResult = { isGranted ->
             if (isGranted) activityPermissionGranted = true else onNavigateBack()
+        })
+    } else if (!notificationPermissionGranted) {
+        RequireNotificationPermission(onPermissionResult = { isGranted ->
+            if (isGranted) notificationPermissionGranted = true else onNavigateBack()
         })
     } else {
         // 2. Main View States

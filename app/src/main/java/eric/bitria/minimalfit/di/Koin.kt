@@ -1,4 +1,4 @@
-package eric.bitria.minimalfit.koin
+package eric.bitria.minimalfit.di
 
 import eric.bitria.minimalfit.data.datasource.FoodDatabase
 import eric.bitria.minimalfit.data.repository.food.FoodCatalogRepository
@@ -13,6 +13,9 @@ import eric.bitria.minimalfit.data.sensor.ActivitySensor
 import eric.bitria.minimalfit.data.sensor.AndroidActivitySensor
 import eric.bitria.minimalfit.data.sensor.AndroidLocationSensor
 import eric.bitria.minimalfit.data.sensor.LocationSensor
+import eric.bitria.minimalfit.data.track.AndroidTrackingManager
+import eric.bitria.minimalfit.data.track.TrackingLogic
+import eric.bitria.minimalfit.data.track.TrackingManager
 import eric.bitria.minimalfit.ui.util.WeekViewHelper
 import eric.bitria.minimalfit.ui.viewmodels.food.DailyLogViewModel
 import eric.bitria.minimalfit.ui.viewmodels.food.FoodViewModel
@@ -50,6 +53,12 @@ val dataModule = module {
             coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
         )
     } bind LocationRepository::class
+
+    // Tracking Logic (Shared logic)
+    singleOf(::TrackingLogic)
+
+    // Tracking Manager (Platform implementation)
+    single<TrackingManager> { AndroidTrackingManager(androidContext(), get()) }
 }
 
 val utilModule = module {

@@ -103,9 +103,7 @@ fun DailyProgressPager(
 
         // Pill indicator row
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = Spacing.m),
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {

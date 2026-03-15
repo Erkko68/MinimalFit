@@ -25,11 +25,8 @@ class AndroidLocationSensor(
     private var currentInterval = 10_000L
     private var currentMinDistance = 5f
 
-    private val _location = MutableStateFlow(Location("Default").apply {
-        latitude = 0.0
-        longitude = 0.0
-    })
-    override val location: StateFlow<Location> = _location.asStateFlow()
+    private val _location = MutableStateFlow<Location?>(null)
+    override val location: StateFlow<Location?> = _location.asStateFlow()
 
     override var isTracking: Boolean = false
         private set
@@ -55,6 +52,7 @@ class AndroidLocationSensor(
         if (!isTracking) return
         isTracking = false
         fusedClient.removeLocationUpdates(locationCallback)
+        _location.value = null
     }
 
     override fun updateSamplingRate(intervalMillis: Long, minDistanceMeters: Float) {

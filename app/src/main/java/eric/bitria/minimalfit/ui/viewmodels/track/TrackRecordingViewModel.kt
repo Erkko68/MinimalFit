@@ -10,10 +10,12 @@ import eric.bitria.minimalfit.data.repository.track.TrackRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDate
@@ -37,11 +39,8 @@ class TrackRecordingViewModel(
     private val _recordingState = MutableStateFlow(RecordingState.IDLE)
     val recordingState: StateFlow<RecordingState> = _recordingState.asStateFlow()
 
-    private val _currentLocation = MutableStateFlow(Location("Default").apply {
-        latitude = 0.0
-        longitude = 0.0
-    })
-    val currentLocation: StateFlow<Location> = _currentLocation.asStateFlow()
+    private val _currentLocation = MutableStateFlow<Location?>(null)
+    val currentLocation: StateFlow<Location?> = _currentLocation.asStateFlow()
 
     private val _routePoints = MutableStateFlow<List<TrackPoint>>(emptyList())
     val routePoints: StateFlow<List<TrackPoint>> = _routePoints.asStateFlow()
@@ -55,8 +54,8 @@ class TrackRecordingViewModel(
     private val _pace = MutableStateFlow("--:--")
     val pace: StateFlow<String> = _pace.asStateFlow()
 
-    private val _isGpsEnabled = MutableStateFlow(true)
-    val isGpsEnabled: StateFlow<Boolean> = _isGpsEnabled.asStateFlow()
+    val isGpsEnabled: StateFlow<Boolean> = locationRepository.isGpsEnabled
+        .stateIn(viewModelScope, SharingStarted.Lazily, true)
 
     private val _savedTrackId = MutableStateFlow<String?>(null)
     val savedTrackId: StateFlow<String?> = _savedTrackId.asStateFlow()
@@ -66,15 +65,26 @@ class TrackRecordingViewModel(
     private var elapsedSeconds = 0L
 
     init {
+        // Passively collect locations to update the map marker
         viewModelScope.launch {
-            locationRepository.isGpsEnabled.collect { enabled ->
-                _isGpsEnabled.value = enabled
+            locationRepository.location.filterNotNull().collect { location ->
+                val isFirstFetch = _currentLocation.value == null && _recordingState.value == RecordingState.IDLE
+
+                _currentLocation.value = location
+
+                // If this was our very first preview location, and we aren't recording yet,
+                // shut down the GPS stream to save battery until the user hits "Start".
+                if (isFirstFetch) {
+                    locationRepository.stopTracking()
+                }
             }
         }
-        viewModelScope.launch {
-            locationRepository.location.collect { location ->
-                _currentLocation.value = location
-            }
+    }
+
+    // Called by the UI once permissions are safely granted
+    fun requestInitialLocation() {
+        if (_currentLocation.value == null && _recordingState.value == RecordingState.IDLE) {
+            locationRepository.startTracking()
         }
     }
 
@@ -116,6 +126,7 @@ class TrackRecordingViewModel(
         locationCollectJob?.cancel()
         locationCollectJob = viewModelScope.launch {
             locationRepository.location
+                .filterNotNull()
                 .distinctUntilChanged { old, new ->
                     old.latitude == new.latitude && old.longitude == new.longitude
                 }
@@ -184,5 +195,6 @@ class TrackRecordingViewModel(
         super.onCleared()
         timerJob?.cancel()
         locationCollectJob?.cancel()
+        locationRepository.stopTracking()
     }
 }

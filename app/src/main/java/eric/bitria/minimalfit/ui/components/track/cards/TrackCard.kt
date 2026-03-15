@@ -75,7 +75,9 @@ fun TrackCard(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    StatItem(label = "Distance", value = "${track.distance} km")
+                    val distanceText = "%.2f".format(track.distance)
+
+                    StatItem(label = "Distance", value = "$distanceText km")
                     StatItem(label = "Time", value = track.duration.toString())
                     StatItem(label = "Pace", value = track.pace)
                 }

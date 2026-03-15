@@ -121,9 +121,11 @@ fun App() {
                 }
             }
             composable<Route.TrackRecording> {
-                TrackRecordingScreen(
-                    onNavigateBack = { navController.popBackStack() }
-                )
+                Box(Modifier.padding(bottom = contentPadding.calculateBottomPadding())) {
+                    TrackRecordingScreen(
+                        onNavigateBack = { navController.popBackStack() }
+                    )
+                }
             }
             composable<Route.IndoorActivities> {
                 Box(Modifier.padding(contentPadding)) {

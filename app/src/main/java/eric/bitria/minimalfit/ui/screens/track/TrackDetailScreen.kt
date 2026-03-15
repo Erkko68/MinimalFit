@@ -28,6 +28,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -40,12 +41,14 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
-import eric.bitria.minimalfit.ui.components.track.map.StaticRouteMap
+import eric.bitria.minimalfit.ui.components.track.map.TrackMap
+import eric.bitria.minimalfit.ui.components.track.map.fitRoute
 import eric.bitria.minimalfit.ui.theme.Spacing
 import eric.bitria.minimalfit.ui.viewmodels.track.TrackDetailViewModel
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 import java.time.format.DateTimeFormatter
+import org.maplibre.compose.camera.rememberCameraState
 
 @Composable
 fun TrackDetailScreen(
@@ -56,16 +59,22 @@ fun TrackDetailScreen(
     val uiState by viewModel.uiState.collectAsState()
     val track = uiState.track
     var editedName by remember(track?.name) { mutableStateOf(track?.name ?: "") }
+    val cameraState = rememberCameraState()
 
     if (track != null) {
+        LaunchedEffect(track.routePoints) {
+            cameraState.fitRoute(track.routePoints)
+        }
+
         Box(
             Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.surface)
         ) {
 
-            StaticRouteMap(
+            TrackMap(
                 routePoints = track.routePoints,
+                cameraState = cameraState,
                 modifier = Modifier.fillMaxSize()
             )
 
@@ -151,7 +160,13 @@ fun TrackDetailScreen(
                         horizontalArrangement = Arrangement.SpaceEvenly,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        ExpressiveStat(label = "Distance", value = "${track.distance}", unit = "km")
+                        val distanceText = "%.2f".format(track.distance)
+
+                        ExpressiveStat(
+                            label = "Distance",
+                            value = distanceText,
+                            unit = "km"
+                        )
 
                         VerticalDivider(
                             modifier = Modifier.height(Spacing.xxl), // Uses 48.dp
@@ -213,4 +228,3 @@ private fun ExpressiveStat(label: String, value: String, unit: String) {
         )
     }
 }
-

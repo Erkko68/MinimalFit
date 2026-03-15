@@ -40,11 +40,11 @@ class TrackingLocationRepository(
 
     private fun adjustSamplingRateForActivity(activity: ActivityType) {
         when (activity) {
-            ActivityType.RUNNING -> locationSensor.updateSamplingRate(3_000L, 2f)
-            ActivityType.WALKING -> locationSensor.updateSamplingRate(10_000L, 5f)
-            ActivityType.ON_BICYCLE -> locationSensor.updateSamplingRate(5_000L, 10f)
-            ActivityType.STILL -> locationSensor.updateSamplingRate(30_000L, 10f)
-            ActivityType.UNKNOWN -> locationSensor.updateSamplingRate(10_000L, 5f)
+            ActivityType.RUNNING -> 2000L to 3f
+            ActivityType.WALKING -> 6000L to 5f
+            ActivityType.ON_BICYCLE -> 1500L to 4f
+            ActivityType.STILL -> 30000L to 10f
+            ActivityType.UNKNOWN -> 4000L to 3f
         }
     }
 }

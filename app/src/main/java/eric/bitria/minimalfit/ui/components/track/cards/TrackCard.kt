@@ -20,9 +20,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import eric.bitria.minimalfit.data.model.Track
+import eric.bitria.minimalfit.ui.components.track.route.TrackRouteCanvas
 import eric.bitria.minimalfit.ui.theme.Spacing
 import java.time.format.DateTimeFormatter
 
@@ -93,10 +94,13 @@ fun TrackCard(
                     .clip(MaterialTheme.shapes.extraLarge),
                 contentAlignment = Alignment.Center,
             ) {
-                Box(
+                TrackRouteCanvas(
+                    track = track,
+                    routeColor = MaterialTheme.colorScheme.primary,
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color.Black)
+                        .background(MaterialTheme.colorScheme.primaryContainer),
+                    strokeWidth = 5.dp
                 )
             }
         }

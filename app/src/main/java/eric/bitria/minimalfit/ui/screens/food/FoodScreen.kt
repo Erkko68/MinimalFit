@@ -1,5 +1,6 @@
 package eric.bitria.minimalfit.ui.screens.food
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -10,22 +11,26 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.em
 import eric.bitria.minimalfit.data.repository.food.FoodCatalogRepository
 import eric.bitria.minimalfit.ui.components.food.cards.MealCard
 import eric.bitria.minimalfit.ui.components.food.progress.DailyProgressPager
 import eric.bitria.minimalfit.ui.components.food.lists.StaggeredGrid
+import eric.bitria.minimalfit.ui.components.food.lists.DietList
 import eric.bitria.minimalfit.ui.theme.Spacing
 import eric.bitria.minimalfit.ui.util.WeekViewHelper
 import eric.bitria.minimalfit.ui.viewmodels.food.FoodViewModel
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 import java.time.LocalDate
+import eric.bitria.minimalfit.data.model.Diet
 
 @Composable
 fun FoodScreen(
     onNavigateToDailyLog: (LocalDate) -> Unit,
+    onNavigateToDietDetail: (Diet) -> Unit,
     viewModel: FoodViewModel = koinViewModel(),
     weekViewHelper: WeekViewHelper = koinInject(),
     foodCatalog: FoodCatalogRepository = koinInject()
@@ -38,13 +43,36 @@ fun FoodScreen(
             .fillMaxSize()
             .padding(horizontal = Spacing.m)
     ) {
+        // Top: Daily progress pager
         DailyProgressPager(
             uiState = uiState,
             dates = weekDates,
             onDayClick = onNavigateToDailyLog,
-            modifier = Modifier.weight(0.42f)
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(0.3f)
         )
 
+        // Recommended diets
+        Text(
+            text = "Your Diets",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.ExtraBold,
+            letterSpacing = (-0.02).em,
+            color = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = Spacing.s)
+        )
+
+        DietList(
+            diets = uiState.diets,
+            onDietClick = onNavigateToDietDetail,
+            modifier = Modifier
+                .weight(0.2f)
+        )
+
+        // Meals section
         Text(
             text = "Your Meals",
             style = MaterialTheme.typography.titleLarge,
@@ -59,7 +87,8 @@ fun FoodScreen(
         StaggeredGrid(
             items = foodCatalog.getAllMeals(),
             key = { meal -> meal.id },
-            modifier = Modifier.weight(1f),
+            modifier = Modifier
+                .weight(0.5f),
             itemContent = { meal ->
                 MealCard(meal = meal)
             }

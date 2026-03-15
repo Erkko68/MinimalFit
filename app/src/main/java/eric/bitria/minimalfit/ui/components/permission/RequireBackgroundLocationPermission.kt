@@ -2,10 +2,8 @@ package eric.bitria.minimalfit.ui.components.permission
 
 import android.Manifest
 import android.app.Activity
-import android.content.Intent
-import android.net.Uri
+import android.content.pm.PackageManager
 import android.os.Build
-import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
@@ -16,7 +14,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -41,7 +38,7 @@ fun RequireBackgroundLocationPermission(
     val lifecycleOwner = LocalLifecycleOwner.current
 
     fun checkPermission() {
-        val isGranted = ContextCompat.checkSelfPermission(context, permission) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        val isGranted = ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
         if (isGranted) {
             onPermissionResult(true)
         }
@@ -73,8 +70,6 @@ fun RequireBackgroundLocationPermission(
 
     LaunchedEffect(Unit) {
         checkPermission()
-        // Note: For background location, we typically show a rationale first
-        // as per Google Play policies, but here we trigger the request if not granted.
         showRationaleDialog = true 
     }
 
@@ -89,8 +84,6 @@ fun RequireBackgroundLocationPermission(
             },
             onConfirm = {
                 showRationaleDialog = false
-                // On Android 11+, background location must be requested after foreground location
-                // and it often requires taking the user to the settings page.
                 permissionLauncher.launch(permission)
             }
         )

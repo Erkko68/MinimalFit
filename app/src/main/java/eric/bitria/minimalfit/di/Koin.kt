@@ -1,7 +1,9 @@
 package eric.bitria.minimalfit.di
 
 import eric.bitria.minimalfit.data.datasource.FoodDatabase
+import eric.bitria.minimalfit.data.repository.food.DietRepository
 import eric.bitria.minimalfit.data.repository.food.FoodCatalogRepository
+import eric.bitria.minimalfit.data.repository.food.InMemoryDietRepository
 import eric.bitria.minimalfit.data.repository.food.InMemoryFoodCatalogRepository
 import eric.bitria.minimalfit.data.repository.food.InMemoryJournalRepository
 import eric.bitria.minimalfit.data.repository.food.JournalRepository
@@ -18,6 +20,7 @@ import eric.bitria.minimalfit.data.track.TrackingLogic
 import eric.bitria.minimalfit.data.track.TrackingManager
 import eric.bitria.minimalfit.ui.util.WeekViewHelper
 import eric.bitria.minimalfit.ui.viewmodels.food.DailyLogViewModel
+import eric.bitria.minimalfit.ui.viewmodels.food.DietDetailViewModel
 import eric.bitria.minimalfit.ui.viewmodels.food.FoodViewModel
 import eric.bitria.minimalfit.ui.viewmodels.track.TrackDetailViewModel
 import eric.bitria.minimalfit.ui.viewmodels.track.TrackRecordingViewModel
@@ -39,6 +42,7 @@ val dataModule = module {
     singleOf(::FoodDatabase)
     singleOf(::InMemoryJournalRepository) bind JournalRepository::class
     singleOf(::InMemoryFoodCatalogRepository) bind FoodCatalogRepository::class
+    singleOf(::InMemoryDietRepository) bind DietRepository::class
     singleOf(::InMemoryTrackRepository) bind TrackRepository::class
 
     // Sensors
@@ -69,6 +73,9 @@ val viewModels = module {
     viewModelOf(::FoodViewModel)
     viewModel { (date: LocalDate) ->
         DailyLogViewModel(date = date, journal = get())
+    }
+    viewModel { (dietId: Int) ->
+        DietDetailViewModel(dietId = dietId, dietRepository = get())
     }
     viewModelOf(::TrackViewModel)
     viewModel { (trackId: String) ->

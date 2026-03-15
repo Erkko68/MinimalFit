@@ -21,9 +21,12 @@ import eric.bitria.minimalfit.navigation.QuickAction
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun QuickActionButton(
+    actions: List<QuickAction>,
     onActionClick: (QuickAction) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    if (actions.isEmpty()) return
+
     var expanded by remember { mutableStateOf(false) }
 
     FloatingActionButtonMenu(
@@ -41,7 +44,7 @@ fun QuickActionButton(
             }
         }
     ) {
-        QuickAction.entries.forEach { action ->
+        actions.forEach { action ->
             FloatingActionButtonMenuItem(
                 onClick = {
                     onActionClick(action)

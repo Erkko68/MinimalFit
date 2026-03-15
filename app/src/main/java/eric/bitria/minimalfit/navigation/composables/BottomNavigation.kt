@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.compose.currentBackStackEntryAsState
 import eric.bitria.minimalfit.navigation.NavDestination
 
@@ -20,26 +21,28 @@ fun BottomNavigationBar(
     navController: NavController,
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
+    val currentDestination = navBackStackEntry?.destination
 
     FlexibleBottomAppBar(
         windowInsets = NavigationBarDefaults.windowInsets,
     ) {
-        NavDestination.entries.forEach { destination ->
-            NavigationBarItem(
-                selected = currentRoute == destination.route::class.qualifiedName,
-                onClick = {
-                    navController.navigate(destination.route) {
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            saveState = true
+        NavDestination.entries
+            .filter { it.showBottomBar }
+            .forEach { destination ->
+                NavigationBarItem(
+                    selected = currentDestination?.hasRoute(destination.route::class) == true,
+                    onClick = {
+                        navController.navigate(destination.route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
                         }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                },
-                icon = { Icon(destination.icon, contentDescription = destination.label) },
-                label = { Text(destination.label) }
-            )
-        }
+                    },
+                    icon = { Icon(destination.icon, contentDescription = destination.label) },
+                    label = { Text(destination.label) }
+                )
+            }
     }
 }

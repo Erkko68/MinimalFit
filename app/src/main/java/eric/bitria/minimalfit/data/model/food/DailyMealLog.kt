@@ -1,8 +1,8 @@
-package eric.bitria.minimalfit.data.model
+package eric.bitria.minimalfit.data.model.food
 
 import java.time.LocalDate
 
-data class DailyLog(
+data class DailyMealLog(
     val date: LocalDate,
     val meals: List<MealLog> = emptyList(),
     val calorieGoal: Int = 2500

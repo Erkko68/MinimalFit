@@ -22,6 +22,7 @@ import eric.bitria.minimalfit.ui.util.WeekViewHelper
 import eric.bitria.minimalfit.ui.viewmodels.food.DailyLogViewModel
 import eric.bitria.minimalfit.ui.viewmodels.food.DietDetailViewModel
 import eric.bitria.minimalfit.ui.viewmodels.food.FoodViewModel
+import eric.bitria.minimalfit.ui.viewmodels.food.MealDetailViewModel
 import eric.bitria.minimalfit.ui.viewmodels.track.TrackDetailViewModel
 import eric.bitria.minimalfit.ui.viewmodels.track.TrackRecordingViewModel
 import eric.bitria.minimalfit.ui.viewmodels.track.TrackViewModel
@@ -74,8 +75,11 @@ val viewModels = module {
     viewModel { (date: LocalDate) ->
         DailyLogViewModel(date = date, journal = get())
     }
-    viewModel { (dietId: Int) ->
+    viewModel { (dietId: String) ->
         DietDetailViewModel(dietId = dietId, dietRepository = get())
+    }
+    viewModel { (mealId: String) ->
+        MealDetailViewModel(mealId = mealId, foodCatalog = get())
     }
     viewModelOf(::TrackViewModel)
     viewModel { (trackId: String) ->

@@ -11,7 +11,7 @@ import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import eric.bitria.minimalfit.data.model.Track
+import eric.bitria.minimalfit.data.model.track.Track
 import kotlin.math.cos
 
 @Composable

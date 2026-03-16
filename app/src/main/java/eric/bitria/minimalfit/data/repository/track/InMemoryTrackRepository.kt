@@ -1,7 +1,7 @@
 package eric.bitria.minimalfit.data.repository.track
 
-import eric.bitria.minimalfit.data.model.Track
-import eric.bitria.minimalfit.data.model.TrackPoint
+import eric.bitria.minimalfit.data.model.track.Track
+import eric.bitria.minimalfit.data.model.track.TrackPoint
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map

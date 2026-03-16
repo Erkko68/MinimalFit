@@ -1,7 +1,7 @@
 package eric.bitria.minimalfit.data.track
 
-import eric.bitria.minimalfit.data.model.Track
-import eric.bitria.minimalfit.data.model.TrackPoint
+import eric.bitria.minimalfit.data.model.track.Track
+import eric.bitria.minimalfit.data.model.track.TrackPoint
 import eric.bitria.minimalfit.data.repository.track.LocationRepository
 import eric.bitria.minimalfit.data.repository.track.TrackRepository
 import kotlinx.coroutines.CoroutineScope

@@ -1,7 +1,7 @@
 package eric.bitria.minimalfit.ui.viewmodels.food
 
 import androidx.lifecycle.ViewModel
-import eric.bitria.minimalfit.data.model.Diet
+import eric.bitria.minimalfit.data.model.food.Diet
 import eric.bitria.minimalfit.data.repository.food.DietRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -12,7 +12,7 @@ data class DietDetailUiState(
 )
 
 class DietDetailViewModel(
-    private val dietId: Int,
+    private val dietId: String,
     private val dietRepository: DietRepository
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(DietDetailUiState(diet = dietRepository.getDietById(dietId)))

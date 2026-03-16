@@ -8,7 +8,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import eric.bitria.minimalfit.data.model.TrackPoint
+import eric.bitria.minimalfit.data.model.track.TrackPoint
 import eric.bitria.minimalfit.ui.theme.Spacing
 import kotlinx.serialization.json.JsonObject
 import org.maplibre.compose.camera.CameraState

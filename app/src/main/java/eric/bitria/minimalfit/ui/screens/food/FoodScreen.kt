@@ -21,12 +21,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import eric.bitria.minimalfit.data.model.Diet
+import eric.bitria.minimalfit.data.model.food.Diet
+import eric.bitria.minimalfit.data.model.food.Meal
 import eric.bitria.minimalfit.data.repository.food.FoodCatalogRepository
 import eric.bitria.minimalfit.ui.components.animations.StaggeredSnapLayoutInfoProvider
 import eric.bitria.minimalfit.ui.components.food.cards.MealCard
 import eric.bitria.minimalfit.ui.components.food.lists.DietList
-import eric.bitria.minimalfit.ui.components.food.progress.DailyProgressPager
+import eric.bitria.minimalfit.ui.components.shared.progress.DailyProgressPager
 import eric.bitria.minimalfit.ui.theme.Spacing
 import eric.bitria.minimalfit.ui.util.WeekViewHelper
 import eric.bitria.minimalfit.ui.viewmodels.food.FoodViewModel
@@ -38,6 +39,7 @@ import java.time.LocalDate
 fun FoodScreen(
     onNavigateToDailyLog: (LocalDate) -> Unit,
     onNavigateToDietDetail: (Diet) -> Unit,
+    onNavigateToMealDetail: (Meal) -> Unit,
     viewModel: FoodViewModel = koinViewModel(),
     weekViewHelper: WeekViewHelper = koinInject(),
     foodCatalog: FoodCatalogRepository = koinInject()
@@ -102,7 +104,10 @@ fun FoodScreen(
 
             // 3. GRID ITEMS
             items(items = meals, key = { it.id }) { meal ->
-                MealCard(meal = meal)
+                MealCard(
+                    meal = meal,
+                    onClick = { onNavigateToMealDetail(meal) }
+                )
             }
         }
     }

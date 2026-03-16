@@ -1,4 +1,4 @@
-package eric.bitria.minimalfit.data.model
+package eric.bitria.minimalfit.data.model.track
 
 import java.time.Instant
 

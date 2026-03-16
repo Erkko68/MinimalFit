@@ -16,6 +16,7 @@ import eric.bitria.minimalfit.ui.screens.SettingsScreen
 import eric.bitria.minimalfit.ui.screens.food.DailyLogScreen
 import eric.bitria.minimalfit.ui.screens.food.DietDetailScreen
 import eric.bitria.minimalfit.ui.screens.food.FoodScreen
+import eric.bitria.minimalfit.ui.screens.food.MealDetailScreen
 import eric.bitria.minimalfit.ui.screens.track.TrackDetailScreen
 import eric.bitria.minimalfit.ui.screens.track.TrackRecordingScreen
 import eric.bitria.minimalfit.ui.screens.track.TrackScreen
@@ -49,6 +50,9 @@ fun AppNavHost(
                     },
                     onNavigateToDietDetail = { diet ->
                         navController.navigate(Route.DietDetail(dietId = diet.id))
+                    },
+                    onNavigateToMealDetail = { meal ->
+                        navController.navigate(Route.MealDetail(mealId = meal.id))
                     }
                 )
             }
@@ -97,6 +101,15 @@ fun AppNavHost(
                 val dietDetail = backStackEntry.toRoute<Route.DietDetail>()
                 DietDetailScreen(
                     dietId = dietDetail.dietId,
+                    onBackClick = { navController.popBackStack() }
+                )
+            }
+        }
+        composable<Route.MealDetail> { backStackEntry ->
+            Box(Modifier.padding(contentPadding)) {
+                val mealDetail = backStackEntry.toRoute<Route.MealDetail>()
+                MealDetailScreen(
+                    mealId = mealDetail.mealId,
                     onBackClick = { navController.popBackStack() }
                 )
             }

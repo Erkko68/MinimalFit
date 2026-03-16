@@ -1,6 +1,6 @@
 package eric.bitria.minimalfit.data.track
 
-import eric.bitria.minimalfit.data.model.TrackPoint
+import eric.bitria.minimalfit.data.model.track.TrackPoint
 import kotlinx.coroutines.flow.StateFlow
 import kotlin.time.Duration
 

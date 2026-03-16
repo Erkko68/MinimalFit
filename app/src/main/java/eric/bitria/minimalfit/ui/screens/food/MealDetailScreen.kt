@@ -18,18 +18,18 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import eric.bitria.minimalfit.ui.theme.Spacing
-import eric.bitria.minimalfit.ui.viewmodels.food.DietDetailViewModel
+import eric.bitria.minimalfit.ui.viewmodels.food.MealDetailViewModel
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 
 @Composable
-fun DietDetailScreen(
-    dietId: String,
+fun MealDetailScreen(
+    mealId: String,
     onBackClick: () -> Unit,
-    viewModel: DietDetailViewModel = koinViewModel { parametersOf(dietId) }
+    viewModel: MealDetailViewModel = koinViewModel { parametersOf(mealId) }
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val diet = uiState.diet
+    val meal = uiState.meal
 
     Scaffold(
         floatingActionButtonPosition = FabPosition.Center,
@@ -48,7 +48,6 @@ fun DietDetailScreen(
                     .fillMaxWidth()
                     .padding(top = Spacing.s, bottom = Spacing.m)
             ) {
-                // Back button pinned to the top left
                 IconButton(
                     onClick = onBackClick,
                     modifier = Modifier.align(Alignment.TopStart)
@@ -59,11 +58,10 @@ fun DietDetailScreen(
                     )
                 }
 
-                // Top-center placeholder for diet name
                 Box(
                     modifier = Modifier.align(Alignment.TopCenter)
                 ) {
-                    Text(text = diet?.name ?: "Diet Detail")
+                    Text(text = meal?.name ?: "Meal Detail")
                 }
             }
         }

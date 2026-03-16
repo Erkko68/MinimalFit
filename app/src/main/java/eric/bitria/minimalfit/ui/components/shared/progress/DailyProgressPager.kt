@@ -1,4 +1,4 @@
-package eric.bitria.minimalfit.ui.components.food.progress
+package eric.bitria.minimalfit.ui.components.shared.progress
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState

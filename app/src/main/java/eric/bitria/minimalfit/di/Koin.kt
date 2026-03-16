@@ -1,6 +1,8 @@
 package eric.bitria.minimalfit.di
 
+import eric.bitria.minimalfit.data.datasource.DietDatabase
 import eric.bitria.minimalfit.data.datasource.FoodDatabase
+import eric.bitria.minimalfit.data.datasource.TrackDatabase
 import eric.bitria.minimalfit.data.repository.food.DietRepository
 import eric.bitria.minimalfit.data.repository.food.FoodCatalogRepository
 import eric.bitria.minimalfit.data.repository.food.InMemoryDietRepository
@@ -41,6 +43,9 @@ import java.time.LocalDate
 
 val dataModule = module {
     singleOf(::FoodDatabase)
+    singleOf(::DietDatabase)
+    singleOf(::TrackDatabase)
+
     singleOf(::InMemoryJournalRepository) bind JournalRepository::class
     singleOf(::InMemoryFoodCatalogRepository) bind FoodCatalogRepository::class
     singleOf(::InMemoryDietRepository) bind DietRepository::class

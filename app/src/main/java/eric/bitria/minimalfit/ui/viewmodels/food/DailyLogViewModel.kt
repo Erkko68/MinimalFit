@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 
 data class DailyLogUiState(
@@ -27,7 +28,7 @@ class DailyLogViewModel(
     private val _showSearchDialog = MutableStateFlow(false)
 
     val uiState: StateFlow<DailyLogUiState> = combine(
-        journal.getLogFlow(date),
+        journal.getLog(date),
         _showSearchDialog
     ) { log, showDialog ->
         DailyLogUiState(
@@ -51,14 +52,20 @@ class DailyLogViewModel(
     }
 
     fun addMeal(meal: Meal) {
-        journal.addMeal(date, meal)
+        viewModelScope.launch {
+            journal.addMeal(date, meal)
+        }
     }
 
     fun removeMeal(mealLog: MealLog) {
-        journal.removeMeal(date, mealLog)
+        viewModelScope.launch {
+            journal.deleteMeal(date, mealLog)
+        }
     }
 
     fun updateMeal(mealLog: MealLog) {
-        journal.updateMeal(date, mealLog)
+        viewModelScope.launch {
+            journal.updateMeal(date, mealLog)
+        }
     }
 }

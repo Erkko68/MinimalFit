@@ -9,27 +9,21 @@ import java.time.LocalDate
  */
 interface TrackRepository {
 
-    /** Returns all outdoor activities as a Flow that emits on changes. */
-    fun getAllActivitiesFlow(): Flow<List<Track>>
+    /** Returns tracks matching the query or recent ones if query is empty. */
+    fun getTracks(query: String = "", limit: Int = 20): Flow<List<Track>>
 
-    /** Returns all outdoor activities (snapshot). */
-    fun getAllActivities(): List<Track>
+    /** Returns tracks within a specific date range. */
+    fun getTracks(start: LocalDate, end: LocalDate): Flow<List<Track>>
 
-    /** Returns activities for a specific date. */
-    fun getActivitiesForDate(date: LocalDate): List<Track>
+    /** Returns a specific track by ID. */
+    fun getTrack(id: String): Flow<Track?>
 
-    /** Returns a specific activity by id as a Flow that emits on changes. */
-    fun getTrackByIdFlow(id: String): Flow<Track?>
+    /** Adds a new track. */
+    suspend fun addTrack(track: Track)
 
-    /** Returns a specific activity by id (snapshot). */
-    fun getTrackById(id: String): Track?
+    /** Updates an existing track. */
+    suspend fun updateTrack(track: Track)
 
-    /** Adds a new activity. */
-    fun addActivity(activity: Track)
-
-    /** Updates an existing activity. */
-    fun updateActivity(activity: Track)
-
-    /** Deletes an activity by id. */
-    fun deleteActivity(id: String)
+    /** Deletes a track by ID. */
+    suspend fun deleteTrack(id: String)
 }

@@ -8,25 +8,19 @@ import java.time.LocalDate
 
 /**
  * Repository for managing daily food logs.
- * Handles CRUD operations for meals and calorie goals.
  */
 interface JournalRepository {
 
-    /** Returns all logs as a Flow that emits on changes. */
-    fun getAllLogsFlow(): Flow<Map<LocalDate, DailyMealLog>>
+    /** Returns the log for the given date as a stream. */
+    fun getLog(date: LocalDate): Flow<DailyMealLog>
 
-    /** Returns the log for the given date as a Flow that emits on changes. */
-    fun getLogFlow(date: LocalDate): Flow<DailyMealLog>
+    /** Returns logs within a specific date range as a stream. */
+    fun getLogs(start: LocalDate, end: LocalDate): Flow<List<DailyMealLog>>
 
-    /** Returns the log for the given date (snapshot), or a default empty one. */
-    fun getLog(date: LocalDate): DailyMealLog
+    /** Searches for specific meals across history. */
+    fun getMeals(query: String): Flow<List<MealLog>>
 
-    /** Wraps the meal in a [MealLog] with a unique ID and appends it to the date's log. */
-    fun addMeal(date: LocalDate, meal: Meal)
-
-    /** Removes a specific log entry from the given date's log. */
-    fun removeMeal(date: LocalDate, mealLog: MealLog)
-
-    /** Updates a specific log entry in the given date's log, matched by [MealLog.id]. */
-    fun updateMeal(date: LocalDate, mealLog: MealLog)
+    suspend fun addMeal(date: LocalDate, meal: Meal)
+    suspend fun updateMeal(date: LocalDate, mealLog: MealLog)
+    suspend fun deleteMeal(date: LocalDate, mealLog: MealLog)
 }

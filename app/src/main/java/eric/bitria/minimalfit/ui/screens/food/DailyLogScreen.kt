@@ -55,6 +55,7 @@ fun DailyLogScreen(
     foodCatalog: FoodCatalogRepository = koinInject()
 ) {
     val uiState by dailyLogViewModel.uiState.collectAsState()
+    val savedMeals by foodCatalog.getMeals().collectAsState(initial = emptyList())
 
     LaunchedEffect(openSearch) {
         if (openSearch) {
@@ -158,7 +159,7 @@ fun DailyLogScreen(
 
     if (uiState.showSearchDialog) {
         MealSearchDialog(
-            savedMeals = foodCatalog.getAllMeals(),
+            savedMeals = savedMeals,
             onDismiss = { dailyLogViewModel.dismissSearchDialog() },
             onAddMeal = { meal -> dailyLogViewModel.addMeal(meal) }
         )

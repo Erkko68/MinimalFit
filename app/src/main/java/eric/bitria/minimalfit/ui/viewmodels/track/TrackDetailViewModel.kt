@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 data class TrackDetailUiState(
     val track: Track? = null
@@ -19,7 +20,7 @@ class TrackDetailViewModel(
 ) : ViewModel() {
 
     val uiState: StateFlow<TrackDetailUiState> = repository
-        .getTrackByIdFlow(trackId)
+        .getTrack(trackId)
         .map { track -> TrackDetailUiState(track = track) }
         .stateIn(
             scope = viewModelScope,
@@ -28,14 +29,17 @@ class TrackDetailViewModel(
         )
 
     fun deleteTrack() {
-        repository.deleteActivity(trackId)
+        viewModelScope.launch {
+            repository.deleteTrack(trackId)
+        }
     }
 
     fun updateTrackName(newName: String) {
         uiState.value.track?.let { track ->
             val updatedTrack = track.copy(name = newName)
-            repository.updateActivity(updatedTrack)
+            viewModelScope.launch {
+                repository.updateTrack(updatedTrack)
+            }
         }
     }
 }
-

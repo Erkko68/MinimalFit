@@ -7,10 +7,14 @@ import eric.bitria.minimalfit.data.model.food.Diet
 import eric.bitria.minimalfit.data.repository.food.DietRepository
 import eric.bitria.minimalfit.data.repository.food.JournalRepository
 import eric.bitria.minimalfit.ui.util.WeekViewHelper
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
+import java.time.LocalDate
 
 data class DailyCalorieData(
     val dayLabel: String,
@@ -21,7 +25,8 @@ data class DailyCalorieData(
 
 data class FoodUiState(
     val weeklyProgress: List<DailyCalorieData> = emptyList(),
-    val diets: List<Diet> = emptyList()
+    val diets: List<Diet> = emptyList(),
+    val searchDietQuery: String = ""
 )
 
 class FoodViewModel(
@@ -30,19 +35,39 @@ class FoodViewModel(
     private val weekViewHelper: WeekViewHelper
 ) : ViewModel() {
 
-    val uiState: StateFlow<FoodUiState> = combine(
-        journal.getAllLogsFlow(),
-        dietRepository.getDiets()
-    ) { logs, diets ->
-        buildUiState(logs, diets)
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = FoodUiState()
-    )
+    private val _searchDietQuery = MutableStateFlow("")
 
-    private fun buildUiState(logs: Map<java.time.LocalDate, DailyMealLog>, diets: List<Diet>): FoodUiState {
-        val days = weekViewHelper.last7Days()
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val uiState: StateFlow<FoodUiState> = _searchDietQuery
+        .flatMapLatest { query ->
+            val days = weekViewHelper.last7Days()
+            val start = days.first()
+            val end = days.last()
+            
+            combine(
+                journal.getLogs(start, end),
+                dietRepository.getDiets(query)
+            ) { logsList, diets ->
+                val logsMap = logsList.associateBy { it.date }
+                buildUiState(logsMap, diets, query, days)
+            }
+        }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = FoodUiState()
+        )
+
+    fun onSearchDietQueryChange(query: String) {
+        _searchDietQuery.value = query
+    }
+
+    private fun buildUiState(
+        logs: Map<LocalDate, DailyMealLog>,
+        diets: List<Diet>,
+        query: String,
+        days: List<LocalDate>
+    ): FoodUiState {
         return FoodUiState(
             weeklyProgress = days.map { date ->
                 val log = logs[date] ?: DailyMealLog(date = date)
@@ -53,7 +78,8 @@ class FoodViewModel(
                     goalCalories = log.calorieGoal
                 )
             },
-            diets = diets
+            diets = diets,
+            searchDietQuery = query
         )
     }
 }

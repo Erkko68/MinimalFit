@@ -142,7 +142,9 @@ class TrackingLogic(
             pace = _pace.value,
             routePoints = _routePoints.value
         )
-        trackRepository.addActivity(track)
+        scope.launch {
+            trackRepository.addTrack(track)
+        }
     }
 
     private fun calculateTotalDistanceKm(points: List<TrackPoint>): Double {

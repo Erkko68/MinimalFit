@@ -46,7 +46,7 @@ fun FoodScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val weekDates = remember { weekViewHelper.last7Days() }
-    val meals = remember { foodCatalog.getAllMeals() }
+    val meals by foodCatalog.getMeals().collectAsState(initial = emptyList())
 
     val state = rememberLazyStaggeredGridState()
     val snappingLayout = remember(state) { StaggeredSnapLayoutInfoProvider(state) }

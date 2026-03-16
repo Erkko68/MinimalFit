@@ -1,19 +1,20 @@
 package eric.bitria.minimalfit.data.sensor
 
 import android.Manifest
-import android.content.BroadcastReceiver
 import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.location.Location
-import android.location.LocationManager
 import android.os.Looper
 import androidx.core.content.ContextCompat
-import androidx.core.location.LocationManagerCompat
-import com.google.android.gms.location.*
-import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.*
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 class AndroidLocationSensor(
     private val context: Context
@@ -28,11 +29,7 @@ class AndroidLocationSensor(
     private val _location = MutableStateFlow<Location?>(null)
     override val location: StateFlow<Location?> = _location.asStateFlow()
 
-    override var isTracking: Boolean = false
-        private set
-
-    override val hasPermission: Boolean
-        get() = hasLocationPermission()
+    private var isTracking: Boolean = false
 
     private val locationCallback = object : LocationCallback() {
         override fun onLocationResult(result: LocationResult) {
@@ -81,24 +78,5 @@ class AndroidLocationSensor(
         return ContextCompat.checkSelfPermission(
             context, Manifest.permission.ACCESS_FINE_LOCATION
         ) == PackageManager.PERMISSION_GRANTED
-    }
-
-    override val isGpsEnabled: Flow<Boolean> = callbackFlow {
-        val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-
-        fun checkGps() = LocationManagerCompat.isLocationEnabled(locationManager)
-
-        trySend(checkGps())
-
-        val receiver = object : BroadcastReceiver() {
-            override fun onReceive(context: Context, intent: Intent?) {
-                if (intent?.action == LocationManager.PROVIDERS_CHANGED_ACTION) {
-                    trySend(checkGps())
-                }
-            }
-        }
-
-        context.registerReceiver(receiver, IntentFilter(LocationManager.PROVIDERS_CHANGED_ACTION))
-        awaitClose { context.unregisterReceiver(receiver) }
     }
 }

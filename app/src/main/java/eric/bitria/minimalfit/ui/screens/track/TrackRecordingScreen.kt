@@ -24,6 +24,7 @@ import eric.bitria.minimalfit.ui.components.permission.RequireActivityRecognitio
 import eric.bitria.minimalfit.ui.components.permission.RequireBackgroundLocationPermission
 import eric.bitria.minimalfit.ui.components.permission.RequireLocationPermission
 import eric.bitria.minimalfit.ui.components.permission.RequireNotificationPermission
+import eric.bitria.minimalfit.ui.components.settings.RequireLocationEnabled
 import eric.bitria.minimalfit.ui.components.track.TrackingToolbar
 import eric.bitria.minimalfit.ui.components.track.map.TrackMap
 import eric.bitria.minimalfit.ui.components.track.map.TrackMapCameraAction
@@ -48,6 +49,7 @@ fun TrackRecordingScreen(
     var backgroundLocationPermissionGranted by remember { mutableStateOf(false) }
     var activityPermissionGranted by remember { mutableStateOf(false) }
     var notificationPermissionGranted by remember { mutableStateOf(false) }
+    var locationEnabled by remember { mutableStateOf(false) }
 
     // 1. Permission Logic Chain
     if (!locationPermissionGranted) {
@@ -65,6 +67,10 @@ fun TrackRecordingScreen(
     } else if (!notificationPermissionGranted) {
         RequireNotificationPermission(onPermissionResult = { isGranted ->
             if (isGranted) notificationPermissionGranted = true else onNavigateBack()
+        })
+    } else if (!locationEnabled) {
+        RequireLocationEnabled(onResult = { isEnabled ->
+            if (isEnabled) locationEnabled = true else onNavigateBack()
         })
     } else {
         // 2. Main View States

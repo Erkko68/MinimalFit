@@ -3,7 +3,6 @@ package eric.bitria.minimalfit.ui.viewmodels.food
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import eric.bitria.minimalfit.data.entity.food.Meal
-import eric.bitria.minimalfit.data.entity.food.MealLog
 import eric.bitria.minimalfit.data.repository.food.FoodCatalogRepository
 import eric.bitria.minimalfit.data.repository.food.JournalRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -12,13 +11,14 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 
 data class DailyLogUiState(
     val date: LocalDate,
-    val meals: List<MealLog> = emptyList(),
+    val meals: List<Meal> = emptyList(),
     val savedMeals: List<Meal> = emptyList(),
     val calorieGoal: Int = 2500,
     val totalCalories: Int = 0,
@@ -42,18 +42,31 @@ class DailyLogViewModel(
     ) { showDialog, query ->
         showDialog to query
     }.flatMapLatest { (showDialog, query) ->
-        combine(
-            journal.getMealLogs(date),
-            foodCatalog.getMeals(query)
-        ) { meals, savedMeals ->
-            DailyLogUiState(
-                date = date,
-                meals = meals,
-                savedMeals = savedMeals,
-                totalCalories = meals.sumOf { it.calories },
-                showSearchDialog = showDialog,
-                searchMealQuery = query
-            )
+        journal.getMealLog(date).flatMapLatest { log ->
+            val mealIds = log?.mealIds ?: emptyList()
+            
+            val mealsFlow = if (mealIds.isEmpty()) {
+                flowOf(emptyList())
+            } else {
+                // Combine individual meal flows from the catalog
+                combine(mealIds.map { foodCatalog.getMeal(it) }) { mealsArray ->
+                    mealsArray.filterNotNull()
+                }
+            }
+
+            combine(
+                mealsFlow,
+                foodCatalog.getMeals(query)
+            ) { meals, savedMeals ->
+                DailyLogUiState(
+                    date = date,
+                    meals = meals,
+                    savedMeals = savedMeals,
+                    totalCalories = meals.sumOf { it.calories },
+                    showSearchDialog = showDialog,
+                    searchMealQuery = query
+                )
+            }
         }
     }.stateIn(
         scope = viewModelScope,
@@ -75,19 +88,13 @@ class DailyLogViewModel(
 
     fun addMeal(meal: Meal) {
         viewModelScope.launch {
-            journal.addMealLog(date, meal)
+            journal.addMealToLog(date, meal.id)
         }
     }
 
-    fun removeMeal(mealLog: MealLog) {
+    fun removeMeal(meal: Meal) {
         viewModelScope.launch {
-            journal.deleteMealLog(mealLog.id)
-        }
-    }
-
-    fun updateMeal(mealLog: MealLog) {
-        viewModelScope.launch {
-            journal.updateMealLog(mealLog)
+            journal.removeMealFromLog(date, meal.id)
         }
     }
 }

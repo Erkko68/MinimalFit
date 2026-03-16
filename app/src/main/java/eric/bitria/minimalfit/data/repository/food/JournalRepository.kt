@@ -11,15 +11,11 @@ import kotlinx.datetime.LocalDate
 interface JournalRepository {
 
     /** Returns the log for the given date as a stream. */
-    fun getMealLogs(date: LocalDate): Flow<List<MealLog>>
+    fun getMealLog(date: LocalDate): Flow<MealLog?>
 
     /** Returns logs within a specific date range as a stream. */
     fun getMealLogs(start: LocalDate, end: LocalDate): Flow<List<MealLog>>
 
-    /** Searches for specific meals across history. */
-    fun searchMealLogs(query: String): Flow<List<MealLog>>
-
-    suspend fun addMealLog(date: LocalDate, meal: Meal)
-    suspend fun updateMealLog(mealLog: MealLog)
-    suspend fun deleteMealLog(id: String)
+    suspend fun addMealToLog(date: LocalDate, mealId: String)
+    suspend fun removeMealFromLog(date: LocalDate, mealId: String)
 }

@@ -57,10 +57,12 @@ class FoodViewModel(
         combine(
             journal.getMealLogs(start, end),
             dietRepository.getDiets(dietQuery),
-            foodCatalog.getMeals(mealQuery)
-        ) { logsList, diets, meals ->
-            val logsMap = logsList.groupBy { it.date }
-            buildUiState(logsMap, diets, meals, dietQuery, mealQuery, days)
+            foodCatalog.getMeals(mealQuery),
+            foodCatalog.getMeals("") // Fetch all catalog meals to calculate calories from IDs
+        ) { logsList, diets, searchedMeals, allMeals ->
+            val allMealsMap = allMeals.associateBy { it.id }
+            val logsMap = logsList.associateBy { it.date }
+            buildUiState(logsMap, allMealsMap, diets, searchedMeals, dietQuery, mealQuery, days)
         }
     }.stateIn(
         scope = viewModelScope,
@@ -77,7 +79,8 @@ class FoodViewModel(
     }
 
     private fun buildUiState(
-        logs: Map<LocalDate, List<MealLog>>,
+        logs: Map<LocalDate, MealLog>,
+        allMealsMap: Map<String, Meal>,
         diets: List<Diet>,
         meals: List<Meal>,
         dietQuery: String,
@@ -86,12 +89,16 @@ class FoodViewModel(
     ): FoodUiState {
         return FoodUiState(
             weeklyProgress = days.map { date ->
-                val dayMeals = logs[date] ?: emptyList()
+                val log = logs[date]
+                val dailyCalories = log?.mealIds?.sumOf { mealId ->
+                    allMealsMap[mealId]?.calories ?: 0
+                } ?: 0
+
                 DailyCalorieData(
                     dayLabel = date.shortWeekdayLabel(),
                     dayNumber = date.day,
-                    currentCalories = dayMeals.sumOf { it.calories },
-                    goalCalories = 2500 // Hardcoded for now
+                    currentCalories = dailyCalories,
+                    goalCalories = 2500 // TODO Hardcoded for now
                 )
             },
             diets = diets,

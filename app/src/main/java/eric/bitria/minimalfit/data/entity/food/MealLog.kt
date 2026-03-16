@@ -7,18 +7,14 @@ import kotlinx.serialization.Serializable
 import java.util.UUID
 
 /**
- * A single logged meal entry. Wraps a catalog [Meal] with a unique [id]
- * so the same meal can appear multiple times in a day's log and each
- * entry can be individually removed or updated.
+ * A record representing all meals logged for a specific date.
  */
 @Serializable
 @Entity(tableName = "meal_logs")
 data class MealLog(
     @PrimaryKey
     val id: String = UUID.randomUUID().toString(),
-    val date: LocalDate, // Added for easier querying by day
+    val date: LocalDate,
     val createdAt: Long = System.currentTimeMillis(),
-    val mealId: String,
-    val mealName: String, // Denormalized for quick display
-    val calories: Int
+    val mealIds: List<String> = emptyList()
 )

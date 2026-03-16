@@ -86,7 +86,7 @@ val viewModels = module {
         DailyLogViewModel(date = date, journal = get(), foodCatalog = get())
     }
     viewModel { (dietId: String) ->
-        DietDetailViewModel(dietId = dietId, dietRepository = get())
+        DietDetailViewModel(dietId = dietId, dietRepository = get(), foodCatalog = get())
     }
     viewModel { (mealId: String) ->
         MealDetailViewModel(mealId = mealId, foodCatalog = get())

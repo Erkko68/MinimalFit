@@ -23,7 +23,6 @@ class DatabaseInitializer(private val db: AppDatabase) {
         // 1. Initialize Meals
         val meals = listOf(
             Meal(
-                id = "meal-oatmeal-berries",
                 name = "Oatmeal with Berries",
                 calories = 350,
                 imageUrl = "https://images.unsplash.com/photo-1517673132405-a56a62b18caf?q=80&w=500&auto=format&fit=crop",
@@ -31,7 +30,6 @@ class DatabaseInitializer(private val db: AppDatabase) {
                 relatedMealIds = listOf("meal-greek-yogurt", "meal-protein-shake")
             ),
             Meal(
-                id = "meal-grilled-chicken-salad",
                 name = "Grilled Chicken Salad",
                 calories = 450,
                 imageUrl = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=500&auto=format&fit=crop",
@@ -39,14 +37,12 @@ class DatabaseInitializer(private val db: AppDatabase) {
                 relatedMealIds = listOf("meal-avocado-toast")
             ),
             Meal(
-                id = "meal-protein-shake",
                 name = "Protein Shake",
                 calories = 200,
                 description = "Post-workout recovery option.",
                 relatedMealIds = listOf("meal-oatmeal-berries")
             ),
             Meal(
-                id = "meal-salmon-asparagus",
                 name = "Salmon and Asparagus",
                 calories = 600,
                 imageUrl = "https://images.unsplash.com/photo-1467003909585-2f8a72700288?q=80&w=500&auto=format&fit=crop",
@@ -54,7 +50,6 @@ class DatabaseInitializer(private val db: AppDatabase) {
                 relatedMealIds = listOf("meal-beef-stir-fry")
             ),
             Meal(
-                id = "meal-greek-yogurt",
                 name = "Greek Yogurt",
                 calories = 150,
                 imageUrl = "https://images.unsplash.com/photo-1488477181946-6428a0291777?q=80&w=500&auto=format&fit=crop",
@@ -62,7 +57,6 @@ class DatabaseInitializer(private val db: AppDatabase) {
                 relatedMealIds = listOf("meal-oatmeal-berries")
             ),
             Meal(
-                id = "meal-avocado-toast",
                 name = "Avocado Toast",
                 calories = 300,
                 imageUrl = "https://images.unsplash.com/photo-1525351484163-7529414344d8?q=80&w=500&auto=format&fit=crop",
@@ -70,7 +64,6 @@ class DatabaseInitializer(private val db: AppDatabase) {
                 relatedMealIds = listOf("meal-grilled-chicken-salad")
             ),
             Meal(
-                id = "meal-beef-stir-fry",
                 name = "Beef Stir Fry",
                 calories = 550,
                 imageUrl = "https://images.unsplash.com/photo-1512058564366-18510be2db19?q=80&w=500&auto=format&fit=crop",
@@ -82,10 +75,30 @@ class DatabaseInitializer(private val db: AppDatabase) {
 
         // 2. Initialize Diets
         val diets = listOf(
-            Diet("diet-keto", "Keto Diet", "High-fat, low-carb diet.", "https://images.unsplash.com/photo-1552332386-f8dd00dc2f85?q=80&w=2070&auto=format&fit=crop"),
-            Diet("diet-mediterranean", "Mediterranean", "Emphasis on plant-based foods and healthy fats.", "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=2070&auto=format&fit=crop"),
-            Diet("diet-vegan", "Vegan", "Excludes all animal products.", "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=2070&auto=format&fit=crop"),
-            Diet("diet-paleo", "Paleo", "Focuses on foods similar to what might have been eaten during the Paleolithic era.", "")
+            Diet(
+                name = "Keto Diet",
+                description = "High-fat, low-carb diet.",
+                imageUrl = "https://images.unsplash.com/photo-1552332386-f8dd00dc2f85?q=80&w=2070&auto=format&fit=crop",
+                relatedMealIds = listOf("meal-salmon-asparagus", "meal-beef-stir-fry")
+            ),
+            Diet(
+                name = "Mediterranean",
+                description = "Emphasis on plant-based foods and healthy fats.",
+                imageUrl = "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=2070&auto=format&fit=crop",
+                relatedMealIds = listOf("meal-grilled-chicken-salad", "meal-avocado-toast")
+            ),
+            Diet(
+                name = "Vegan",
+                description = "Excludes all animal products.",
+                imageUrl = "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=2070&auto=format&fit=crop",
+                relatedMealIds = listOf("meal-oatmeal-berries", "meal-avocado-toast")
+            ),
+            Diet(
+                name = "Paleo",
+                description = "Focuses on foods similar to what might have been eaten during the Paleolithic era.",
+                imageUrl = "https://images.unsplash.com/photo-1505576391880-b3f9d713dc4f?q=80&w=2070&auto=format&fit=crop",
+                relatedMealIds = listOf("meal-beef-stir-fry")
+            )
         )
         diets.forEach { dietDao.insertDiet(it) }
 
@@ -126,7 +139,6 @@ class DatabaseInitializer(private val db: AppDatabase) {
 
         val tracks = listOf(
             Track(
-                id = "1",
                 date = today().minus(1, DateTimeUnit.DAY),
                 time = LocalTime(18, 30),
                 name = "Evening Run",
@@ -136,7 +148,6 @@ class DatabaseInitializer(private val db: AppDatabase) {
                 routePoints = eveningRunPoints
             ),
             Track(
-                id = "2",
                 date = today().minus(2, DateTimeUnit.DAY),
                 time = LocalTime(7, 0),
                 name = "Morning Walk",

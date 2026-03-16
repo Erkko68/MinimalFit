@@ -30,7 +30,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.em
-import eric.bitria.minimalfit.data.entity.food.Meal
 import eric.bitria.minimalfit.ui.components.animations.StaggeredSnapLayoutInfoProvider
 import eric.bitria.minimalfit.ui.components.animations.SwipeToDeleteCard
 import eric.bitria.minimalfit.ui.components.food.actions.AddEntryFab
@@ -71,7 +70,6 @@ fun DailyLogScreen(
         goalCalories = uiState.calorieGoal
     )
 
-    // --- Snapping Logic Setup ---
     val state = rememberLazyStaggeredGridState()
     val snappingLayout = remember(state) { StaggeredSnapLayoutInfoProvider(state) }
     val flingBehavior = rememberSnapFlingBehavior(snappingLayout)
@@ -96,12 +94,8 @@ fun DailyLogScreen(
                 verticalItemSpacing = Spacing.m,
                 contentPadding = PaddingValues(Spacing.m)
             ) {
-                // 1. HEADER SECTION: Back Button and Circle Progress
                 item(span = StaggeredGridItemSpan.FullLine) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                    ) {
+                    Box(modifier = Modifier.fillMaxWidth()) {
                         IconButton(
                             onClick = onBackClick,
                             modifier = Modifier.align(Alignment.TopStart)
@@ -123,7 +117,6 @@ fun DailyLogScreen(
                     }
                 }
 
-                // 2. MEALS TITLE
                 item(span = StaggeredGridItemSpan.FullLine) {
                     Text(
                         text = "Meals",
@@ -133,7 +126,6 @@ fun DailyLogScreen(
                     )
                 }
 
-                // 3. MEALS LIST OR PLACEHOLDER
                 if (uiState.meals.isEmpty()) {
                     item(span = StaggeredGridItemSpan.FullLine) {
                         EmptyMealsPlaceholder()
@@ -142,18 +134,11 @@ fun DailyLogScreen(
                     items(
                         items = uiState.meals,
                         key = { it.id }
-                    ) { mealLog ->
+                    ) { meal ->
                         SwipeToDeleteCard(
-                            onDismiss = { dailyLogViewModel.removeMeal(mealLog) }
+                            onDismiss = { dailyLogViewModel.removeMeal(meal) }
                         ) {
-                            // Since MealLog is denormalized, we construct a temporary Meal object for the UI card
-                            MealCard(
-                                meal = Meal(
-                                    id = mealLog.mealId,
-                                    name = mealLog.mealName,
-                                    calories = mealLog.calories
-                                )
-                            )
+                            MealCard(meal = meal)
                         }
                     }
                 }

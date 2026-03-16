@@ -1,5 +1,8 @@
 package eric.bitria.minimalfit.data.entity.food
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
 import java.util.UUID
 
@@ -9,9 +12,13 @@ import java.util.UUID
  * entry can be individually removed or updated.
  */
 @Serializable
+@Entity(tableName = "meal_logs")
 data class MealLog(
+    @PrimaryKey
     val id: String = UUID.randomUUID().toString(),
+    val date: LocalDate, // Added for easier querying by day
     val createdAt: Long = System.currentTimeMillis(),
-    val meal: Meal
+    val mealId: String,
+    val mealName: String, // Denormalized for quick display
+    val calories: Int
 )
-

@@ -30,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.em
+import eric.bitria.minimalfit.data.entity.food.Meal
 import eric.bitria.minimalfit.ui.components.animations.StaggeredSnapLayoutInfoProvider
 import eric.bitria.minimalfit.ui.components.animations.SwipeToDeleteCard
 import eric.bitria.minimalfit.ui.components.food.actions.AddEntryFab
@@ -60,13 +61,13 @@ fun DailyLogScreen(
     }
 
     val progress = if (uiState.calorieGoal > 0) {
-        uiState.meals.sumOf { it.meal.calories }.toFloat() / uiState.calorieGoal
+        uiState.totalCalories.toFloat() / uiState.calorieGoal
     } else 0f
 
     val dailyData = DailyCalorieData(
         dayLabel = date.dayOfWeek.name.take(3),
         dayNumber = date.day,
-        currentCalories = uiState.meals.sumOf { it.meal.calories },
+        currentCalories = uiState.totalCalories,
         goalCalories = uiState.calorieGoal
     )
 
@@ -145,7 +146,14 @@ fun DailyLogScreen(
                         SwipeToDeleteCard(
                             onDismiss = { dailyLogViewModel.removeMeal(mealLog) }
                         ) {
-                            MealCard(meal = mealLog.meal)
+                            // Since MealLog is denormalized, we construct a temporary Meal object for the UI card
+                            MealCard(
+                                meal = Meal(
+                                    id = mealLog.mealId,
+                                    name = mealLog.mealName,
+                                    calories = mealLog.calories
+                                )
+                            )
                         }
                     }
                 }

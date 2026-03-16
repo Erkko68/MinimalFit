@@ -21,6 +21,7 @@ data class DailyLogUiState(
     val meals: List<MealLog> = emptyList(),
     val savedMeals: List<Meal> = emptyList(),
     val calorieGoal: Int = 2500,
+    val totalCalories: Int = 0,
     val showSearchDialog: Boolean = false,
     val searchMealQuery: String = ""
 )
@@ -42,14 +43,14 @@ class DailyLogViewModel(
         showDialog to query
     }.flatMapLatest { (showDialog, query) ->
         combine(
-            journal.getLog(date),
+            journal.getMealLogs(date),
             foodCatalog.getMeals(query)
-        ) { log, savedMeals ->
+        ) { meals, savedMeals ->
             DailyLogUiState(
                 date = date,
-                meals = log.meals,
+                meals = meals,
                 savedMeals = savedMeals,
-                calorieGoal = log.calorieGoal,
+                totalCalories = meals.sumOf { it.calories },
                 showSearchDialog = showDialog,
                 searchMealQuery = query
             )
@@ -74,19 +75,19 @@ class DailyLogViewModel(
 
     fun addMeal(meal: Meal) {
         viewModelScope.launch {
-            journal.addMeal(date, meal)
+            journal.addMealLog(date, meal)
         }
     }
 
     fun removeMeal(mealLog: MealLog) {
         viewModelScope.launch {
-            journal.deleteMeal(date, mealLog)
+            journal.deleteMealLog(mealLog.id)
         }
     }
 
     fun updateMeal(mealLog: MealLog) {
         viewModelScope.launch {
-            journal.updateMeal(date, mealLog)
+            journal.updateMealLog(mealLog)
         }
     }
 }

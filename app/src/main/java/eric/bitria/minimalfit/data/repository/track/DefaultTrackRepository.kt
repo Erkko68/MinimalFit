@@ -1,30 +1,31 @@
 package eric.bitria.minimalfit.data.repository.track
 
-import eric.bitria.minimalfit.data.database.TrackDatabase
+import eric.bitria.minimalfit.data.database.dao.TrackDao
 import eric.bitria.minimalfit.data.entity.track.Track
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.LocalDate
 
 /**
- * In-memory implementation of the outdoor activity repository.
+ * Room implementation of the outdoor activity repository.
  */
-class DefaultTrackRepository(private val trackDatabase: TrackDatabase) : TrackRepository {
+class DefaultTrackRepository(private val trackDao: TrackDao) : TrackRepository {
 
     override fun getTracks(query: String, limit: Int): Flow<List<Track>> =
-        trackDatabase.getTracks(query, limit)
+        if (query.isBlank()) trackDao.getTracks(limit)
+        else trackDao.getTracks(query, limit)
 
     override fun getTracks(start: LocalDate, end: LocalDate): Flow<List<Track>> =
-        trackDatabase.getTracks(start, end)
+        trackDao.getTracks(start, end)
 
     override fun getTrack(id: String): Flow<Track?> =
-        trackDatabase.getTrack(id)
+        trackDao.getTrack(id)
 
     override suspend fun addTrack(track: Track) =
-        trackDatabase.addTrack(track)
+        trackDao.insertTrack(track)
 
     override suspend fun updateTrack(track: Track) =
-        trackDatabase.updateTrack(track)
+        trackDao.updateTrack(track)
 
     override suspend fun deleteTrack(id: String) =
-        trackDatabase.deleteTrack(id)
+        trackDao.deleteTrack(id)
 }

@@ -1,28 +1,28 @@
 package eric.bitria.minimalfit.data.repository.food
 
-import eric.bitria.minimalfit.data.database.FoodDatabase
+import eric.bitria.minimalfit.data.database.dao.MealDao
 import eric.bitria.minimalfit.data.entity.food.Meal
 import kotlinx.coroutines.flow.Flow
 
 /**
- * In-memory implementation of the food catalog repository.
+ * Room implementation of the food catalog repository.
  */
 class DefaultFoodCatalogRepository(
-    private val foodDatabase: FoodDatabase
+    private val mealDao: MealDao
 ) : FoodCatalogRepository {
 
     override fun getMeals(query: String): Flow<List<Meal>> =
-        foodDatabase.getMeals(query)
+        mealDao.searchMeals(query)
 
     override fun getMeal(id: String): Flow<Meal?> =
-        foodDatabase.getMeal(id)
+        mealDao.getMeal(id)
 
     override suspend fun addMeal(meal: Meal) =
-        foodDatabase.addMeal(meal)
+        mealDao.insertMeal(meal)
 
     override suspend fun updateMeal(meal: Meal) =
-        foodDatabase.updateMeal(meal)
+        mealDao.updateMeal(meal)
 
     override suspend fun deleteMeal(id: String) =
-        foodDatabase.deleteMeal(id)
+        mealDao.deleteMeal(id)
 }

@@ -1,12 +1,16 @@
 package eric.bitria.minimalfit.data.entity.track
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
 import kotlinx.datetime.LocalTime
 import kotlin.time.Duration
 
 @Serializable
+@Entity(tableName = "tracks")
 data class Track(
+    @PrimaryKey
     val id: String,
     val date: LocalDate,
     val time: LocalTime,

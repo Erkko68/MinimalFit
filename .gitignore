@@ -27,3 +27,4 @@ local.properties
 /.idea/vcs.xml
 /.idea/deviceManager.xml
 /gradle/gradle-daemon-jvm.properties
+/app/schemas/eric.bitria.minimalfit.data.database.AppDatabase/

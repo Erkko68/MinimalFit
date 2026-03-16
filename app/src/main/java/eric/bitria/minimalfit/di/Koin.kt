@@ -1,9 +1,8 @@
 package eric.bitria.minimalfit.di
 
-import eric.bitria.minimalfit.data.database.DietDatabase
-import eric.bitria.minimalfit.data.database.FoodDatabase
-import eric.bitria.minimalfit.data.database.JournalDatabase
-import eric.bitria.minimalfit.data.database.TrackDatabase
+import androidx.room.Room
+import eric.bitria.minimalfit.data.database.AppDatabase
+import eric.bitria.minimalfit.data.database.DatabaseInitializer
 import eric.bitria.minimalfit.data.repository.food.DietRepository
 import eric.bitria.minimalfit.data.repository.food.FoodCatalogRepository
 import eric.bitria.minimalfit.data.repository.food.DefaultDietRepository
@@ -42,11 +41,20 @@ import org.koin.dsl.module
 import kotlinx.datetime.LocalDate
 
 val dataModule = module {
-    singleOf(::FoodDatabase)
-    singleOf(::DietDatabase)
-    singleOf(::JournalDatabase)
-    singleOf(::TrackDatabase)
+    single {
+        Room.databaseBuilder(
+            androidContext(),
+            AppDatabase::class.java,
+            "minimalfit.db"
+        ).build()
+    }
 
+    single { get<AppDatabase>().trackDao() }
+    single { get<AppDatabase>().mealDao() }
+    single { get<AppDatabase>().dietDao() }
+    single { get<AppDatabase>().mealLogDao() }
+
+    singleOf(::DatabaseInitializer)
     singleOf(::DefaultJournalRepository) bind JournalRepository::class
     singleOf(::DefaultFoodCatalogRepository) bind FoodCatalogRepository::class
     singleOf(::DefaultDietRepository) bind DietRepository::class

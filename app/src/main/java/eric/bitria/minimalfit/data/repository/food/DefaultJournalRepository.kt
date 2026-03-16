@@ -1,34 +1,40 @@
 package eric.bitria.minimalfit.data.repository.food
 
-import eric.bitria.minimalfit.data.database.JournalDatabase
-import eric.bitria.minimalfit.data.entity.food.DailyMealLog
+import eric.bitria.minimalfit.data.database.dao.MealLogDao
 import eric.bitria.minimalfit.data.entity.food.Meal
 import eric.bitria.minimalfit.data.entity.food.MealLog
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.LocalDate
 
-/**
- * In-memory implementation of the journal repository.
- */
 class DefaultJournalRepository(
-    private val database: JournalDatabase
+    private val mealLogDao: MealLogDao
 ) : JournalRepository {
 
-    override fun getLog(date: LocalDate): Flow<DailyMealLog> =
-        database.getLog(date)
+    override fun getMealLogs(date: LocalDate): Flow<List<MealLog>> =
+        mealLogDao.getMealLogsForDate(date)
 
-    override fun getLogs(start: LocalDate, end: LocalDate): Flow<List<DailyMealLog>> =
-        database.getLogs(start, end)
+    override fun getMealLogs(start: LocalDate, end: LocalDate): Flow<List<MealLog>> {
+        return mealLogDao.getMealLogsInRange(start, end)
+    }
 
-    override fun getMeals(query: String): Flow<List<MealLog>> =
-        database.getMeals(query)
+    override fun searchMealLogs(query: String): Flow<List<MealLog>> =
+        mealLogDao.searchMealLogs(query)
 
-    override suspend fun addMeal(date: LocalDate, meal: Meal) =
-        database.addMeal(date, meal)
+    override suspend fun addMealLog(date: LocalDate, meal: Meal) {
+        val log = MealLog(
+            date = date,
+            mealId = meal.id,
+            mealName = meal.name,
+            calories = meal.calories
+        )
+        mealLogDao.insertMealLog(log)
+    }
 
-    override suspend fun updateMeal(date: LocalDate, mealLog: MealLog) =
-        database.updateMeal(date, mealLog)
+    override suspend fun updateMealLog(mealLog: MealLog) {
+        mealLogDao.insertMealLog(mealLog)
+    }
 
-    override suspend fun deleteMeal(date: LocalDate, mealLog: MealLog) =
-        database.deleteMeal(date, mealLog)
+    override suspend fun deleteMealLog(id: String) {
+        mealLogDao.deleteMealLog(id)
+    }
 }

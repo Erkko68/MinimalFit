@@ -2,9 +2,9 @@ package eric.bitria.minimalfit.ui.viewmodels.food
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import eric.bitria.minimalfit.data.entity.food.DailyMealLog
 import eric.bitria.minimalfit.data.entity.food.Diet
 import eric.bitria.minimalfit.data.entity.food.Meal
+import eric.bitria.minimalfit.data.entity.food.MealLog
 import eric.bitria.minimalfit.data.repository.food.DietRepository
 import eric.bitria.minimalfit.data.repository.food.FoodCatalogRepository
 import eric.bitria.minimalfit.data.repository.food.JournalRepository
@@ -55,11 +55,11 @@ class FoodViewModel(
         val end = days.last()
 
         combine(
-            journal.getLogs(start, end),
+            journal.getMealLogs(start, end),
             dietRepository.getDiets(dietQuery),
             foodCatalog.getMeals(mealQuery)
         ) { logsList, diets, meals ->
-            val logsMap = logsList.associateBy { it.date }
+            val logsMap = logsList.groupBy { it.date }
             buildUiState(logsMap, diets, meals, dietQuery, mealQuery, days)
         }
     }.stateIn(
@@ -77,7 +77,7 @@ class FoodViewModel(
     }
 
     private fun buildUiState(
-        logs: Map<LocalDate, DailyMealLog>,
+        logs: Map<LocalDate, List<MealLog>>,
         diets: List<Diet>,
         meals: List<Meal>,
         dietQuery: String,
@@ -86,12 +86,12 @@ class FoodViewModel(
     ): FoodUiState {
         return FoodUiState(
             weeklyProgress = days.map { date ->
-                val log = logs[date] ?: DailyMealLog(date = date)
+                val dayMeals = logs[date] ?: emptyList()
                 DailyCalorieData(
                     dayLabel = date.shortWeekdayLabel(),
                     dayNumber = date.day,
-                    currentCalories = log.totalCalories,
-                    goalCalories = log.calorieGoal
+                    currentCalories = dayMeals.sumOf { it.calories },
+                    goalCalories = 2500 // Hardcoded for now
                 )
             },
             diets = diets,

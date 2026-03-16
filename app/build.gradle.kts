@@ -8,9 +8,7 @@ plugins {
 
 android {
     namespace = "eric.bitria.minimalfit"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "eric.bitria.minimalfit"
@@ -74,6 +72,7 @@ dependencies {
     // Room DB
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.sqlite.bundled)
+    ksp(libs.androidx.room.compiler)
     
     implementation(libs.kotlinx.serialization.json)
 

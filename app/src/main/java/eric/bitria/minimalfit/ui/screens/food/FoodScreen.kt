@@ -1,6 +1,5 @@
 package eric.bitria.minimalfit.ui.screens.food
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -35,7 +34,6 @@ import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 import java.time.LocalDate
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun FoodScreen(
     onNavigateToDailyLog: (LocalDate) -> Unit,

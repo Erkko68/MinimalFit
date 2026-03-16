@@ -1,6 +1,10 @@
 package eric.bitria.minimalfit.data.datasource
 
 import eric.bitria.minimalfit.data.model.food.Meal
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
+import java.util.UUID
 
 /**
  * In-memory food catalogue. In the future this could be backed by a
@@ -8,7 +12,7 @@ import eric.bitria.minimalfit.data.model.food.Meal
  */
 class FoodDatabase {
 
-    val meals: List<Meal> = listOf(
+    private val _meals = MutableStateFlow(listOf(
         Meal(
             id = "meal-oatmeal-berries",
             name = "Oatmeal with Berries",
@@ -65,9 +69,30 @@ class FoodDatabase {
             description = "Lunch option with veggies and protein.",
             relatedMealIds = listOf("meal-salmon-asparagus")
         )
-    )
+    ))
 
-    fun search(query: String): List<Meal> =
-        if (query.isBlank()) meals
-        else meals.filter { it.name.contains(query, ignoreCase = true) }
+    fun getMeals(query: String): Flow<List<Meal>> {
+        return _meals.map { meals ->
+            if (query.isBlank()) meals
+            else meals.filter { it.name.contains(query, ignoreCase = true) }
+        }
+    }
+
+    fun getMeal(id: String): Flow<Meal?> =
+        _meals.map { meals -> meals.find { it.id == id } }
+
+    suspend fun addMeal(meal: Meal) {
+        val newMeal = if (meal.id.isBlank()) meal.copy(id = UUID.randomUUID().toString()) else meal
+        _meals.value += newMeal
+    }
+
+    suspend fun updateMeal(meal: Meal) {
+        _meals.value = _meals.value.map {
+            if (it.id == meal.id) meal else it
+        }
+    }
+
+    suspend fun deleteMeal(id: String) {
+        _meals.value = _meals.value.filter { it.id != id }
+    }
 }

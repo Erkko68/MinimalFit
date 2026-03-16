@@ -4,11 +4,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import eric.bitria.minimalfit.data.model.food.Meal
 import eric.bitria.minimalfit.data.model.food.MealLog
+import eric.bitria.minimalfit.data.repository.food.FoodCatalogRepository
 import eric.bitria.minimalfit.data.repository.food.JournalRepository
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -16,27 +19,41 @@ import java.time.LocalDate
 data class DailyLogUiState(
     val date: LocalDate,
     val meals: List<MealLog> = emptyList(),
+    val savedMeals: List<Meal> = emptyList(),
     val calorieGoal: Int = 2500,
-    val showSearchDialog: Boolean = false
+    val showSearchDialog: Boolean = false,
+    val searchMealQuery: String = ""
 )
 
 class DailyLogViewModel(
     private val date: LocalDate,
-    private val journal: JournalRepository
+    private val journal: JournalRepository,
+    private val foodCatalog: FoodCatalogRepository
 ) : ViewModel() {
 
     private val _showSearchDialog = MutableStateFlow(false)
+    private val _searchMealQuery = MutableStateFlow("")
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     val uiState: StateFlow<DailyLogUiState> = combine(
-        journal.getLog(date),
-        _showSearchDialog
-    ) { log, showDialog ->
-        DailyLogUiState(
-            date = date,
-            meals = log.meals,
-            calorieGoal = log.calorieGoal,
-            showSearchDialog = showDialog
-        )
+        _showSearchDialog,
+        _searchMealQuery
+    ) { showDialog, query ->
+        showDialog to query
+    }.flatMapLatest { (showDialog, query) ->
+        combine(
+            journal.getLog(date),
+            foodCatalog.getMeals(query)
+        ) { log, savedMeals ->
+            DailyLogUiState(
+                date = date,
+                meals = log.meals,
+                savedMeals = savedMeals,
+                calorieGoal = log.calorieGoal,
+                showSearchDialog = showDialog,
+                searchMealQuery = query
+            )
+        }
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -49,6 +66,10 @@ class DailyLogViewModel(
 
     fun dismissSearchDialog() {
         _showSearchDialog.value = false
+    }
+
+    fun onSearchMealQueryChange(query: String) {
+        _searchMealQuery.value = query
     }
 
     fun addMeal(meal: Meal) {

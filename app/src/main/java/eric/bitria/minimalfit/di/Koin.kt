@@ -2,14 +2,15 @@ package eric.bitria.minimalfit.di
 
 import eric.bitria.minimalfit.data.datasource.DietDatabase
 import eric.bitria.minimalfit.data.datasource.FoodDatabase
+import eric.bitria.minimalfit.data.datasource.JournalDatabase
 import eric.bitria.minimalfit.data.datasource.TrackDatabase
 import eric.bitria.minimalfit.data.repository.food.DietRepository
 import eric.bitria.minimalfit.data.repository.food.FoodCatalogRepository
-import eric.bitria.minimalfit.data.repository.food.InMemoryDietRepository
-import eric.bitria.minimalfit.data.repository.food.InMemoryFoodCatalogRepository
-import eric.bitria.minimalfit.data.repository.food.InMemoryJournalRepository
+import eric.bitria.minimalfit.data.repository.food.DefaultDietRepository
+import eric.bitria.minimalfit.data.repository.food.DefaultFoodCatalogRepository
+import eric.bitria.minimalfit.data.repository.food.DefaultJournalRepository
 import eric.bitria.minimalfit.data.repository.food.JournalRepository
-import eric.bitria.minimalfit.data.repository.track.InMemoryTrackRepository
+import eric.bitria.minimalfit.data.repository.track.DefaultTrackRepository
 import eric.bitria.minimalfit.data.repository.track.LocationRepository
 import eric.bitria.minimalfit.data.repository.track.TrackRepository
 import eric.bitria.minimalfit.data.repository.track.TrackingLocationRepository
@@ -44,12 +45,13 @@ import java.time.LocalDate
 val dataModule = module {
     singleOf(::FoodDatabase)
     singleOf(::DietDatabase)
+    singleOf(::JournalDatabase)
     singleOf(::TrackDatabase)
 
-    singleOf(::InMemoryJournalRepository) bind JournalRepository::class
-    singleOf(::InMemoryFoodCatalogRepository) bind FoodCatalogRepository::class
-    singleOf(::InMemoryDietRepository) bind DietRepository::class
-    singleOf(::InMemoryTrackRepository) bind TrackRepository::class
+    singleOf(::DefaultJournalRepository) bind JournalRepository::class
+    singleOf(::DefaultFoodCatalogRepository) bind FoodCatalogRepository::class
+    singleOf(::DefaultDietRepository) bind DietRepository::class
+    singleOf(::DefaultTrackRepository) bind TrackRepository::class
 
     // Sensors
     single { AndroidLocationSensor(androidContext()) } bind LocationSensor::class
@@ -78,7 +80,7 @@ val utilModule = module {
 val viewModels = module {
     viewModelOf(::FoodViewModel)
     viewModel { (date: LocalDate) ->
-        DailyLogViewModel(date = date, journal = get())
+        DailyLogViewModel(date = date, journal = get(), foodCatalog = get())
     }
     viewModel { (dietId: String) ->
         DietDetailViewModel(dietId = dietId, dietRepository = get())

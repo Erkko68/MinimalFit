@@ -2,11 +2,18 @@ package eric.bitria.minimalfit.data.datasource
 
 import eric.bitria.minimalfit.data.model.track.Track
 import eric.bitria.minimalfit.data.model.track.TrackPoint
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
+import java.util.UUID
 import kotlin.time.Duration.Companion.minutes
 
+/**
+ * In-memory database for tracking activities.
+ */
 class TrackDatabase {
     private val eveningRunPoints = listOf(
         TrackPoint(41.38879, 2.18992, Instant.parse("2026-03-09T16:30:00Z")),
@@ -42,7 +49,7 @@ class TrackDatabase {
         TrackPoint(41.40280, 2.15640, Instant.parse("2026-03-08T07:45:00Z"))
     )
 
-    val initialTracks = listOf(
+    private val _activities = MutableStateFlow(listOf(
         Track(
             id = "1",
             date = LocalDate.now().minusDays(1),
@@ -63,10 +70,39 @@ class TrackDatabase {
             pace = "14:31",
             routePoints = morningWalkPoints
         )
-    )
+    ))
 
-    fun search(tracks: List<Track>, query: String): List<Track> {
-        if (query.isBlank()) return tracks
-        return tracks.filter { it.name.contains(query, ignoreCase = true) }
+    fun getTracks(query: String, limit: Int): Flow<List<Track>> {
+        return _activities.map { activities ->
+            val filtered = if (query.isBlank()) activities
+            else activities.filter { it.name.contains(query, ignoreCase = true) }
+
+            filtered.sortedByDescending { it.date }.take(limit)
+        }
+    }
+
+    fun getTracks(start: LocalDate, end: LocalDate): Flow<List<Track>> {
+        return _activities.map { activities ->
+            activities.filter { !it.date.isBefore(start) && !it.date.isAfter(end) }
+                .sortedByDescending { it.date }
+        }
+    }
+
+    fun getTrack(id: String): Flow<Track?> =
+        _activities.map { activities -> activities.find { it.id == id } }
+
+    suspend fun addTrack(track: Track) {
+        val newTrack = if (track.id.isBlank()) track.copy(id = UUID.randomUUID().toString()) else track
+        _activities.value += newTrack
+    }
+
+    suspend fun updateTrack(track: Track) {
+        _activities.value = _activities.value.map {
+            if (it.id == track.id) track else it
+        }
+    }
+
+    suspend fun deleteTrack(id: String) {
+        _activities.value = _activities.value.filter { it.id != id }
     }
 }

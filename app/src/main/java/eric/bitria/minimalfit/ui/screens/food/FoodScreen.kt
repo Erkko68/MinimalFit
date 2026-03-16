@@ -23,7 +23,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import eric.bitria.minimalfit.data.model.food.Diet
 import eric.bitria.minimalfit.data.model.food.Meal
-import eric.bitria.minimalfit.data.repository.food.FoodCatalogRepository
 import eric.bitria.minimalfit.ui.components.animations.StaggeredSnapLayoutInfoProvider
 import eric.bitria.minimalfit.ui.components.food.cards.MealCard
 import eric.bitria.minimalfit.ui.components.food.lists.DietList
@@ -41,12 +40,10 @@ fun FoodScreen(
     onNavigateToDietDetail: (Diet) -> Unit,
     onNavigateToMealDetail: (Meal) -> Unit,
     viewModel: FoodViewModel = koinViewModel(),
-    weekViewHelper: WeekViewHelper = koinInject(),
-    foodCatalog: FoodCatalogRepository = koinInject()
+    weekViewHelper: WeekViewHelper = koinInject()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val weekDates = remember { weekViewHelper.last7Days() }
-    val meals by foodCatalog.getMeals().collectAsState(initial = emptyList())
 
     val state = rememberLazyStaggeredGridState()
     val snappingLayout = remember(state) { StaggeredSnapLayoutInfoProvider(state) }
@@ -103,7 +100,7 @@ fun FoodScreen(
             }
 
             // 3. GRID ITEMS
-            items(items = meals, key = { it.id }) { meal ->
+            items(items = uiState.meals, key = { it.id }) { meal ->
                 MealCard(
                     meal = meal,
                     onClick = { onNavigateToMealDetail(meal) }

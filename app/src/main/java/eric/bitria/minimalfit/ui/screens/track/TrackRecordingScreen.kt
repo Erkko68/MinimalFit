@@ -68,18 +68,14 @@ fun TrackRecordingScreen(
         })
     } else {
         // 2. Main View States
-        val routePoints by viewModel.routePoints.collectAsState()
-        val currentLocation by viewModel.currentLocation.collectAsState()
-        val recordingState by viewModel.recordingState.collectAsState()
-        val distanceKm by viewModel.distanceKm.collectAsState()
-        val duration by viewModel.duration.collectAsState()
+        val uiState by viewModel.uiState.collectAsState()
 
         val defaultLatLng = LatLng(0.0, 0.0)
-        val currentLatLng = currentLocation?.let { LatLng(it.latitude, it.longitude) } ?: defaultLatLng
+        val currentLatLng = uiState.currentLocation?.let { LatLng(it.latitude, it.longitude) } ?: defaultLatLng
         val cameraState = rememberCameraState(
             CameraPosition(
                 target = Position(currentLatLng.longitude, currentLatLng.latitude),
-                zoom = if (currentLocation != null) 16.0 else 1.0
+                zoom = if (uiState.currentLocation != null) 16.0 else 1.0
             )
         )
 
@@ -94,9 +90,9 @@ fun TrackRecordingScreen(
         // --- Follow Mode Logic ---
 
         // 1. Center camera reactively when location updates or Follow Mode is toggled on
-        LaunchedEffect(currentLocation, isFollowingUser) {
+        LaunchedEffect(uiState.currentLocation, isFollowingUser) {
             if (isFollowingUser) {
-                currentLocation?.let { location ->
+                uiState.currentLocation?.let { location ->
                     cameraState.centerOnUser(LatLng(location.latitude, location.longitude))
                 }
             }
@@ -110,9 +106,9 @@ fun TrackRecordingScreen(
         }
 
         // Handle Fit Route Action
-        LaunchedEffect(pendingCameraAction, routePoints) {
+        LaunchedEffect(pendingCameraAction, uiState.routePoints) {
             if (pendingCameraAction == TrackMapCameraAction.FitRoute) {
-                cameraState.fitRoute(routePoints)
+                cameraState.fitRoute(uiState.routePoints)
                 pendingCameraAction = null
             }
         }
@@ -122,7 +118,7 @@ fun TrackRecordingScreen(
 
             // Map Layer
             TrackMap(
-                routePoints = routePoints,
+                routePoints = uiState.routePoints,
                 cameraState = cameraState,
                 modifier = Modifier.fillMaxSize()
             )
@@ -147,8 +143,8 @@ fun TrackRecordingScreen(
 
             // Top Overlay: Floating Bold Stats
             FloatingStats(
-                distanceKm = distanceKm,
-                duration = duration,
+                distanceKm = uiState.distanceKm,
+                duration = uiState.duration,
                 modifier = Modifier
                     .align(Alignment.TopCenter)
                     .statusBarsPadding()
@@ -157,7 +153,7 @@ fun TrackRecordingScreen(
 
             // Bottom Overlay: Floating Toolbar (Pill)
             TrackingToolbar(
-                state = recordingState,
+                state = uiState.recordingState,
                 onStartResume = {
                     isFollowingUser = true // Re-center map when they start
                     viewModel.startOrResume()

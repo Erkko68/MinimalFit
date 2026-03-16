@@ -30,7 +30,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.em
-import eric.bitria.minimalfit.data.repository.food.FoodCatalogRepository
 import eric.bitria.minimalfit.ui.components.animations.StaggeredSnapLayoutInfoProvider
 import eric.bitria.minimalfit.ui.components.animations.SwipeToDeleteCard
 import eric.bitria.minimalfit.ui.components.food.actions.AddEntryFab
@@ -42,7 +41,6 @@ import eric.bitria.minimalfit.ui.theme.Spacing
 import eric.bitria.minimalfit.ui.viewmodels.food.DailyCalorieData
 import eric.bitria.minimalfit.ui.viewmodels.food.DailyLogViewModel
 import org.koin.androidx.compose.koinViewModel
-import org.koin.compose.koinInject
 import org.koin.core.parameter.parametersOf
 import java.time.LocalDate
 
@@ -51,11 +49,9 @@ fun DailyLogScreen(
     date: LocalDate,
     openSearch: Boolean = false,
     onBackClick: () -> Unit,
-    dailyLogViewModel: DailyLogViewModel = koinViewModel { parametersOf(date) },
-    foodCatalog: FoodCatalogRepository = koinInject()
+    dailyLogViewModel: DailyLogViewModel = koinViewModel { parametersOf(date) }
 ) {
     val uiState by dailyLogViewModel.uiState.collectAsState()
-    val savedMeals by foodCatalog.getMeals().collectAsState(initial = emptyList())
 
     LaunchedEffect(openSearch) {
         if (openSearch) {
@@ -159,7 +155,7 @@ fun DailyLogScreen(
 
     if (uiState.showSearchDialog) {
         MealSearchDialog(
-            savedMeals = savedMeals,
+            savedMeals = uiState.savedMeals,
             onDismiss = { dailyLogViewModel.dismissSearchDialog() },
             onAddMeal = { meal -> dailyLogViewModel.addMeal(meal) }
         )

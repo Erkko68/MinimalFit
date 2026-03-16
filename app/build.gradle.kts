@@ -55,6 +55,7 @@ dependencies {
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
+    implementation(libs.androidx.compose.foundation)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
     // Koin for Dependency Injection

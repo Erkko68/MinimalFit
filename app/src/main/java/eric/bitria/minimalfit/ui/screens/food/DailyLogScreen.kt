@@ -30,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.em
+import eric.bitria.minimalfit.data.entity.food.Meal
 import eric.bitria.minimalfit.ui.components.animations.StaggeredSnapLayoutInfoProvider
 import eric.bitria.minimalfit.ui.components.animations.SwipeToDeleteCard
 import eric.bitria.minimalfit.ui.components.food.actions.AddEntryFab
@@ -49,6 +50,7 @@ fun DailyLogScreen(
     date: LocalDate,
     openSearch: Boolean = false,
     onBackClick: () -> Unit,
+    onNavigateToMealDetail: (Meal) -> Unit,
     dailyLogViewModel: DailyLogViewModel = koinViewModel { parametersOf(date) }
 ) {
     val uiState by dailyLogViewModel.uiState.collectAsState()
@@ -138,7 +140,10 @@ fun DailyLogScreen(
                         SwipeToDeleteCard(
                             onDismiss = { dailyLogViewModel.removeMeal(meal) }
                         ) {
-                            MealCard(meal = meal)
+                            MealCard(
+                                meal = meal,
+                                onClick = { onNavigateToMealDetail(meal) }
+                            )
                         }
                     }
                 }

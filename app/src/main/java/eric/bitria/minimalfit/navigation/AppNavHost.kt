@@ -92,27 +92,32 @@ fun AppNavHost(
                 DailyLogScreen(
                     date = LocalDate.parse(dailyLog.date),
                     openSearch = dailyLog.openSearch,
-                    onBackClick = { navController.popBackStack() }
+                    onBackClick = { navController.popBackStack() },
+                    onNavigateToMealDetail = { meal ->
+                        navController.navigate(Route.MealDetail(mealId = meal.id))
+                    }
                 )
             }
         }
         composable<Route.DietDetail> { backStackEntry ->
-            Box(Modifier.padding(contentPadding)) {
-                val dietDetail = backStackEntry.toRoute<Route.DietDetail>()
-                DietDetailScreen(
-                    dietId = dietDetail.dietId,
-                    onBackClick = { navController.popBackStack() }
-                )
-            }
+            val dietDetail = backStackEntry.toRoute<Route.DietDetail>()
+            DietDetailScreen(
+                dietId = dietDetail.dietId,
+                onBackClick = { navController.popBackStack() },
+                onNavigateToMealDetail = { meal ->
+                    navController.navigate(Route.MealDetail(mealId = meal.id))
+                }
+            )
         }
         composable<Route.MealDetail> { backStackEntry ->
-            Box(Modifier.padding(contentPadding)) {
-                val mealDetail = backStackEntry.toRoute<Route.MealDetail>()
-                MealDetailScreen(
-                    mealId = mealDetail.mealId,
-                    onBackClick = { navController.popBackStack() }
-                )
-            }
+            val mealDetail = backStackEntry.toRoute<Route.MealDetail>()
+            MealDetailScreen(
+                mealId = mealDetail.mealId,
+                onBackClick = { navController.popBackStack() },
+                onNavigateToMealDetail = { meal ->
+                    navController.navigate(Route.MealDetail(mealId = meal.id))
+                }
+            )
         }
     }
 }

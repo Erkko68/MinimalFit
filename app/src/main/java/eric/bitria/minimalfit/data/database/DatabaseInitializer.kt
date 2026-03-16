@@ -8,7 +8,7 @@ import eric.bitria.minimalfit.util.today
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.DateTimeUnit
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.minus
 import kotlin.time.Duration.Companion.minutes

@@ -2,14 +2,17 @@ package eric.bitria.minimalfit.data.datasource
 
 import eric.bitria.minimalfit.data.model.track.Track
 import eric.bitria.minimalfit.data.model.track.TrackPoint
+import eric.bitria.minimalfit.util.today
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
-import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalTime
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.minus
 import java.util.UUID
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Instant
 
 /**
  * In-memory database for tracking activities.
@@ -52,8 +55,8 @@ class TrackDatabase {
     private val _activities = MutableStateFlow(listOf(
         Track(
             id = "1",
-            date = LocalDate.now().minusDays(1),
-            time = LocalTime.of(18, 30),
+            date = today().minus(1, DateTimeUnit.DAY),
+            time = LocalTime(18, 30), // if using kotlinx.datetime.LocalTime
             name = "Evening Run",
             distance = 5.2,
             duration = 30.minutes,
@@ -62,8 +65,8 @@ class TrackDatabase {
         ),
         Track(
             id = "2",
-            date = LocalDate.now().minusDays(2),
-            time = LocalTime.of(7, 0),
+            date = today().minus(2, DateTimeUnit.DAY),
+            time = LocalTime(7, 0),
             name = "Morning Walk",
             distance = 3.1,
             duration = 45.minutes,
@@ -83,8 +86,8 @@ class TrackDatabase {
 
     fun getTracks(start: LocalDate, end: LocalDate): Flow<List<Track>> {
         return _activities.map { activities ->
-            activities.filter { !it.date.isBefore(start) && !it.date.isAfter(end) }
-                .sortedByDescending { it.date }
+            activities.filter { it.date in start..end } // use comparison operators
+                .sortedByDescending { it.date } // sort by date descending
         }
     }
 

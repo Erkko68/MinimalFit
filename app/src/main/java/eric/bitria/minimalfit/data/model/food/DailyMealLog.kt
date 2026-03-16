@@ -1,7 +1,9 @@
 package eric.bitria.minimalfit.data.model.food
 
-import java.time.LocalDate
+import kotlinx.serialization.Serializable
+import kotlinx.datetime.LocalDate
 
+@Serializable
 data class DailyMealLog(
     val date: LocalDate,
     val meals: List<MealLog> = emptyList(),
@@ -9,4 +11,3 @@ data class DailyMealLog(
 ) {
     val totalCalories: Int get() = meals.sumOf { it.meal.calories }
 }
-

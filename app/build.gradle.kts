@@ -67,6 +67,7 @@ dependencies {
 
     // DataStore for local storage
     implementation(libs.androidx.datastore.preferences)
+    implementation(libs.kotlinx.datetime)
     
     implementation(libs.kotlinx.serialization.json)
 

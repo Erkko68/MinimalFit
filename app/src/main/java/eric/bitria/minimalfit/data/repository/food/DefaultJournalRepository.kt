@@ -5,7 +5,7 @@ import eric.bitria.minimalfit.data.model.food.DailyMealLog
 import eric.bitria.minimalfit.data.model.food.Meal
 import eric.bitria.minimalfit.data.model.food.MealLog
 import kotlinx.coroutines.flow.Flow
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 
 /**
  * In-memory implementation of the journal repository.

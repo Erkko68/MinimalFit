@@ -4,6 +4,8 @@ import eric.bitria.minimalfit.data.model.track.Track
 import eric.bitria.minimalfit.data.model.track.TrackPoint
 import eric.bitria.minimalfit.data.repository.track.LocationRepository
 import eric.bitria.minimalfit.data.repository.track.TrackRepository
+import eric.bitria.minimalfit.util.currentDateAndTime
+import eric.bitria.minimalfit.util.nowInstant
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -15,9 +17,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
-import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalTime
 import java.util.UUID
 import kotlin.math.atan2
 import kotlin.math.cos
@@ -117,7 +116,7 @@ class TrackingLogic(
                     val newPoint = TrackPoint(
                         latitude = location.latitude,
                         longitude = location.longitude,
-                        timestamp = Instant.now()
+                        timestamp = nowInstant()
                     )
                     val updatedPoints = _routePoints.value + newPoint
                     val newDistance = calculateTotalDistanceKm(updatedPoints)
@@ -129,8 +128,7 @@ class TrackingLogic(
     }
 
     private fun saveTrack() {
-        val now = LocalDate.now()
-        val time = LocalTime.now()
+        val (now, time) = currentDateAndTime()
         val id = UUID.randomUUID().toString()
         val track = Track(
             id = id,

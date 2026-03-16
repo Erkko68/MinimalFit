@@ -20,7 +20,7 @@ import eric.bitria.minimalfit.ui.screens.food.MealDetailScreen
 import eric.bitria.minimalfit.ui.screens.track.TrackDetailScreen
 import eric.bitria.minimalfit.ui.screens.track.TrackRecordingScreen
 import eric.bitria.minimalfit.ui.screens.track.TrackScreen
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 
 @Composable
 fun AppNavHost(

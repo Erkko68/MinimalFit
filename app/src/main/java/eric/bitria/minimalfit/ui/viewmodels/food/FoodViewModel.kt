@@ -8,7 +8,8 @@ import eric.bitria.minimalfit.data.model.food.Meal
 import eric.bitria.minimalfit.data.repository.food.DietRepository
 import eric.bitria.minimalfit.data.repository.food.FoodCatalogRepository
 import eric.bitria.minimalfit.data.repository.food.JournalRepository
-import eric.bitria.minimalfit.ui.util.WeekViewHelper
+import eric.bitria.minimalfit.util.last7DaysEndingToday
+import eric.bitria.minimalfit.util.shortWeekdayLabel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -16,7 +17,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 
 data class DailyCalorieData(
     val dayLabel: String,
@@ -37,7 +38,6 @@ class FoodViewModel(
     private val journal: JournalRepository,
     private val dietRepository: DietRepository,
     private val foodCatalog: FoodCatalogRepository,
-    private val weekViewHelper: WeekViewHelper
 ) : ViewModel() {
 
     private val _searchDietQuery = MutableStateFlow("")
@@ -50,7 +50,7 @@ class FoodViewModel(
     ) { dietQuery, mealQuery ->
         dietQuery to mealQuery
     }.flatMapLatest { (dietQuery, mealQuery) ->
-        val days = weekViewHelper.last7Days()
+        val days = last7DaysEndingToday()
         val start = days.first()
         val end = days.last()
 
@@ -88,8 +88,8 @@ class FoodViewModel(
             weeklyProgress = days.map { date ->
                 val log = logs[date] ?: DailyMealLog(date = date)
                 DailyCalorieData(
-                    dayLabel = weekViewHelper.dayLabel(date),
-                    dayNumber = date.dayOfMonth,
+                    dayLabel = date.shortWeekdayLabel(),
+                    dayNumber = date.day,
                     currentCalories = log.totalCalories,
                     goalCalories = log.calorieGoal
                 )

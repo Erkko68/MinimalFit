@@ -25,7 +25,8 @@ import androidx.compose.ui.unit.dp
 import eric.bitria.minimalfit.data.model.track.Track
 import eric.bitria.minimalfit.ui.components.track.route.TrackRouteCanvas
 import eric.bitria.minimalfit.ui.theme.Spacing
-import java.time.format.DateTimeFormatter
+import eric.bitria.minimalfit.util.hourMinute
+import eric.bitria.minimalfit.util.shortMonthDay
 
 @Composable
 fun TrackCard(
@@ -52,8 +53,7 @@ fun TrackCard(
                 modifier = Modifier.weight(0.65f), // Takes 65% of the row width
                 verticalArrangement = Arrangement.spacedBy(Spacing.xs)
             ) {
-                // Date and Time
-                val dateTime = "${track.date.format(DateTimeFormatter.ofPattern("MMM dd"))} • ${track.time.format(DateTimeFormatter.ofPattern("HH:mm"))}"
+                val dateTime = "${track.date.shortMonthDay()} • ${track.time.hourMinute()}"
                 Text(
                     text = dateTime,
                     style = MaterialTheme.typography.labelLarge,

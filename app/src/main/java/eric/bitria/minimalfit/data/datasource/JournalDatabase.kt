@@ -6,7 +6,7 @@ import eric.bitria.minimalfit.data.model.food.MealLog
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 
 /**
  * In-memory database for the food journal.
@@ -19,14 +19,13 @@ class JournalDatabase {
     fun getLog(date: LocalDate): Flow<DailyMealLog> =
         _logs.map { logs -> logs[date] ?: DailyMealLog(date = date) }
 
-    fun getLogs(start: LocalDate, end: LocalDate): Flow<List<DailyMealLog>> {
-        return _logs.map { logs ->
-            logs.filterKeys { date -> !date.isBefore(start) && !date.isAfter(end) }
+    fun getLogs(start: LocalDate, end: LocalDate): Flow<List<DailyMealLog>> =
+        _logs.map { logs ->
+            logs.filterKeys { date -> date in start..end }
                 .values
                 .toList()
                 .sortedByDescending { it.date }
         }
-    }
 
     fun getMeals(query: String): Flow<List<MealLog>> {
         return _logs.map { logs ->

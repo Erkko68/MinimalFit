@@ -42,7 +42,7 @@ import eric.bitria.minimalfit.ui.viewmodels.food.DailyCalorieData
 import eric.bitria.minimalfit.ui.viewmodels.food.DailyLogViewModel
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 
 @Composable
 fun DailyLogScreen(
@@ -65,7 +65,7 @@ fun DailyLogScreen(
 
     val dailyData = DailyCalorieData(
         dayLabel = date.dayOfWeek.name.take(3),
-        dayNumber = date.dayOfMonth,
+        dayNumber = date.day,
         currentCalories = uiState.meals.sumOf { it.meal.calories },
         goalCalories = uiState.calorieGoal
     )

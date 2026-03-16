@@ -21,7 +21,6 @@ import eric.bitria.minimalfit.data.sensor.LocationSensor
 import eric.bitria.minimalfit.data.track.AndroidTrackingManager
 import eric.bitria.minimalfit.data.track.TrackingLogic
 import eric.bitria.minimalfit.data.track.TrackingManager
-import eric.bitria.minimalfit.ui.util.WeekViewHelper
 import eric.bitria.minimalfit.ui.viewmodels.food.DailyLogViewModel
 import eric.bitria.minimalfit.ui.viewmodels.food.DietDetailViewModel
 import eric.bitria.minimalfit.ui.viewmodels.food.FoodViewModel
@@ -40,7 +39,7 @@ import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.KoinAppDeclaration
 import org.koin.dsl.bind
 import org.koin.dsl.module
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 
 val dataModule = module {
     singleOf(::FoodDatabase)
@@ -73,10 +72,6 @@ val dataModule = module {
     single<TrackingManager> { AndroidTrackingManager(androidContext(), get()) }
 }
 
-val utilModule = module {
-    singleOf(::WeekViewHelper)
-}
-
 val viewModels = module {
     viewModelOf(::FoodViewModel)
     viewModel { (date: LocalDate) ->
@@ -100,7 +95,6 @@ fun initKoin(appDeclaration: KoinAppDeclaration = {}) {
         appDeclaration()
         modules(
             dataModule,
-            utilModule,
             viewModels,
         )
     }

@@ -1,9 +1,11 @@
 package eric.bitria.minimalfit.data.model.track
 
-import java.time.LocalDate
-import java.time.LocalTime
+import kotlinx.datetime.LocalDate
+import kotlinx.serialization.Serializable
+import kotlinx.datetime.LocalTime
 import kotlin.time.Duration
 
+@Serializable
 data class Track(
     val id: String,
     val date: LocalDate,

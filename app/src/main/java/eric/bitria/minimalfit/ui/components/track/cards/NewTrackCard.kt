@@ -28,17 +28,19 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import eric.bitria.minimalfit.ui.theme.Spacing
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
+import eric.bitria.minimalfit.util.fullWeekdayName
+import eric.bitria.minimalfit.util.monthDayYear
+import eric.bitria.minimalfit.util.today
 
 @Composable
 fun NewTrackCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val today = LocalDate.now()
-    val dayName = today.format(DateTimeFormatter.ofPattern("EEEE"))
-    val date = today.format(DateTimeFormatter.ofPattern("MMM dd, yyyy"))
+    val currentDate = today()
+    val dayName = currentDate.fullWeekdayName()
+    val date = currentDate.monthDayYear()
+
 
     // subtle containerColor transition for pressed/interaction states
     val containerColor by animateColorAsState(

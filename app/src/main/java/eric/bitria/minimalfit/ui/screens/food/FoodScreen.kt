@@ -28,11 +28,10 @@ import eric.bitria.minimalfit.ui.components.food.cards.MealCard
 import eric.bitria.minimalfit.ui.components.food.lists.DietList
 import eric.bitria.minimalfit.ui.components.shared.progress.DailyProgressPager
 import eric.bitria.minimalfit.ui.theme.Spacing
-import eric.bitria.minimalfit.ui.util.WeekViewHelper
 import eric.bitria.minimalfit.ui.viewmodels.food.FoodViewModel
+import eric.bitria.minimalfit.util.last7DaysEndingToday
 import org.koin.androidx.compose.koinViewModel
-import org.koin.compose.koinInject
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 
 @Composable
 fun FoodScreen(
@@ -40,10 +39,9 @@ fun FoodScreen(
     onNavigateToDietDetail: (Diet) -> Unit,
     onNavigateToMealDetail: (Meal) -> Unit,
     viewModel: FoodViewModel = koinViewModel(),
-    weekViewHelper: WeekViewHelper = koinInject()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val weekDates = remember { weekViewHelper.last7Days() }
+    val weekDates = remember { last7DaysEndingToday() }
 
     val state = rememberLazyStaggeredGridState()
     val snappingLayout = remember(state) { StaggeredSnapLayoutInfoProvider(state) }

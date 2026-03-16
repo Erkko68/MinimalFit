@@ -44,10 +44,11 @@ import androidx.compose.ui.unit.em
 import eric.bitria.minimalfit.ui.components.track.map.TrackMap
 import eric.bitria.minimalfit.ui.components.track.map.fitRoute
 import eric.bitria.minimalfit.ui.theme.Spacing
+import eric.bitria.minimalfit.util.hourMinute
+import eric.bitria.minimalfit.util.weekdayMonthDay
 import eric.bitria.minimalfit.ui.viewmodels.track.TrackDetailViewModel
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
-import java.time.format.DateTimeFormatter
 import org.maplibre.compose.camera.rememberCameraState
 
 @Composable
@@ -126,8 +127,7 @@ fun TrackDetailScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                val dateTime = "${track.date.format(DateTimeFormatter.ofPattern("EEEE, MMM dd"))} • " +
-                        track.time.format(DateTimeFormatter.ofPattern("HH:mm"))
+                val dateTime = "${track.date.weekdayMonthDay()} • ${track.time.hourMinute()}"
 
                 Text(
                     text = dateTime,

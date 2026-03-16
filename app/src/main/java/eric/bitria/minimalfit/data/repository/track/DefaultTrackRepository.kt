@@ -3,7 +3,7 @@ package eric.bitria.minimalfit.data.repository.track
 import eric.bitria.minimalfit.data.datasource.TrackDatabase
 import eric.bitria.minimalfit.data.model.track.Track
 import kotlinx.coroutines.flow.Flow
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 
 /**
  * In-memory implementation of the outdoor activity repository.

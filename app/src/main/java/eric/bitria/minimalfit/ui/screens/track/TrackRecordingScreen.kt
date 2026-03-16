@@ -24,7 +24,7 @@ import eric.bitria.minimalfit.ui.components.permission.RequireActivityRecognitio
 import eric.bitria.minimalfit.ui.components.permission.RequireBackgroundLocationPermission
 import eric.bitria.minimalfit.ui.components.permission.RequireLocationPermission
 import eric.bitria.minimalfit.ui.components.permission.RequireNotificationPermission
-import eric.bitria.minimalfit.ui.components.settings.RequireLocationEnabled
+import eric.bitria.minimalfit.ui.components.settings.RequireLocationEnabledSetting
 import eric.bitria.minimalfit.ui.components.track.TrackingToolbar
 import eric.bitria.minimalfit.ui.components.track.map.TrackMap
 import eric.bitria.minimalfit.ui.components.track.map.TrackMapCameraAction
@@ -49,135 +49,156 @@ fun TrackRecordingScreen(
     var backgroundLocationPermissionGranted by remember { mutableStateOf(false) }
     var activityPermissionGranted by remember { mutableStateOf(false) }
     var notificationPermissionGranted by remember { mutableStateOf(false) }
-    var locationEnabled by remember { mutableStateOf(false) }
+    var gpsSettingEnabled by remember { mutableStateOf(false) }
 
-    // 1. Permission Logic Chain
+    // 1. Permission Logic Chain (Setup Phase)
     if (!locationPermissionGranted) {
         RequireLocationPermission(onPermissionResult = { isGranted ->
-            if (isGranted) locationPermissionGranted = true else onNavigateBack()
+            if (isGranted) locationPermissionGranted = true else {
+                onNavigateBack()
+                viewModel.stop()
+            }
         })
     } else if (!backgroundLocationPermissionGranted) {
         RequireBackgroundLocationPermission(onPermissionResult = { isGranted ->
-            if (isGranted) backgroundLocationPermissionGranted = true else onNavigateBack()
+            if (isGranted) backgroundLocationPermissionGranted = true else {
+                onNavigateBack()
+                viewModel.stop()
+            }
         })
     } else if (!activityPermissionGranted) {
         RequireActivityRecognitionPermission(onPermissionResult = { isGranted ->
-            if (isGranted) activityPermissionGranted = true else onNavigateBack()
+            if (isGranted) activityPermissionGranted = true else {
+                onNavigateBack()
+                viewModel.stop()
+            }
         })
     } else if (!notificationPermissionGranted) {
         RequireNotificationPermission(onPermissionResult = { isGranted ->
-            if (isGranted) notificationPermissionGranted = true else onNavigateBack()
-        })
-    } else if (!locationEnabled) {
-        RequireLocationEnabled(onResult = { isEnabled ->
-            if (isEnabled) locationEnabled = true else onNavigateBack()
+            if (isGranted) notificationPermissionGranted = true else {
+                onNavigateBack()
+                viewModel.stop()
+            }
         })
     } else {
-        // 2. Main View States
-        val uiState by viewModel.uiState.collectAsState()
-
-        val defaultLatLng = LatLng(0.0, 0.0)
-        val currentLatLng = uiState.currentLocation?.let { LatLng(it.latitude, it.longitude) } ?: defaultLatLng
-        val cameraState = rememberCameraState(
-            CameraPosition(
-                target = Position(currentLatLng.longitude, currentLatLng.latitude),
-                zoom = if (uiState.currentLocation != null) 16.0 else 1.0
-            )
-        )
-
-        var isFollowingUser by remember { mutableStateOf(true) }
-        var pendingCameraAction by remember { mutableStateOf<TrackMapCameraAction?>(null) }
-
-        // Fetch the initial location map center once permissions are good
-        LaunchedEffect(Unit) {
-            viewModel.requestInitialLocation()
-        }
-
-        // --- Follow Mode Logic ---
-
-        // 1. Center camera reactively when location updates or Follow Mode is toggled on
-        LaunchedEffect(uiState.currentLocation, isFollowingUser) {
-            if (isFollowingUser) {
-                uiState.currentLocation?.let { location ->
-                    cameraState.centerOnUser(LatLng(location.latitude, location.longitude))
-                }
+        // We always want to monitor the GPS setting, even after it's initially enabled.
+        // If it's disabled later, this component will show the dialog and notify onResult(false).
+        RequireLocationEnabledSetting(onResult = { isEnabled ->
+            gpsSettingEnabled = isEnabled
+            if (!isEnabled) {
+                viewModel.stop()
+                onNavigateBack()
             }
-        }
+        })
 
-        // 2. Disable Follow Mode if the user manually drags the map
-        LaunchedEffect(cameraState.isCameraMoving, cameraState.moveReason) {
-            if (cameraState.isCameraMoving && cameraState.moveReason == CameraMoveReason.GESTURE) {
-                isFollowingUser = false
-            }
-        }
+        if (gpsSettingEnabled) {
+            val uiState by viewModel.uiState.collectAsState()
 
-        // Handle Fit Route Action
-        LaunchedEffect(pendingCameraAction, uiState.routePoints) {
-            if (pendingCameraAction == TrackMapCameraAction.FitRoute) {
-                cameraState.fitRoute(uiState.routePoints)
-                pendingCameraAction = null
-            }
-        }
-
-        // 3. Main UI Layout
-        Box(modifier = Modifier.fillMaxSize()) {
-
-            // Map Layer
-            TrackMap(
-                routePoints = uiState.routePoints,
-                cameraState = cameraState,
-                modifier = Modifier.fillMaxSize()
+            val defaultLatLng = LatLng(0.0, 0.0)
+            val currentLatLng = uiState.currentLocation?.let { LatLng(it.latitude, it.longitude) } ?: defaultLatLng
+            val cameraState = rememberCameraState(
+                CameraPosition(
+                    target = Position(currentLatLng.longitude, currentLatLng.latitude),
+                    zoom = if (uiState.currentLocation != null) 16.0 else 1.0
+                )
             )
 
-            // Top Overlay: Floating Back Button
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .statusBarsPadding()
-                    .padding(Spacing.m)
-            ) {
-                FilledTonalIconButton(
-                    onClick = onNavigateBack,
-                    colors = IconButtonDefaults.filledTonalIconButtonColors(
-                        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f),
-                        contentColor = MaterialTheme.colorScheme.onSurface
-                    )
-                ) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+            var isFollowingUser by remember { mutableStateOf(true) }
+            var pendingCameraAction by remember { mutableStateOf<TrackMapCameraAction?>(null) }
+
+            // Fetch the initial location map center once permissions are good
+            LaunchedEffect(Unit) {
+                viewModel.requestInitialLocation()
+            }
+
+            // --- Follow Mode Logic ---
+
+            // 1. Center camera reactively when location updates or Follow Mode is toggled on
+            LaunchedEffect(uiState.currentLocation, isFollowingUser) {
+                if (isFollowingUser) {
+                    uiState.currentLocation?.let { location ->
+                        cameraState.centerOnUser(LatLng(location.latitude, location.longitude))
+                    }
                 }
             }
 
-            // Top Overlay: Floating Bold Stats
-            FloatingStats(
-                distanceKm = uiState.distanceKm,
-                duration = uiState.duration,
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .statusBarsPadding()
-                    .padding(top = Spacing.m)
-            )
-
-            // Bottom Overlay: Floating Toolbar (Pill)
-            TrackingToolbar(
-                state = uiState.recordingState,
-                onStartResume = {
-                    isFollowingUser = true // Re-center map when they start
-                    viewModel.startOrResume()
-                },
-                onPause = viewModel::pause,
-                onStop = viewModel::stop,
-                onCenterOnUser = {
-                    isFollowingUser = true
-                },
-                onCenterOnRoute = {
+            // 2. Disable Follow Mode if the user manually drags the map
+            LaunchedEffect(cameraState.isCameraMoving, cameraState.moveReason) {
+                if (cameraState.isCameraMoving && cameraState.moveReason == CameraMoveReason.GESTURE) {
                     isFollowingUser = false
-                    pendingCameraAction = TrackMapCameraAction.FitRoute
-                },
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .navigationBarsPadding()
-                    .padding(bottom = Spacing.l)
-            )
+                }
+            }
+
+            // Handle Fit Route Action
+            LaunchedEffect(pendingCameraAction, uiState.routePoints) {
+                if (pendingCameraAction == TrackMapCameraAction.FitRoute) {
+                    cameraState.fitRoute(uiState.routePoints)
+                    pendingCameraAction = null
+                }
+            }
+
+            // 3. Main UI Layout
+            Box(modifier = Modifier.fillMaxSize()) {
+
+                // Map Layer
+                TrackMap(
+                    routePoints = uiState.routePoints,
+                    cameraState = cameraState,
+                    modifier = Modifier.fillMaxSize()
+                )
+
+                // Top Overlay: Floating Back Button
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .statusBarsPadding()
+                        .padding(Spacing.m)
+                ) {
+                    FilledTonalIconButton(
+                        onClick = {
+                            onNavigateBack()
+                            viewModel.stop() },
+                        colors = IconButtonDefaults.filledTonalIconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f),
+                            contentColor = MaterialTheme.colorScheme.onSurface
+                        )
+                    ) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                }
+
+                // Top Overlay: Floating Bold Stats
+                FloatingStats(
+                    distanceKm = uiState.distanceKm,
+                    duration = uiState.duration,
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .statusBarsPadding()
+                        .padding(top = Spacing.m)
+                )
+
+                // Bottom Overlay: Floating Toolbar (Pill)
+                TrackingToolbar(
+                    state = uiState.recordingState,
+                    onStartResume = {
+                        isFollowingUser = true // Re-center map when they start
+                        viewModel.startOrResume()
+                    },
+                    onPause = viewModel::pause,
+                    onStop = viewModel::stop,
+                    onCenterOnUser = {
+                        isFollowingUser = true
+                    },
+                    onCenterOnRoute = {
+                        isFollowingUser = false
+                        pendingCameraAction = TrackMapCameraAction.FitRoute
+                    },
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .navigationBarsPadding()
+                        .padding(bottom = Spacing.l)
+                )
+            }
         }
     }
 }

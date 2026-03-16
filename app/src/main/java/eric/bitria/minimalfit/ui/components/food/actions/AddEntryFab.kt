@@ -12,14 +12,15 @@ import androidx.compose.ui.Modifier
 @Composable
 fun AddEntryFab(
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    text: String = "Add Entry"
 ) {
     ExtendedFloatingActionButton(
         onClick = onClick,
         containerColor = MaterialTheme.colorScheme.primaryContainer,
         contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
         icon = { Icon(Icons.Default.Add, contentDescription = null) },
-        text = { Text("Add Entry") },
+        text = { Text(text) },
         modifier = modifier
     )
 }

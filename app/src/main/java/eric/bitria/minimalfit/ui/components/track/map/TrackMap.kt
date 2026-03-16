@@ -3,10 +3,10 @@ package eric.bitria.minimalfit.ui.components.track.map
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import eric.bitria.minimalfit.data.entity.track.TrackPoint
 import eric.bitria.minimalfit.ui.theme.Spacing
@@ -61,8 +61,8 @@ fun TrackMap(
                 LineLayer(
                     id = "route-layer",
                     source = routeSource,
-                    color = const(Color.Blue),
-                    width = const(4.dp)
+                    color = const(MaterialTheme.colorScheme.primary),
+                    width = const(8.dp)
                 )
             }
         }

@@ -79,7 +79,10 @@ fun DailyLogScreen(
     Scaffold(
         floatingActionButtonPosition = FabPosition.Center,
         floatingActionButton = {
-            AddEntryFab(onClick = { dailyLogViewModel.openSearchDialog() })
+            AddEntryFab(
+                onClick = { dailyLogViewModel.openSearchDialog() },
+                text = "Add Meal"
+            )
         }
     ) { paddingValues ->
         Box(

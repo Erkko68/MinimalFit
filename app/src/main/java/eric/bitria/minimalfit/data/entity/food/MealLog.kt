@@ -1,4 +1,4 @@
-package eric.bitria.minimalfit.data.model.food
+package eric.bitria.minimalfit.data.entity.food
 
 import kotlinx.serialization.Serializable
 import java.util.UUID

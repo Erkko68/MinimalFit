@@ -1,7 +1,7 @@
 package eric.bitria.minimalfit.ui.components.track.map
 
 import androidx.compose.foundation.layout.PaddingValues
-import eric.bitria.minimalfit.data.model.track.TrackPoint
+import eric.bitria.minimalfit.data.entity.track.TrackPoint
 import eric.bitria.minimalfit.ui.theme.Spacing
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.compose.camera.CameraPosition

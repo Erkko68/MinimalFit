@@ -1,7 +1,7 @@
 package eric.bitria.minimalfit.data.repository.food
 
-import eric.bitria.minimalfit.data.datasource.DietDatabase
-import eric.bitria.minimalfit.data.model.food.Diet
+import eric.bitria.minimalfit.data.database.DietDatabase
+import eric.bitria.minimalfit.data.entity.food.Diet
 import kotlinx.coroutines.flow.Flow
 
 class DefaultDietRepository(private val dietDatabase: DietDatabase) : DietRepository {

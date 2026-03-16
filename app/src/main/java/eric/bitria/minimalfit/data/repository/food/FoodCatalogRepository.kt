@@ -1,6 +1,6 @@
 package eric.bitria.minimalfit.data.repository.food
 
-import eric.bitria.minimalfit.data.model.food.Meal
+import eric.bitria.minimalfit.data.entity.food.Meal
 import kotlinx.coroutines.flow.Flow
 
 /**

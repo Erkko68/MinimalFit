@@ -2,7 +2,7 @@ package eric.bitria.minimalfit.ui.viewmodels.food
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import eric.bitria.minimalfit.data.model.food.Diet
+import eric.bitria.minimalfit.data.entity.food.Diet
 import eric.bitria.minimalfit.data.repository.food.DietRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow

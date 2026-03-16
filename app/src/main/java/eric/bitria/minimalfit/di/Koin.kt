@@ -1,9 +1,9 @@
 package eric.bitria.minimalfit.di
 
-import eric.bitria.minimalfit.data.datasource.DietDatabase
-import eric.bitria.minimalfit.data.datasource.FoodDatabase
-import eric.bitria.minimalfit.data.datasource.JournalDatabase
-import eric.bitria.minimalfit.data.datasource.TrackDatabase
+import eric.bitria.minimalfit.data.database.DietDatabase
+import eric.bitria.minimalfit.data.database.FoodDatabase
+import eric.bitria.minimalfit.data.database.JournalDatabase
+import eric.bitria.minimalfit.data.database.TrackDatabase
 import eric.bitria.minimalfit.data.repository.food.DietRepository
 import eric.bitria.minimalfit.data.repository.food.FoodCatalogRepository
 import eric.bitria.minimalfit.data.repository.food.DefaultDietRepository

@@ -1,7 +1,7 @@
 package eric.bitria.minimalfit.data.track
 
-import eric.bitria.minimalfit.data.model.track.Track
-import eric.bitria.minimalfit.data.model.track.TrackPoint
+import eric.bitria.minimalfit.data.entity.track.Track
+import eric.bitria.minimalfit.data.entity.track.TrackPoint
 import eric.bitria.minimalfit.data.repository.track.LocationRepository
 import eric.bitria.minimalfit.data.repository.track.TrackRepository
 import eric.bitria.minimalfit.util.currentDateAndTime

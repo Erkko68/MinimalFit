@@ -22,7 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import eric.bitria.minimalfit.data.model.track.Track
+import eric.bitria.minimalfit.data.entity.track.Track
 import eric.bitria.minimalfit.ui.components.track.route.TrackRouteCanvas
 import eric.bitria.minimalfit.ui.theme.Spacing
 import eric.bitria.minimalfit.util.hourMinute

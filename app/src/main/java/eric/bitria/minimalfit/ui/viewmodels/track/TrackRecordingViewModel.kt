@@ -3,7 +3,7 @@ package eric.bitria.minimalfit.ui.viewmodels.track
 import android.location.Location
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import eric.bitria.minimalfit.data.model.track.TrackPoint
+import eric.bitria.minimalfit.data.entity.track.TrackPoint
 import eric.bitria.minimalfit.data.repository.track.LocationRepository
 import eric.bitria.minimalfit.data.track.RecordingState
 import eric.bitria.minimalfit.data.track.TrackingManager

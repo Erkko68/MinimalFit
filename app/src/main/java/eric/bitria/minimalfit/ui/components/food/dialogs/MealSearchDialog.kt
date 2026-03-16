@@ -28,7 +28,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import eric.bitria.minimalfit.data.model.food.Meal
+import eric.bitria.minimalfit.data.entity.food.Meal
 import eric.bitria.minimalfit.ui.theme.Spacing
 
 @OptIn(ExperimentalMaterial3Api::class)

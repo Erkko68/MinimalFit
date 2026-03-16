@@ -1,6 +1,6 @@
-package eric.bitria.minimalfit.data.datasource
+package eric.bitria.minimalfit.data.database
 
-import eric.bitria.minimalfit.data.model.food.Diet
+import eric.bitria.minimalfit.data.entity.food.Diet
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map

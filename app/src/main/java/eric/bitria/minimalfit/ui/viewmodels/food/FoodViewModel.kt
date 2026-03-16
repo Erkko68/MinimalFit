@@ -2,9 +2,9 @@ package eric.bitria.minimalfit.ui.viewmodels.food
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import eric.bitria.minimalfit.data.model.food.DailyMealLog
-import eric.bitria.minimalfit.data.model.food.Diet
-import eric.bitria.minimalfit.data.model.food.Meal
+import eric.bitria.minimalfit.data.entity.food.DailyMealLog
+import eric.bitria.minimalfit.data.entity.food.Diet
+import eric.bitria.minimalfit.data.entity.food.Meal
 import eric.bitria.minimalfit.data.repository.food.DietRepository
 import eric.bitria.minimalfit.data.repository.food.FoodCatalogRepository
 import eric.bitria.minimalfit.data.repository.food.JournalRepository

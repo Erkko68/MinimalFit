@@ -1,9 +1,9 @@
 package eric.bitria.minimalfit.data.repository.food
 
-import eric.bitria.minimalfit.data.datasource.JournalDatabase
-import eric.bitria.minimalfit.data.model.food.DailyMealLog
-import eric.bitria.minimalfit.data.model.food.Meal
-import eric.bitria.minimalfit.data.model.food.MealLog
+import eric.bitria.minimalfit.data.database.JournalDatabase
+import eric.bitria.minimalfit.data.entity.food.DailyMealLog
+import eric.bitria.minimalfit.data.entity.food.Meal
+import eric.bitria.minimalfit.data.entity.food.MealLog
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.LocalDate
 

@@ -1,4 +1,4 @@
-package eric.bitria.minimalfit.data.model.track
+package eric.bitria.minimalfit.data.entity.track
 
 import eric.bitria.minimalfit.util.nowInstant
 import kotlinx.serialization.Serializable

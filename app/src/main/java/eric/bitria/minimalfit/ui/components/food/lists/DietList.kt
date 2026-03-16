@@ -7,7 +7,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import eric.bitria.minimalfit.data.model.food.Diet
+import eric.bitria.minimalfit.data.entity.food.Diet
 import eric.bitria.minimalfit.ui.components.food.cards.DietCard
 import eric.bitria.minimalfit.ui.theme.Spacing
 

@@ -1,6 +1,6 @@
 package eric.bitria.minimalfit.data.repository.track
 
-import eric.bitria.minimalfit.data.model.track.Track
+import eric.bitria.minimalfit.data.entity.track.Track
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.LocalDate
 

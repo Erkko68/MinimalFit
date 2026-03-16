@@ -17,7 +17,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import coil.compose.AsyncImage
-import eric.bitria.minimalfit.data.model.food.Diet
+import eric.bitria.minimalfit.data.entity.food.Diet
 import eric.bitria.minimalfit.ui.theme.Spacing
 
 @Composable

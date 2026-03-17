@@ -35,6 +35,7 @@ interface FoodCatalogRepository {
 
     suspend fun addIngredientToMeal(mealId: String, ingredientId: String, amount: Float)
     suspend fun removeIngredientsFromMeal(mealId: String)
+    suspend fun removeIngredientFromMeal(mealId: String, ingredientId: String)
 
     // --- INGREDIENTS ---
     /** Returns all available ingredients. Supports optional search. */

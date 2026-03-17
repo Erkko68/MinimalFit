@@ -3,9 +3,7 @@ package eric.bitria.minimalfit.data.repository.food
 import eric.bitria.minimalfit.data.database.dao.DietDao
 import eric.bitria.minimalfit.data.database.dao.MealDao
 import eric.bitria.minimalfit.data.entity.food.Diet
-import eric.bitria.minimalfit.data.entity.food.Ingredient
 import eric.bitria.minimalfit.data.entity.food.Meal
-import eric.bitria.minimalfit.data.entity.food.MeasurementUnit
 import eric.bitria.minimalfit.data.entity.food.relations.DietMealCrossRef
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -61,5 +59,9 @@ class DefaultDietRepository(
 
     override suspend fun addMealToDiet(dietId: String, mealId: String, amount: Float) {
         dietDao.insertDietMealCrossRef(DietMealCrossRef(dietId, mealId, amount))
+    }
+
+    override suspend fun removeMealFromDiet(dietId: String, mealId: String) {
+        dietDao.deleteMealFromDiet(dietId, mealId)
     }
 }

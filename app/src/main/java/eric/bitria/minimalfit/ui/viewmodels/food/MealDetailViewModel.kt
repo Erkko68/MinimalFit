@@ -98,6 +98,12 @@ class MealDetailViewModel(
         }
     }
 
+    fun deleteIngredient(ingredient: Ingredient) {
+        viewModelScope.launch {
+            foodCatalog.removeIngredientFromMeal(mealId, ingredient.id)
+        }
+    }
+
     fun updateMeal(meal: Meal) {
         viewModelScope.launch {
             foodCatalog.updateMeal(meal)

@@ -26,4 +26,5 @@ interface DietRepository {
     fun getDietCalories(dietId: String): Flow<Int>
 
     suspend fun addMealToDiet(dietId: String, mealId: String, amount: Float)
+    suspend fun removeMealFromDiet(dietId: String, mealId: String)
 }

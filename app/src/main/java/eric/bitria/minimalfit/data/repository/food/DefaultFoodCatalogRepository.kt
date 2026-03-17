@@ -82,6 +82,10 @@ class DefaultFoodCatalogRepository(
         mealDao.deleteIngredientsForMeal(mealId)
     }
 
+    override suspend fun removeIngredientFromMeal(mealId: String, ingredientId: String) {
+        mealDao.deleteIngredientFromMeal(mealId, ingredientId)
+    }
+
     override fun getIngredients(query: String): Flow<List<Ingredient>> =
         ingredientDao.searchIngredients(query)
 

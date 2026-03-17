@@ -100,6 +100,12 @@ class DietDetailViewModel(
         }
     }
 
+    fun removeMealFromDiet(mealId: String) {
+        viewModelScope.launch {
+            dietRepository.removeMealFromDiet(dietId, mealId)
+        }
+    }
+
     fun updateDiet(diet: Diet) {
         viewModelScope.launch {
             dietRepository.updateDiet(diet)

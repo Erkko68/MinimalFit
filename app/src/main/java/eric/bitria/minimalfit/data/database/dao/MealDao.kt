@@ -36,6 +36,9 @@ interface MealDao {
     @Query("DELETE FROM meal_ingredient_cross_ref WHERE mealId = :mealId")
     suspend fun deleteIngredientsForMeal(mealId: String)
 
+    @Query("DELETE FROM meal_ingredient_cross_ref WHERE mealId = :mealId AND ingredientId = :ingredientId")
+    suspend fun deleteIngredientFromMeal(mealId: String, ingredientId: String)
+
     @Query("SELECT * FROM meal_ingredient_cross_ref WHERE mealId = :mealId")
     fun getIngredientsForMeal(mealId: String): Flow<List<MealIngredientCrossRef>>
 }

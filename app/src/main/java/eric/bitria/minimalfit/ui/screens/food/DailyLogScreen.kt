@@ -1,5 +1,7 @@
 package eric.bitria.minimalfit.ui.screens.food
 
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -28,6 +30,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.em
 import eric.bitria.minimalfit.data.entity.food.Meal
@@ -46,6 +49,7 @@ import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 import kotlinx.datetime.LocalDate
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun DailyLogScreen(
     date: LocalDate,
@@ -142,6 +146,13 @@ fun DailyLogScreen(
                         key = { it.logId }
                     ) { model ->
                         SwipeToDeleteCard(
+                            modifier = Modifier
+                                .clip(MaterialTheme.shapes.extraLarge)
+                                .animateItem(
+                                    fadeInSpec = tween(durationMillis = 300),
+                                    fadeOutSpec = tween(durationMillis = 300),
+                                    placementSpec = tween(durationMillis = 300)
+                                ),
                             onDismiss = { dailyLogViewModel.removeMealLog(model.logId) }
                         ) {
                             MealCard(

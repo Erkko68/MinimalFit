@@ -19,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.em
 import eric.bitria.minimalfit.ui.components.animations.SwipeToDeleteCard
@@ -69,7 +70,9 @@ fun TrackScreen(
             items(tracks, key = { it.id }) { track ->
                 SwipeToDeleteCard(
                     onDismiss = { viewModel.deleteActivity(track.id) },
-                    modifier = Modifier.animateItem(
+                    modifier = Modifier
+                        .clip(MaterialTheme.shapes.extraLarge)
+                        .animateItem(
                         fadeInSpec = tween(durationMillis = 300),
                         fadeOutSpec = tween(durationMillis = 300),
                         placementSpec = tween(durationMillis = 300)

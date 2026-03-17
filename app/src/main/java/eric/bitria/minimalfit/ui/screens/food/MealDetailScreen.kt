@@ -1,5 +1,7 @@
 package eric.bitria.minimalfit.ui.screens.food
 
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -27,11 +29,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import coil.compose.AsyncImage
+import eric.bitria.minimalfit.ui.components.animations.SwipeToDeleteCard
 import eric.bitria.minimalfit.ui.components.food.actions.AddEntryFab
 import eric.bitria.minimalfit.ui.components.food.dialogs.SearchableItemDialog
 import eric.bitria.minimalfit.ui.components.food.dialogs.item.IngredientItem
@@ -41,6 +45,7 @@ import eric.bitria.minimalfit.ui.viewmodels.food.MealDetailViewModel
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MealDetailScreen(
     mealId: String,
@@ -144,12 +149,23 @@ fun MealDetailScreen(
                         )
                     }
 
-                    items(uiState.ingredients) { itemState ->
-                        IngredientListItem(
-                            ingredient = itemState.ingredient,
-                            amount = itemState.amount,
-                            modifier = Modifier.padding(horizontal = Spacing.m, vertical = Spacing.xs)
-                        )
+                    items(uiState.ingredients, key = { it.ingredient.id }) { itemState ->
+                        SwipeToDeleteCard(
+                            onDismiss = { viewModel.deleteIngredient(itemState.ingredient) },
+                            modifier = Modifier
+                                .padding(horizontal = Spacing.m, vertical = Spacing.xs)
+                                .clip(MaterialTheme.shapes.medium)
+                                .animateItem(
+                                    fadeInSpec = tween(durationMillis = 300),
+                                    fadeOutSpec = tween(durationMillis = 300),
+                                    placementSpec = tween(durationMillis = 300)
+                                )
+                        ) {
+                            IngredientListItem(
+                                ingredient = itemState.ingredient,
+                                amount = itemState.amount
+                            )
+                        }
                     }
                 }
             }

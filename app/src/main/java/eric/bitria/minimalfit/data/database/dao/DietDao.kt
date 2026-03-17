@@ -36,6 +36,9 @@ interface DietDao {
     @Query("DELETE FROM diet_meal_cross_ref WHERE dietId = :dietId")
     suspend fun deleteMealsForDiet(dietId: String)
 
+    @Query("DELETE FROM diet_meal_cross_ref WHERE dietId = :dietId AND mealId = :mealId")
+    suspend fun deleteMealFromDiet(dietId: String, mealId: String)
+
     @Query("SELECT * FROM diet_meal_cross_ref WHERE dietId = :dietId")
     fun getMealsForDiet(dietId: String): Flow<List<DietMealCrossRef>>
 }

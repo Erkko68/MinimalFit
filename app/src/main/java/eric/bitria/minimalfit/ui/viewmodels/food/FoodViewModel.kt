@@ -59,7 +59,9 @@ class FoodViewModel(
             val end = date.endOfDayEpoch()
             journal.getMealLogsInRange(start, end).flatMapLatest { logs ->
                 if (logs.isEmpty()) flowOf(0)
-                else combine(logs.map { journal.getLogCalories(it.id) }) { it.sum() }
+                else combine(logs.map { journal.getLogCalories(it.id) }) { calories ->
+                    calories.sum()
+                }
             }.map { calories ->
                 DailyCalorieData(
                     dayLabel = date.shortWeekdayLabel(),

@@ -35,10 +35,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import coil.compose.AsyncImage
+import eric.bitria.minimalfit.data.entity.food.LoggedMeal
 import eric.bitria.minimalfit.data.entity.food.Meal
 import eric.bitria.minimalfit.ui.components.food.actions.AddEntryFab
 import eric.bitria.minimalfit.ui.components.food.cards.MealCard
-import eric.bitria.minimalfit.ui.components.food.dialogs.MealSearchDialog
+import eric.bitria.minimalfit.ui.components.food.dialogs.SearchableItemDialog
+import eric.bitria.minimalfit.ui.components.food.dialogs.item.MealItem
 import eric.bitria.minimalfit.ui.theme.Spacing
 import eric.bitria.minimalfit.ui.viewmodels.food.DietDetailViewModel
 import org.koin.androidx.compose.koinViewModel
@@ -183,10 +185,22 @@ fun DietDetailScreen(
     }
 
     if (uiState.showSearchDialog) {
-        MealSearchDialog(
-            savedMeals = uiState.savedMeals,
+        SearchableItemDialog(
+            title = "Log Meal",
+            placeholder = "e.g., Chicken Salad",
+            items = uiState.savedMeals,
+            itemKey = { it.id },
+            filter = { meal, query -> meal.name.contains(query, ignoreCase = true) },
             onDismiss = { viewModel.dismissSearchDialog() },
-            onAddMeal = { mealToAdd -> viewModel.addMeal(mealToAdd) }
+            itemContent = { meal ->
+                MealItem(
+                    meal = meal,
+                    onAdd = { amount ->
+                        viewModel.addMeal(LoggedMeal(mealId = meal.id, amount = amount))
+                        viewModel.dismissSearchDialog()
+                    }
+                )
+            }
         )
     }
 }

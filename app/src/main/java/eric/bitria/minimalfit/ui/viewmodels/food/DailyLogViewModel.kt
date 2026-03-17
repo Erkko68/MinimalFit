@@ -2,6 +2,7 @@ package eric.bitria.minimalfit.ui.viewmodels.food
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import eric.bitria.minimalfit.data.entity.food.LoggedMeal
 import eric.bitria.minimalfit.data.entity.food.Meal
 import eric.bitria.minimalfit.data.repository.food.FoodCatalogRepository
 import eric.bitria.minimalfit.data.repository.food.JournalRepository
@@ -43,7 +44,7 @@ class DailyLogViewModel(
         showDialog to query
     }.flatMapLatest { (showDialog, query) ->
         journal.getMealLog(date).flatMapLatest { log ->
-            val mealIds = log?.mealIds ?: emptyList()
+            val mealIds = log?.loggedMeals?.map { it.mealId } ?: emptyList()
             
             val mealsFlow = if (mealIds.isEmpty()) {
                 flowOf(emptyList())
@@ -62,7 +63,7 @@ class DailyLogViewModel(
                     date = date,
                     meals = meals,
                     savedMeals = savedMeals,
-                    totalCalories = meals.sumOf { it.calories },
+                    totalCalories = meals.sumOf { it.totalCalories },
                     showSearchDialog = showDialog,
                     searchMealQuery = query
                 )
@@ -86,9 +87,9 @@ class DailyLogViewModel(
         _searchMealQuery.value = query
     }
 
-    fun addMeal(meal: Meal) {
+    fun addMeal(loggedMeal: LoggedMeal) {
         viewModelScope.launch {
-            journal.addMealToLog(date, meal.id)
+            journal.addMealToLog(date, loggedMeal)
         }
     }
 

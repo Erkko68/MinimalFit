@@ -113,10 +113,7 @@ fun AppNavHost(
             val mealDetail = backStackEntry.toRoute<Route.MealDetail>()
             MealDetailScreen(
                 mealId = mealDetail.mealId,
-                onBackClick = { navController.popBackStack() },
-                onNavigateToMealDetail = { meal ->
-                    navController.navigate(Route.MealDetail(mealId = meal.id))
-                }
+                onBackClick = { navController.popBackStack() }
             )
         }
     }

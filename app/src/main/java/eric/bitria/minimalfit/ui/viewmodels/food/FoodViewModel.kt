@@ -90,8 +90,8 @@ class FoodViewModel(
         return FoodUiState(
             weeklyProgress = days.map { date ->
                 val log = logs[date]
-                val dailyCalories = log?.mealIds?.sumOf { mealId ->
-                    allMealsMap[mealId]?.calories ?: 0
+                val dailyCalories = log?.loggedMeals?.sumOf { loggedMeal ->
+                    allMealsMap[loggedMeal.mealId]?.totalCalories ?: 0
                 } ?: 0
 
                 DailyCalorieData(

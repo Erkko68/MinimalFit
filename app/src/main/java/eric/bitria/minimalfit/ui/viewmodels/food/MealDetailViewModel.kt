@@ -2,6 +2,8 @@ package eric.bitria.minimalfit.ui.viewmodels.food
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import eric.bitria.minimalfit.data.entity.food.Ingredient
+import eric.bitria.minimalfit.data.entity.food.IngredientReference
 import eric.bitria.minimalfit.data.entity.food.Meal
 import eric.bitria.minimalfit.data.repository.food.FoodCatalogRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -11,16 +13,20 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
+data class MealIngredientUiState(
+    val ingredient: Ingredient,
+    val amount: Float
+)
+
 data class MealDetailUiState(
     val meal: Meal? = null,
-    val relatedMeals: List<Meal> = emptyList(),
-    val savedMeals: List<Meal> = emptyList(),
+    val ingredients: List<MealIngredientUiState> = emptyList(),
+    val savedIngredients: List<Ingredient> = emptyList(),
     val showSearchDialog: Boolean = false,
-    val searchMealQuery: String = ""
+    val searchIngredientQuery: String = ""
 )
 
 class MealDetailViewModel(
@@ -29,37 +35,42 @@ class MealDetailViewModel(
 ) : ViewModel() {
 
     private val _showSearchDialog = MutableStateFlow(false)
-    private val _searchMealQuery = MutableStateFlow("")
+    private val _searchIngredientQuery = MutableStateFlow("")
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val uiState: StateFlow<MealDetailUiState> = combine(
         _showSearchDialog,
-        _searchMealQuery
+        _searchIngredientQuery
     ) { showDialog, query ->
         showDialog to query
     }.flatMapLatest { (showDialog, query) ->
         foodCatalog.getMeal(mealId).flatMapLatest { meal ->
             if (meal == null) return@flatMapLatest flowOf(MealDetailUiState())
 
-            val relatedIds = meal.relatedMealIds
-            val relatedFlow = if (relatedIds.isEmpty()) {
+            val ingredientRefs = meal.ingredients
+            val ingredientsFlow = if (ingredientRefs.isEmpty()) {
                 flowOf(emptyList())
             } else {
-                combine(relatedIds.map { foodCatalog.getMeal(it) }) { mealsArray ->
-                    mealsArray.filterNotNull()
+                combine(ingredientRefs.map { ref ->
+                    foodCatalog.getIngredient(ref.ingredientId).flatMapLatest { ingredient ->
+                        if (ingredient == null) flowOf(null)
+                        else flowOf(MealIngredientUiState(ingredient, ref.amount))
+                    }
+                }) { ingredientsArray ->
+                    ingredientsArray.filterNotNull()
                 }
             }
 
             combine(
-                relatedFlow,
-                foodCatalog.getMeals(query)
-            ) { related, savedMeals ->
+                ingredientsFlow,
+                foodCatalog.getIngredients(query)
+            ) { ingredients, savedIngredients ->
                 MealDetailUiState(
                     meal = meal,
-                    relatedMeals = related,
-                    savedMeals = savedMeals,
+                    ingredients = ingredients,
+                    savedIngredients = savedIngredients,
                     showSearchDialog = showDialog,
-                    searchMealQuery = query
+                    searchIngredientQuery = query
                 )
             }
         }
@@ -77,19 +88,16 @@ class MealDetailViewModel(
         _showSearchDialog.value = false
     }
 
-    fun onSearchMealQueryChange(query: String) {
-        _searchMealQuery.value = query
+    fun onSearchIngredientQueryChange(query: String) {
+        _searchIngredientQuery.value = query
     }
 
-    fun addMeal(mealToAdd: Meal) {
+    fun addIngredient(ingredient: Ingredient, amount: Float) {
         viewModelScope.launch {
             val currentMeal = uiState.value.meal ?: return@launch
-            if (!currentMeal.relatedMealIds.contains(mealToAdd.id)) {
-                val updatedMeal = currentMeal.copy(
-                    relatedMealIds = currentMeal.relatedMealIds + mealToAdd.id
-                )
-                foodCatalog.updateMeal(updatedMeal)
-            }
+            val updatedIngredients = currentMeal.ingredients + IngredientReference(ingredient.id, amount)
+            val updatedMeal = currentMeal.copy(ingredients = updatedIngredients)
+            foodCatalog.updateMeal(updatedMeal)
             dismissSearchDialog()
         }
     }

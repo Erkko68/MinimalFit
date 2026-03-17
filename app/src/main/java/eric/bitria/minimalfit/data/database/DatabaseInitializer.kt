@@ -1,7 +1,10 @@
 package eric.bitria.minimalfit.data.database
 
 import eric.bitria.minimalfit.data.entity.food.Diet
+import eric.bitria.minimalfit.data.entity.food.Ingredient
+import eric.bitria.minimalfit.data.entity.food.IngredientReference
 import eric.bitria.minimalfit.data.entity.food.Meal
+import eric.bitria.minimalfit.data.entity.food.MeasurementUnit
 import eric.bitria.minimalfit.data.entity.track.Track
 import eric.bitria.minimalfit.data.entity.track.TrackPoint
 import eric.bitria.minimalfit.util.today
@@ -16,104 +19,149 @@ import kotlin.time.Duration.Companion.minutes
 class DatabaseInitializer(private val db: AppDatabase) {
 
     suspend fun initializeMockData() = withContext(Dispatchers.IO) {
+        val ingredientDao = db.ingredientDao()
         val mealDao = db.mealDao()
         val dietDao = db.dietDao()
         val trackDao = db.trackDao()
 
-        // 1. Initialize Meals
+        // 1. Initialize Ingredients
+        val ingredients = listOf(
+            Ingredient(
+                id = "ing-oats",
+                name = "Oats",
+                baseCalories = 389, // per 100g
+                measurementUnit = MeasurementUnit.GRAMS
+            ),
+            Ingredient(
+                id = "ing-blueberries",
+                name = "Blueberries",
+                baseCalories = 57, // per 100g
+                measurementUnit = MeasurementUnit.GRAMS
+            ),
+            Ingredient(
+                id = "ing-chicken",
+                name = "Chicken Breast",
+                baseCalories = 165, // per 100g
+                measurementUnit = MeasurementUnit.GRAMS
+            ),
+            Ingredient(
+                id = "ing-avocado",
+                name = "Avocado",
+                baseCalories = 160, // per 100g
+                measurementUnit = MeasurementUnit.GRAMS
+            ),
+            Ingredient(
+                id = "ing-bread",
+                name = "Whole Wheat Bread",
+                baseCalories = 250, // per 100g
+                measurementUnit = MeasurementUnit.GRAMS
+            ),
+            Ingredient(
+                id = "ing-protein-powder",
+                name = "Whey Protein",
+                baseCalories = 120, // per piece (scoop)
+                measurementUnit = MeasurementUnit.PIECE
+            ),
+            Ingredient(
+                id = "ing-salmon",
+                name = "Salmon Fillet",
+                baseCalories = 208, // per 100g
+                measurementUnit = MeasurementUnit.GRAMS
+            ),
+            Ingredient(
+                id = "ing-asparagus",
+                name = "Asparagus",
+                baseCalories = 20, // per 100g
+                measurementUnit = MeasurementUnit.GRAMS
+            ),
+            Ingredient(
+                id = "ing-beef",
+                name = "Lean Beef",
+                baseCalories = 250, // per 100g
+                measurementUnit = MeasurementUnit.GRAMS
+            ),
+            Ingredient(
+                id = "ing-greek-yogurt",
+                name = "Greek Yogurt",
+                baseCalories = 59, // per 100g
+                measurementUnit = MeasurementUnit.GRAMS
+            )
+        )
+        ingredients.forEach { ingredientDao.insertIngredient(it) }
+
+        // 2. Initialize Meals
         val meals = listOf(
             Meal(
                 id = "meal-oatmeal-berries",
                 name = "Oatmeal with Berries",
-                calories = 350,
-                imageUrl = "https://images.unsplash.com/photo-1517673132405-a56a62b18caf?q=80&w=500&auto=format&fit=crop",
                 description = "Healthy breakfast bowl with fiber and antioxidants.",
-                relatedMealIds = listOf("meal-greek-yogurt", "meal-protein-shake")
+                imageUrl = "https://images.unsplash.com/photo-1517673132405-a56a62b18caf?q=80&w=500&auto=format&fit=crop",
+                ingredients = listOf(
+                    IngredientReference("ing-oats", 50f),
+                    IngredientReference("ing-blueberries", 30f)
+                )
             ),
             Meal(
                 id = "meal-grilled-chicken-salad",
                 name = "Grilled Chicken Salad",
-                calories = 450,
-                imageUrl = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=500&auto=format&fit=crop",
                 description = "Balanced lunch with lean protein and greens.",
-                relatedMealIds = listOf("meal-avocado-toast")
-            ),
-            Meal(
-                id = "meal-protein-shake",
-                name = "Protein Shake",
-                calories = 200,
-                description = "Post-workout recovery option.",
-                relatedMealIds = listOf("meal-oatmeal-berries")
-            ),
-            Meal(
-                id = "meal-salmon-asparagus",
-                name = "Salmon and Asparagus",
-                calories = 600,
-                imageUrl = "https://images.unsplash.com/photo-1467003909585-2f8a72700288?q=80&w=500&auto=format&fit=crop",
-                description = "Omega-3 rich dinner.",
-                relatedMealIds = listOf("meal-beef-stir-fry")
-            ),
-            Meal(
-                id = "meal-greek-yogurt",
-                name = "Greek Yogurt",
-                calories = 150,
-                imageUrl = "https://images.unsplash.com/photo-1488477181946-6428a0291777?q=80&w=500&auto=format&fit=crop",
-                description = "High-protein snack.",
-                relatedMealIds = listOf("meal-oatmeal-berries")
+                imageUrl = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=500&auto=format&fit=crop",
+                ingredients = listOf(
+                    IngredientReference("ing-chicken", 150f),
+                    IngredientReference("ing-avocado", 50f)
+                )
             ),
             Meal(
                 id = "meal-avocado-toast",
                 name = "Avocado Toast",
-                calories = 300,
-                imageUrl = "https://images.unsplash.com/photo-1525351484163-7529414344d8?q=80&w=500&auto=format&fit=crop",
                 description = "Simple breakfast with healthy fats.",
-                relatedMealIds = listOf("meal-grilled-chicken-salad")
+                imageUrl = "https://images.unsplash.com/photo-1525351484163-7529414344d8?q=80&w=500&auto=format&fit=crop",
+                ingredients = listOf(
+                    IngredientReference("ing-bread", 60f),
+                    IngredientReference("ing-avocado", 40f)
+                )
             ),
             Meal(
-                id = "meal-beef-stir-fry",
-                name = "Beef Stir Fry",
-                calories = 550,
-                imageUrl = "https://images.unsplash.com/photo-1512058564366-18510be2db19?q=80&w=500&auto=format&fit=crop",
-                description = "Lunch option with veggies and protein.",
-                relatedMealIds = listOf("meal-salmon-asparagus")
+                id = "meal-protein-shake",
+                name = "Post-Workout Shake",
+                description = "Quick recovery protein shake.",
+                ingredients = listOf(
+                    IngredientReference("ing-protein-powder", 1f)
+                )
+            ),
+            Meal(
+                id = "meal-salmon-asparagus",
+                name = "Salmon and Asparagus",
+                description = "Omega-3 rich dinner.",
+                imageUrl = "https://images.unsplash.com/photo-1467003909585-2f8a72700288?q=80&w=500&auto=format&fit=crop",
+                ingredients = listOf(
+                    IngredientReference("ing-salmon", 200f),
+                    IngredientReference("ing-asparagus", 100f)
+                )
             )
         )
         meals.forEach { mealDao.insertMeal(it) }
 
-        // 2. Initialize Diets
+        // 3. Initialize Diets
         val diets = listOf(
             Diet(
                 id = "diet-keto",
                 name = "Keto Diet",
                 description = "High-fat, low-carb diet.",
                 imageUrl = "https://images.unsplash.com/photo-1552332386-f8dd00dc2f85?q=80&w=2070&auto=format&fit=crop",
-                relatedMealIds = listOf("meal-salmon-asparagus", "meal-beef-stir-fry")
-            ),
-            Diet(
-                id = "diet-mediterranean",
-                name = "Mediterranean",
-                description = "Emphasis on plant-based foods and healthy fats.",
-                imageUrl = "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=2070&auto=format&fit=crop",
-                relatedMealIds = listOf("meal-grilled-chicken-salad", "meal-avocado-toast")
+                mealIds = listOf("meal-salmon-asparagus", "meal-grilled-chicken-salad")
             ),
             Diet(
                 id = "diet-vegan",
                 name = "Vegan",
                 description = "Excludes all animal products.",
                 imageUrl = "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=2070&auto=format&fit=crop",
-                relatedMealIds = listOf("meal-oatmeal-berries", "meal-avocado-toast")
-            ),
-            Diet(
-                id = "diet-paleo",
-                name = "Paleo",
-                description = "Focuses on foods similar to what might have been eaten during the Paleolithic era.",
-                imageUrl = "https://images.unsplash.com/photo-1505576391880-b3f9d713dc4f?q=80&w=2070&auto=format&fit=crop",
-                relatedMealIds = listOf("meal-beef-stir-fry")
+                mealIds = listOf("meal-oatmeal-berries", "meal-avocado-toast")
             )
         )
         diets.forEach { dietDao.insertDiet(it) }
 
-        // 3. Initialize Tracks
+        // 4. Initialize Tracks
         val eveningRunPoints = listOf(
             TrackPoint(41.38879, 2.18992, Instant.parse("2026-03-09T16:30:00Z")),
             TrackPoint(41.38950, 2.19120, Instant.parse("2026-03-09T16:31:00Z")),

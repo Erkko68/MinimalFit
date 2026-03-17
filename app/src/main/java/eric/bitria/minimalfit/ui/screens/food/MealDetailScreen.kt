@@ -1,7 +1,6 @@
 package eric.bitria.minimalfit.ui.screens.food
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -12,10 +11,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
-import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
-import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
-import androidx.compose.foundation.lazy.staggeredgrid.items
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.FabPosition
@@ -35,10 +32,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import coil.compose.AsyncImage
-import eric.bitria.minimalfit.data.entity.food.Meal
 import eric.bitria.minimalfit.ui.components.food.actions.AddEntryFab
-import eric.bitria.minimalfit.ui.components.food.cards.MealCard
-import eric.bitria.minimalfit.ui.components.food.dialogs.MealSearchDialog
+import eric.bitria.minimalfit.ui.components.food.dialogs.SearchableItemDialog
+import eric.bitria.minimalfit.ui.components.food.dialogs.item.IngredientItem
+import eric.bitria.minimalfit.ui.components.food.lists.IngredientListItem
 import eric.bitria.minimalfit.ui.theme.Spacing
 import eric.bitria.minimalfit.ui.viewmodels.food.MealDetailViewModel
 import org.koin.androidx.compose.koinViewModel
@@ -48,7 +45,6 @@ import org.koin.core.parameter.parametersOf
 fun MealDetailScreen(
     mealId: String,
     onBackClick: () -> Unit,
-    onNavigateToMealDetail: (Meal) -> Unit,
     viewModel: MealDetailViewModel = koinViewModel { parametersOf(mealId) }
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -64,112 +60,101 @@ fun MealDetailScreen(
             )
         }
     ) { paddingValues ->
-        // Use BoxWithConstraints to get the screen height and calculate ratios dynamically
         BoxWithConstraints(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(bottom = paddingValues.calculateBottomPadding())
                 .background(backgroundColor)
         ) {
-            // Calculate 30% of the screen height for the header
             val headerHeight = maxHeight * 0.3f
 
-            // 1. FIXED HEADER SECTION (Image + Title + Calories)
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(headerHeight)
-            ) {
-                // Image taking up the whole header space
-                if (!meal?.imageUrl.isNullOrEmpty()) {
-                    AsyncImage(
-                        model = meal.imageUrl,
-                        contentDescription = meal.name,
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
-                    )
-                }
-
-                // Smooth fade effect at the bottom of the image
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            Brush.verticalGradient(
-                                0.3f to Color.Transparent,
-                                1.0f to backgroundColor
-                            )
-                        )
-                )
-
-                // Text content anchored to the bottom of the header
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.BottomStart)
-                        .padding(horizontal = Spacing.m, vertical = Spacing.s)
-                ) {
-                    Text(
-                        text = meal?.name ?: "",
-                        style = MaterialTheme.typography.displaySmall,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
-                    Text(
-                        text = "${meal?.calories ?: 0} kcal",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-
-            // 2. SCROLLABLE CONTENT
-            LazyVerticalStaggeredGrid(
-                columns = StaggeredGridCells.Fixed(2),
+            LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
                     .navigationBarsPadding(),
-                contentPadding = PaddingValues(
-                    start = Spacing.m,
-                    end = Spacing.m,
-                    top = headerHeight, // Starts exactly where the header ends
-                    bottom = Spacing.m
-                ),
-                horizontalArrangement = Arrangement.spacedBy(Spacing.m),
-                verticalItemSpacing = Spacing.m
+                contentPadding = PaddingValues(bottom = Spacing.m)
             ) {
-                // Meal Description
-                item(span = StaggeredGridItemSpan.FullLine) {
+                // 1. HEADER SECTION
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(headerHeight)
+                    ) {
+                        if (!meal?.imageUrl.isNullOrEmpty()) {
+                            AsyncImage(
+                                model = meal.imageUrl,
+                                contentDescription = meal.name,
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(
+                                    Brush.verticalGradient(
+                                        0.3f to Color.Transparent,
+                                        1.0f to backgroundColor
+                                    )
+                                )
+                        )
+
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .align(Alignment.BottomStart)
+                                .padding(horizontal = Spacing.m, vertical = Spacing.s)
+                        ) {
+                            Text(
+                                text = meal?.name ?: "",
+                                style = MaterialTheme.typography.displaySmall,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                            Text(
+                                text = "${meal?.totalCalories ?: 0} kcal",
+                                style = MaterialTheme.typography.titleLarge,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+
+                // 2. DESCRIPTION
+                item {
                     Text(
                         text = meal?.description ?: "",
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(top = Spacing.s)
+                        modifier = Modifier.padding(horizontal = Spacing.m, vertical = Spacing.s)
                     )
                 }
 
-                // Related Meals
-                if (uiState.relatedMeals.isNotEmpty()) {
-                    item(span = StaggeredGridItemSpan.FullLine) {
+                // 3. INGREDIENTS LIST
+                if (uiState.ingredients.isNotEmpty()) {
+                    item {
                         Text(
-                            text = "Contains",
+                            text = "Ingredients",
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(bottom = Spacing.xs)
+                            modifier = Modifier.padding(horizontal = Spacing.m, vertical = Spacing.s)
                         )
                     }
 
-                    items(uiState.relatedMeals, key = { it.id }) { relatedMeal ->
-                        MealCard(
-                            meal = relatedMeal,
-                            onClick = { onNavigateToMealDetail(relatedMeal) }
+                    items(uiState.ingredients) { itemState ->
+                        IngredientListItem(
+                            ingredient = itemState.ingredient,
+                            amount = itemState.amount,
+                            modifier = Modifier.padding(horizontal = Spacing.m, vertical = Spacing.xs)
                         )
                     }
                 }
             }
 
-            // 3. FIXED BACK BUTTON
+            // 4. FIXED BACK BUTTON
             FilledIconButton(
                 onClick = onBackClick,
                 modifier = Modifier
@@ -190,10 +175,22 @@ fun MealDetailScreen(
     }
 
     if (uiState.showSearchDialog) {
-        MealSearchDialog(
-            savedMeals = uiState.savedMeals,
+        SearchableItemDialog(
+            title = "Add Ingredient",
+            placeholder = "e.g., Chicken Breast",
+            items = uiState.savedIngredients,
+            itemKey = { it.id },
+            filter = { ingredient, query -> ingredient.name.contains(query, ignoreCase = true) },
             onDismiss = { viewModel.dismissSearchDialog() },
-            onAddMeal = { mealToAdd -> viewModel.addMeal(mealToAdd) }
+            itemContent = { ingredient ->
+                IngredientItem(
+                    ingredient = ingredient,
+                    onAdd = { amount ->
+                        viewModel.addIngredient(ingredient, amount)
+                        viewModel.dismissSearchDialog()
+                    }
+                )
+            }
         )
     }
 }

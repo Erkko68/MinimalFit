@@ -6,12 +6,12 @@ import kotlinx.serialization.Serializable
 import java.util.UUID
 
 @Serializable
-@Entity(tableName = "diets")
-data class Diet(
+@Entity(tableName = "ingredients")
+data class Ingredient(
     @PrimaryKey
     val id: String = UUID.randomUUID().toString(),
     val name: String,
-    val description: String = "",
-    val imageUrl: String? = null,
-    val mealIds: List<String> = emptyList()
+    val baseCalories: Int, // per 100g/100ml or per piece
+    val measurementUnit: MeasurementUnit = MeasurementUnit.GRAMS,
+    val imageUrl: String? = null
 )

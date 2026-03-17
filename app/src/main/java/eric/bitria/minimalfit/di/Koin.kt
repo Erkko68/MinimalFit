@@ -51,6 +51,7 @@ val dataModule = module {
 
     single { get<AppDatabase>().trackDao() }
     single { get<AppDatabase>().mealDao() }
+    single { get<AppDatabase>().ingredientDao() }
     single { get<AppDatabase>().dietDao() }
     single { get<AppDatabase>().mealLogDao() }
 

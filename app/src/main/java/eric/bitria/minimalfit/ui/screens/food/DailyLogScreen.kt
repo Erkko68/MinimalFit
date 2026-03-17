@@ -30,13 +30,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.em
+import eric.bitria.minimalfit.data.entity.food.LoggedMeal
 import eric.bitria.minimalfit.data.entity.food.Meal
 import eric.bitria.minimalfit.ui.components.animations.StaggeredSnapLayoutInfoProvider
 import eric.bitria.minimalfit.ui.components.animations.SwipeToDeleteCard
 import eric.bitria.minimalfit.ui.components.food.actions.AddEntryFab
 import eric.bitria.minimalfit.ui.components.food.cards.DailyCalorieCircleCard
 import eric.bitria.minimalfit.ui.components.food.cards.MealCard
-import eric.bitria.minimalfit.ui.components.food.dialogs.MealSearchDialog
+import eric.bitria.minimalfit.ui.components.food.dialogs.SearchableItemDialog
+import eric.bitria.minimalfit.ui.components.food.dialogs.item.MealItem
 import eric.bitria.minimalfit.ui.components.food.lists.EmptyMealsPlaceholder
 import eric.bitria.minimalfit.ui.theme.Spacing
 import eric.bitria.minimalfit.ui.viewmodels.food.DailyCalorieData
@@ -155,10 +157,22 @@ fun DailyLogScreen(
     }
 
     if (uiState.showSearchDialog) {
-        MealSearchDialog(
-            savedMeals = uiState.savedMeals,
+        SearchableItemDialog(
+            title = "Log Meal",
+            placeholder = "e.g., Chicken Salad",
+            items = uiState.savedMeals,
+            itemKey = { it.id },
+            filter = { meal, query -> meal.name.contains(query, ignoreCase = true) },
             onDismiss = { dailyLogViewModel.dismissSearchDialog() },
-            onAddMeal = { meal -> dailyLogViewModel.addMeal(meal) }
+            itemContent = { meal ->
+                MealItem(
+                    meal = meal,
+                    onAdd = { amount ->
+                        dailyLogViewModel.addMeal(LoggedMeal(mealId = meal.id, amount = amount))
+                        dailyLogViewModel.dismissSearchDialog()
+                    }
+                )
+            }
         )
     }
 }

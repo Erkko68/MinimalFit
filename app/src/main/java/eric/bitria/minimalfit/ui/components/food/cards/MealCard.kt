@@ -81,7 +81,7 @@ fun MealCard(
                     shape = CircleShape
                 ) {
                     Text(
-                        text = "${meal.calories} kcal",
+                        text = "${meal.totalCalories} kcal",
                         style = MaterialTheme.typography.labelLarge,
                         modifier = Modifier.padding(
                             horizontal = Spacing.m,

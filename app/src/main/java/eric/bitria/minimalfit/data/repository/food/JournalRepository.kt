@@ -1,6 +1,6 @@
 package eric.bitria.minimalfit.data.repository.food
 
-import eric.bitria.minimalfit.data.entity.food.Meal
+import eric.bitria.minimalfit.data.entity.food.LoggedMeal
 import eric.bitria.minimalfit.data.entity.food.MealLog
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.LocalDate
@@ -16,6 +16,6 @@ interface JournalRepository {
     /** Returns logs within a specific date range as a stream. */
     fun getMealLogs(start: LocalDate, end: LocalDate): Flow<List<MealLog>>
 
-    suspend fun addMealToLog(date: LocalDate, mealId: String)
+    suspend fun addMealToLog(date: LocalDate, loggedMeal: LoggedMeal)
     suspend fun removeMealFromLog(date: LocalDate, mealId: String)
 }

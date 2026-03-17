@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
-import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -146,32 +145,35 @@ fun DietDetailScreen(
                             )
                     )
 
-                    Column(
+                    Text(
+                        text = diet?.name ?: "",
+                        style = MaterialTheme.typography.displaySmall,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colorScheme.onBackground,
                         modifier = Modifier
-                            .fillMaxWidth()
                             .align(Alignment.BottomStart)
                             .padding(horizontal = Spacing.m, vertical = Spacing.s)
-                    ) {
+                    )
+                }
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = Spacing.m, vertical = Spacing.s)
+                ) {
+                    if (diet != null && diet.description.isNotEmpty()) {
                         Text(
-                            text = diet?.name ?: "",
-                            style = MaterialTheme.typography.displaySmall,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-                        if (diet != null && diet.description.isNotEmpty()) {
-                            Text(
-                                text = diet.description,
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(Spacing.m))
-                        Text(
-                            text = "Meals",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold
+                            text = diet.description,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
+                    Spacer(modifier = Modifier.height(Spacing.m))
+                    Text(
+                        text = "Meals",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
 

@@ -108,7 +108,7 @@ fun DailyLogScreen(
                 .padding(bottom = paddingValues.calculateBottomPadding())
                 .background(backgroundColor)
         ) {
-            val headerHeight = maxHeight * 0.3f // Aligned to DietDetailScreen proportions
+            val headerHeight = maxHeight * 0.35f // Aligned to DietDetailScreen proportions
             var headerAreaHeight by remember { mutableIntStateOf(0) }
 
             // 1. SCROLLABLE CONTENT (Rendered first to be below the header)
@@ -173,7 +173,7 @@ fun DailyLogScreen(
                 ) {
                     // Daily Calorie Circle Card as the "Hero" element
                     Box(
-                        modifier = Modifier.fillMaxSize(), // Removed bottom padding creating the gap
+                        modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
                         Box(

@@ -77,7 +77,7 @@ fun MealDetailScreen(
                 .padding(bottom = paddingValues.calculateBottomPadding())
                 .background(backgroundColor)
         ) {
-            val headerHeight = maxHeight * 0.3f
+            val headerHeight = maxHeight * 0.2f
             var headerAreaHeight by remember { mutableIntStateOf(0) }
 
             // 1. SCROLLABLE CONTENT (Rendered first to be behind the header)
@@ -144,38 +144,41 @@ fun MealDetailScreen(
                             )
                     )
 
-                    Column(
+                    Text(
+                        text = meal?.name ?: "",
+                        style = MaterialTheme.typography.displaySmall,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colorScheme.onBackground,
                         modifier = Modifier
-                            .fillMaxWidth()
                             .align(Alignment.BottomStart)
                             .padding(horizontal = Spacing.m, vertical = Spacing.s)
-                    ) {
+                    )
+                }
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = Spacing.m, vertical = Spacing.s)
+                ) {
+                    Text(
+                        text = "${uiState.totalCalories} kcal",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
+                    )
+                    if (meal != null && meal.description.isNotEmpty()) {
                         Text(
-                            text = meal?.name ?: "",
-                            style = MaterialTheme.typography.displaySmall,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-                        Text(
-                            text = "${uiState.totalCalories} kcal",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Bold
-                        )
-                        if (meal != null && meal.description.isNotEmpty()) {
-                            Text(
-                                text = meal.description,
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(Spacing.m))
-                        Text(
-                            text = "Ingredients",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
+                            text = meal.description,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
+                    Spacer(modifier = Modifier.height(Spacing.m))
+                    Text(
+                        text = "Ingredients",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                    )
                 }
             }
 

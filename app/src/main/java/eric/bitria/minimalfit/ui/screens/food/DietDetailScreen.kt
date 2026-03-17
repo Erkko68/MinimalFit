@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -28,14 +29,21 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import coil.compose.AsyncImage
 import eric.bitria.minimalfit.data.entity.food.Meal
+import eric.bitria.minimalfit.ui.components.animations.SwipeToDeleteCard
 import eric.bitria.minimalfit.ui.components.food.actions.AddEntryFab
 import eric.bitria.minimalfit.ui.components.food.cards.MealCard
 import eric.bitria.minimalfit.ui.components.food.dialogs.SearchableItemDialog
@@ -71,54 +79,10 @@ fun DietDetailScreen(
                 .padding(bottom = paddingValues.calculateBottomPadding())
                 .background(backgroundColor)
         ) {
-            // Calculate 30% of the screen height for the header
             val headerHeight = maxHeight * 0.3f
+            var headerAreaHeight by remember { mutableIntStateOf(0) }
 
-            // 1. FIXED HEADER SECTION (Image + Title)
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(headerHeight)
-            ) {
-                // Image taking up the whole header space
-                if (!diet?.imageUrl.isNullOrEmpty()) {
-                    AsyncImage(
-                        model = diet.imageUrl,
-                        contentDescription = diet.name,
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
-                    )
-                }
-
-                // Smooth fade effect at the bottom of the image
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            Brush.verticalGradient(
-                                0.3f to Color.Transparent,
-                                1.0f to backgroundColor
-                            )
-                        )
-                )
-
-                // Text content anchored to the bottom of the header
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.BottomStart)
-                        .padding(horizontal = Spacing.m, vertical = Spacing.s)
-                ) {
-                    Text(
-                        text = diet?.name ?: "",
-                        style = MaterialTheme.typography.displaySmall,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
-                }
-            }
-
-            // 2. SCROLLABLE CONTENT
+            // 1. SCROLLABLE CONTENT (Rendered first to be below the header)
             LazyVerticalStaggeredGrid(
                 columns = StaggeredGridCells.Fixed(2),
                 modifier = Modifier
@@ -127,38 +91,85 @@ fun DietDetailScreen(
                 contentPadding = PaddingValues(
                     start = Spacing.m,
                     end = Spacing.m,
-                    top = headerHeight, // Starts exactly where the header ends
+                    top = with(LocalDensity.current) { headerAreaHeight.toDp() },
                     bottom = Spacing.m
                 ),
                 horizontalArrangement = Arrangement.spacedBy(Spacing.m),
                 verticalItemSpacing = Spacing.m
             ) {
-                // Diet Description
-                item(span = StaggeredGridItemSpan.FullLine) {
-                    Text(
-                        text = diet?.description ?: "",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(top = Spacing.s)
-                    )
-                }
-
                 // Related Meals
                 if (uiState.relatedMeals.isNotEmpty()) {
-                    item(span = StaggeredGridItemSpan.FullLine) {
-                        Text(
-                            text = "Meals",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(bottom = Spacing.xs)
+                    items(uiState.relatedMeals, key = { it.meal.id }) { item ->
+                        SwipeToDeleteCard(
+                            onDismiss = { viewModel.removeMealFromDiet(item.meal.id) },
+                            modifier = Modifier.clip(MaterialTheme.shapes.extraLarge)
+                        ) {
+                            MealCard(
+                                meal = item.meal,
+                                calories = item.calories,
+                                onClick = { onNavigateToMealDetail(item.meal) }
+                            )
+                        }
+                    }
+                }
+            }
+
+            // 2. FIXED HEADER SECTION (Rendered second to be on top)
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .onSizeChanged { headerAreaHeight = it.height }
+                    .background(backgroundColor)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(headerHeight)
+                ) {
+                    if (diet != null && !diet.imageUrl.isNullOrEmpty()) {
+                        AsyncImage(
+                            model = diet.imageUrl,
+                            contentDescription = diet.name,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
                         )
                     }
 
-                    items(uiState.relatedMeals, key = { it.meal.id }) { item ->
-                        MealCard(
-                            meal = item.meal,
-                            calories = item.calories,
-                            onClick = { onNavigateToMealDetail(item.meal) }
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                Brush.verticalGradient(
+                                    0.3f to Color.Transparent,
+                                    1.0f to backgroundColor
+                                )
+                            )
+                    )
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .align(Alignment.BottomStart)
+                            .padding(horizontal = Spacing.m, vertical = Spacing.s)
+                    ) {
+                        Text(
+                            text = diet?.name ?: "",
+                            style = MaterialTheme.typography.displaySmall,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                        if (diet != null && diet.description.isNotEmpty()) {
+                            Text(
+                                text = diet.description,
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(Spacing.m))
+                        Text(
+                            text = "Meals",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
@@ -195,8 +206,8 @@ fun DietDetailScreen(
             itemContent = { meal ->
                 MealItem(
                     meal = meal,
-                    onAdd = { amount ->
-                        viewModel.addMeal(mealId = meal.id, amount = amount)
+                    onAdd = { amount, portionMode ->
+                        viewModel.addMeal(mealId = meal.id, amount = amount, portionMode = portionMode)
                         viewModel.dismissSearchDialog()
                     }
                 )

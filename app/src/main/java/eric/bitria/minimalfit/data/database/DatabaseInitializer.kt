@@ -155,15 +155,6 @@ class DatabaseInitializer(private val db: AppDatabase) {
         )
         diets.forEach { dietDao.insertDiet(it) }
 
-        // Initialize Diet Meals
-        val dietMeals = listOf(
-            DietMealCrossRef("diet-keto", "meal-salmon-asparagus", 1f),
-            DietMealCrossRef("diet-keto", "meal-grilled-chicken-salad", 1f),
-            DietMealCrossRef("diet-vegan", "meal-oatmeal-berries", 1f),
-            DietMealCrossRef("diet-vegan", "meal-avocado-toast", 1f)
-        )
-        dietMeals.forEach { dietDao.insertDietMealCrossRef(it) }
-
         // 4. Initialize Tracks
         val eveningRunPoints = listOf(
             TrackPoint(41.38879, 2.18992, Instant.parse("2026-03-09T16:30:00Z")),

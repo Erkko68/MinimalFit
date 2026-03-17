@@ -53,8 +53,14 @@ class DefaultDietRepository(
         dietDao.getMealsForDiet(dietId).flatMapLatest { refs ->
             if (refs.isEmpty()) flowOf(0)
             else combine(refs.map { ref ->
-                foodCatalog.getMealCalories(ref.mealId).map { it * ref.amount }
-            }) { it.sum().toInt() }
+                combine(
+                    foodCatalog.getMealCalories(ref.mealId),
+                    foodCatalog.getMealWeight(ref.mealId)
+                ) { baseCalories, baseWeight ->
+                    val scale = if (baseWeight > 0f) ref.amount / baseWeight else 1f
+                    (baseCalories * scale).toInt()
+                }
+            }) { it.sum() }
         }
 
     override suspend fun addMealToDiet(dietId: String, mealId: String, amount: Float) {

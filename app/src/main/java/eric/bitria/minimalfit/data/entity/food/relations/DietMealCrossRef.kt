@@ -11,5 +11,5 @@ import kotlinx.serialization.Serializable
 data class DietMealCrossRef(
     val dietId: String,
     val mealId: String,
-    val amount: Float = 1f // Number of servings or specific amount
+    val amount: Float = 1f
 )

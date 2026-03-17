@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,6 +16,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -33,21 +36,23 @@ import androidx.compose.ui.unit.dp
 import eric.bitria.minimalfit.data.entity.food.Meal
 import eric.bitria.minimalfit.data.entity.food.MeasurementUnit
 import eric.bitria.minimalfit.ui.theme.Spacing
+import eric.bitria.minimalfit.ui.viewmodels.food.MealPortionMode
 
 @Composable
 fun MealItem(
     meal: Meal,
-    onAdd: (Float) -> Unit
+    onAdd: (Float, MealPortionMode) -> Unit
 ) {
-    var amountText by rememberSaveable {
-        mutableStateOf("100")
-    }
+    var amountText by rememberSaveable { mutableStateOf("100") }
+    var portionMode by rememberSaveable { mutableStateOf(MealPortionMode.WEIGHT) }
 
     val unitSuffix = when (meal.measurementUnit) {
         MeasurementUnit.GRAMS -> "g"
         MeasurementUnit.MILLILITERS -> "ml"
         MeasurementUnit.PIECE -> "pcs"
     }
+
+    val defaultWeight = 100f
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -68,6 +73,23 @@ fun MealItem(
                 fontWeight = FontWeight.Bold,
                 maxLines = 1
             )
+
+            Spacer(modifier = Modifier.height(Spacing.xs))
+
+            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                FilterChip(
+                    selected = portionMode == MealPortionMode.WEIGHT,
+                    onClick = { portionMode = MealPortionMode.WEIGHT },
+                    label = { Text("Weight") },
+                    colors = FilterChipDefaults.filterChipColors()
+                )
+                FilterChip(
+                    selected = portionMode == MealPortionMode.FULL_MEAL,
+                    onClick = { portionMode = MealPortionMode.FULL_MEAL },
+                    label = { Text("Full meal") },
+                    colors = FilterChipDefaults.filterChipColors()
+                )
+            }
         }
 
         // Amount input + add button - Compact layout
@@ -80,6 +102,7 @@ fun MealItem(
                 value = amountText,
                 onValueChange = { amountText = it },
                 modifier = Modifier.width(84.dp),
+                enabled = portionMode == MealPortionMode.WEIGHT,
                 singleLine = true,
                 textStyle = MaterialTheme.typography.bodyMedium,
                 shape = MaterialTheme.shapes.medium,
@@ -101,9 +124,12 @@ fun MealItem(
 
             FilledIconButton(
                 onClick = {
-                    amountText.toFloatOrNull()?.let { amount ->
-                        if (amount > 0) onAdd(amount)
+                    val selectedAmount = if (portionMode == MealPortionMode.FULL_MEAL) {
+                        defaultWeight
+                    } else {
+                        amountText.toFloatOrNull() ?: 0f
                     }
+                    if (selectedAmount > 0f) onAdd(selectedAmount, portionMode)
                 },
                 modifier = Modifier
                     .fillMaxHeight()

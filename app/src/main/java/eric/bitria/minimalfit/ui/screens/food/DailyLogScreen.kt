@@ -178,8 +178,8 @@ fun DailyLogScreen(
             itemContent = { meal ->
                 MealItem(
                     meal = meal,
-                    onAdd = { amount ->
-                        dailyLogViewModel.addMeal(meal.id, amount)
+                    onAdd = { amount, portionMode ->
+                        dailyLogViewModel.addMeal(meal.id, amount, portionMode)
                         dailyLogViewModel.dismissSearchDialog()
                     }
                 )

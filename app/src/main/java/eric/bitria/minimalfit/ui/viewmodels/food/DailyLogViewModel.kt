@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.first
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
@@ -118,17 +119,25 @@ class DailyLogViewModel(
         _searchMealQuery.value = query
     }
 
-    fun addMeal(mealId: String, amount: Float) {
+    fun addMeal(mealId: String, amount: Float, portionMode: MealPortionMode = MealPortionMode.WEIGHT) {
         viewModelScope.launch {
             val timestamp = if (date == today()) {
                 System.currentTimeMillis()
             } else {
                 date.atTime(12, 0).toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds()
             }
-            
+
+            val normalizedAmount = when (portionMode) {
+                MealPortionMode.FULL_MEAL -> {
+                    val mealWeight = foodCatalog.getMealWeight(mealId).first()
+                    if (mealWeight > 0f) mealWeight else amount
+                }
+                MealPortionMode.WEIGHT -> amount
+            }
+
             val logId = UUID.randomUUID().toString()
             journal.addMealLog(MealLog(id = logId, createdAt = timestamp))
-            journal.addMealToLog(logId, mealId, amount)
+            journal.addMealToLog(logId, mealId, normalizedAmount)
         }
     }
 

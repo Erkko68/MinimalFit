@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import eric.bitria.minimalfit.data.entity.food.Ingredient
 import eric.bitria.minimalfit.data.entity.food.Meal
+import eric.bitria.minimalfit.data.entity.food.MeasurementUnit
 import eric.bitria.minimalfit.data.repository.food.FoodCatalogRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -58,18 +59,21 @@ class MealDetailViewModel(
                         }
                     }) { it.toList() }
                 },
-                foodCatalog.getMealCalories(mealId),
-                foodCatalog.getMealWeight(mealId),
                 foodCatalog.getIngredients(query)
-            ) { ingredientStates, calories, weight, savedIngredients ->
+            ) { ingredientStates, savedIngredients ->
+                val totalWeight = ingredientStates.sumOf { it.amount.toDouble() }.toFloat()
+                val totalCalories = ingredientStates.sumOf { state ->
+                    calculateIngredientCalories(state.ingredient, state.amount).toDouble()
+                }.toInt()
+
                 MealDetailUiState(
                     meal = meal,
                     ingredients = ingredientStates,
                     savedIngredients = savedIngredients,
                     showSearchDialog = showDialog,
                     searchIngredientQuery = query,
-                    totalCalories = calories,
-                    totalAmount = weight
+                    totalCalories = totalCalories,
+                    totalAmount = totalWeight
                 )
             }
         }
@@ -113,6 +117,14 @@ class MealDetailViewModel(
     fun deleteMeal() {
         viewModelScope.launch {
             foodCatalog.deleteMeal(mealId)
+        }
+    }
+
+    private fun calculateIngredientCalories(ingredient: Ingredient, amount: Float): Float {
+        return when (ingredient.measurementUnit) {
+            MeasurementUnit.PIECE -> ingredient.baseCalories * amount
+            MeasurementUnit.GRAMS,
+            MeasurementUnit.MILLILITERS -> (ingredient.baseCalories / 100f) * amount
         }
     }
 }

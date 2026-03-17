@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -27,12 +28,17 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import coil.compose.AsyncImage
 import eric.bitria.minimalfit.ui.components.animations.SwipeToDeleteCard
@@ -72,83 +78,19 @@ fun MealDetailScreen(
                 .background(backgroundColor)
         ) {
             val headerHeight = maxHeight * 0.3f
+            var headerAreaHeight by remember { mutableIntStateOf(0) }
 
+            // 1. SCROLLABLE CONTENT (Rendered first to be behind the header)
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
                     .navigationBarsPadding(),
-                contentPadding = PaddingValues(bottom = Spacing.m)
+                contentPadding = PaddingValues(
+                    top = with(LocalDensity.current) { headerAreaHeight.toDp() },
+                    bottom = Spacing.m
+                )
             ) {
-                // 1. HEADER SECTION
-                item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(headerHeight)
-                    ) {
-                        if (!meal?.imageUrl.isNullOrEmpty()) {
-                            AsyncImage(
-                                model = meal.imageUrl,
-                                contentDescription = meal.name,
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
-                            )
-                        }
-
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(
-                                    Brush.verticalGradient(
-                                        0.3f to Color.Transparent,
-                                        1.0f to backgroundColor
-                                    )
-                                )
-                        )
-
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .align(Alignment.BottomStart)
-                                .padding(horizontal = Spacing.m, vertical = Spacing.s)
-                        ) {
-                            Text(
-                                text = meal?.name ?: "",
-                                style = MaterialTheme.typography.displaySmall,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
-                            Text(
-                                text = "${uiState.totalCalories} kcal",
-                                style = MaterialTheme.typography.titleLarge,
-                                color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-                }
-
-                // 2. DESCRIPTION
-                item {
-                    Text(
-                        text = meal?.description ?: "",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(horizontal = Spacing.m, vertical = Spacing.s)
-                    )
-                }
-
-                // 3. INGREDIENTS LIST
                 if (uiState.ingredients.isNotEmpty()) {
-                    item {
-                        Text(
-                            text = "Ingredients",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(horizontal = Spacing.m, vertical = Spacing.s)
-                        )
-                    }
-
                     items(uiState.ingredients, key = { it.ingredient.id }) { itemState ->
                         SwipeToDeleteCard(
                             onDismiss = { viewModel.deleteIngredient(itemState.ingredient) },
@@ -170,7 +112,74 @@ fun MealDetailScreen(
                 }
             }
 
-            // 4. FIXED BACK BUTTON
+            // 2. FIXED HEADER SECTION (Rendered second to be on top)
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .onSizeChanged { headerAreaHeight = it.height }
+                    .background(backgroundColor)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(headerHeight)
+                ) {
+                    if (meal != null && !meal.imageUrl.isNullOrEmpty()) {
+                        AsyncImage(
+                            model = meal.imageUrl,
+                            contentDescription = meal.name,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                Brush.verticalGradient(
+                                    0.3f to Color.Transparent,
+                                    1.0f to backgroundColor
+                                )
+                            )
+                    )
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .align(Alignment.BottomStart)
+                            .padding(horizontal = Spacing.m, vertical = Spacing.s)
+                    ) {
+                        Text(
+                            text = meal?.name ?: "",
+                            style = MaterialTheme.typography.displaySmall,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                        Text(
+                            text = "${uiState.totalCalories} kcal",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold
+                        )
+                        if (meal != null && meal.description.isNotEmpty()) {
+                            Text(
+                                text = meal.description,
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(Spacing.m))
+                        Text(
+                            text = "Ingredients",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
+                }
+            }
+
+            // 3. FIXED BACK BUTTON
             FilledIconButton(
                 onClick = onBackClick,
                 modifier = Modifier

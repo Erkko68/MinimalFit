@@ -56,9 +56,33 @@ val dataModule = module {
     single { get<AppDatabase>().mealLogDao() }
 
     singleOf(::DatabaseInitializer)
-    singleOf(::DefaultJournalRepository) bind JournalRepository::class
-    singleOf(::DefaultFoodCatalogRepository) bind FoodCatalogRepository::class
-    singleOf(::DefaultDietRepository) bind DietRepository::class
+    
+    // Food Catalog Repository
+    single<FoodCatalogRepository> {
+        DefaultFoodCatalogRepository(
+            mealDao = get(),
+            ingredientDao = get()
+        )
+    }
+
+    // Journal Repository
+    single<JournalRepository> {
+        DefaultJournalRepository(
+            mealLogDao = get(),
+            mealDao = get(),
+            foodCatalog = get()
+        )
+    }
+
+    // Diet Repository
+    single<DietRepository> {
+        DefaultDietRepository(
+            dietDao = get(),
+            mealDao = get(),
+            foodCatalog = get()
+        )
+    }
+
     singleOf(::DefaultTrackRepository) bind TrackRepository::class
 
     // Sensors

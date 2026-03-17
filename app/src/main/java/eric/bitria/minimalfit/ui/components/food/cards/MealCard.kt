@@ -26,6 +26,7 @@ import eric.bitria.minimalfit.ui.theme.Spacing
 fun MealCard(
     meal: Meal,
     modifier: Modifier = Modifier,
+    calories: Int? = null,
     onClick: (() -> Unit)? = null
 ) {
     val hasImage = !meal.imageUrl.isNullOrEmpty()
@@ -74,21 +75,23 @@ fun MealCard(
                     overflow = TextOverflow.Ellipsis
                 )
 
-                Surface(
-                    color =
-                        if (hasImage) MaterialTheme.colorScheme.primaryContainer
-                        else MaterialTheme.colorScheme.surface,
-                    shape = CircleShape
-                ) {
-                    Text(
-                        text = "${meal.totalCalories} kcal",
-                        style = MaterialTheme.typography.labelLarge,
-                        modifier = Modifier.padding(
-                            horizontal = Spacing.m,
-                            vertical = Spacing.xs
-                        ),
-                        fontWeight = FontWeight.Bold
-                    )
+                if (calories != null) {
+                    Surface(
+                        color =
+                            if (hasImage) MaterialTheme.colorScheme.primaryContainer
+                            else MaterialTheme.colorScheme.surface,
+                        shape = CircleShape
+                    ) {
+                        Text(
+                            text = "$calories kcal",
+                            style = MaterialTheme.typography.labelLarge,
+                            modifier = Modifier.padding(
+                                horizontal = Spacing.m,
+                                vertical = Spacing.xs
+                            ),
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
         }

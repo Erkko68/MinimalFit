@@ -13,12 +13,28 @@ interface FoodCatalogRepository {
     /** Returns all available meals. Supports optional search. */
     fun getMeals(query: String = ""): Flow<List<Meal>>
 
-    /** Returns a specific meal by ID, resolving its total calories from ingredients. */
+    /** Returns a specific meal by ID. */
     fun getMeal(id: String): Flow<Meal?>
 
     suspend fun addMeal(meal: Meal)
     suspend fun updateMeal(meal: Meal)
     suspend fun deleteMeal(id: String)
+
+    // --- MEAL RELATIONS ---
+    /** Returns the list of ingredients belonging to a meal. */
+    fun getIngredientsForMeal(mealId: String): Flow<List<Ingredient>>
+
+    /** Returns the total calories of a meal. */
+    fun getMealCalories(mealId: String): Flow<Int>
+
+    /** Returns the total weight/amount of a meal (sum of its ingredients). */
+    fun getMealWeight(mealId: String): Flow<Float>
+    
+    /** Returns the weight/amount of a specific ingredient within a meal. */
+    fun getIngredientAmountInMeal(mealId: String, ingredientId: String): Flow<Float>
+
+    suspend fun addIngredientToMeal(mealId: String, ingredientId: String, amount: Float)
+    suspend fun removeIngredientsFromMeal(mealId: String)
 
     // --- INGREDIENTS ---
     /** Returns all available ingredients. Supports optional search. */

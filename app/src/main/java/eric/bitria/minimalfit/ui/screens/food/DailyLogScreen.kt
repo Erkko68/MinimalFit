@@ -139,13 +139,14 @@ fun DailyLogScreen(
                 } else {
                     items(
                         items = uiState.logs,
-                        key = { it.log.id }
+                        key = { it.logId }
                     ) { model ->
                         SwipeToDeleteCard(
-                            onDismiss = { dailyLogViewModel.removeMealLog(model.log.id) }
+                            onDismiss = { dailyLogViewModel.removeMealLog(model.logId) }
                         ) {
                             MealCard(
                                 meal = model.meal,
+                                calories = model.calories,
                                 onClick = { onNavigateToMealDetail(model.meal) }
                             )
                         }

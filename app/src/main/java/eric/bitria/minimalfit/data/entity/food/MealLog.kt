@@ -6,14 +6,12 @@ import kotlinx.serialization.Serializable
 import java.util.UUID
 
 /**
- * Represents a single instance of a meal being logged.
+ * Represents a session of logging food (e.g., "Breakfast").
  */
 @Serializable
 @Entity(tableName = "meal_logs")
 data class MealLog(
     @PrimaryKey
     val id: String = UUID.randomUUID().toString(),
-    val mealId: String,
-    val amount: Float,
     val createdAt: Long = System.currentTimeMillis()
 )

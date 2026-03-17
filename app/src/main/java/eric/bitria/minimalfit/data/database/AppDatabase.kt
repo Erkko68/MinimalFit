@@ -12,6 +12,9 @@ import eric.bitria.minimalfit.data.entity.food.Diet
 import eric.bitria.minimalfit.data.entity.food.Ingredient
 import eric.bitria.minimalfit.data.entity.food.Meal
 import eric.bitria.minimalfit.data.entity.food.MealLog
+import eric.bitria.minimalfit.data.entity.food.relations.DietMealCrossRef
+import eric.bitria.minimalfit.data.entity.food.relations.MealIngredientCrossRef
+import eric.bitria.minimalfit.data.entity.food.relations.MealLogMealCrossRef
 import eric.bitria.minimalfit.data.entity.track.Track
 
 @Database(
@@ -20,7 +23,10 @@ import eric.bitria.minimalfit.data.entity.track.Track
         Ingredient::class,
         Meal::class,
         Diet::class,
-        MealLog::class
+        MealLog::class,
+        MealIngredientCrossRef::class,
+        DietMealCrossRef::class,
+        MealLogMealCrossRef::class
     ],
     version = 1
 )

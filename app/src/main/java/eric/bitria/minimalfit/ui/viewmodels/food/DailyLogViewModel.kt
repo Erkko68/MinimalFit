@@ -6,9 +6,9 @@ import eric.bitria.minimalfit.data.entity.food.Meal
 import eric.bitria.minimalfit.data.entity.food.MealLog
 import eric.bitria.minimalfit.data.repository.food.FoodCatalogRepository
 import eric.bitria.minimalfit.data.repository.food.JournalRepository
-import eric.bitria.minimalfit.util.nowInstant
 import eric.bitria.minimalfit.util.today
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -23,10 +23,13 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.atTime
 import kotlinx.datetime.toInstant
+import java.util.UUID
 
 data class MealLogUiModel(
-    val log: MealLog,
-    val meal: Meal
+    val logId: String,
+    val meal: Meal,
+    val calories: Int,
+    val amount: Float
 )
 
 data class DailyLogUiState(
@@ -61,28 +64,28 @@ class DailyLogViewModel(
             .toInstant(timeZone).toEpochMilliseconds()
 
         journal.getMealLogsInRange(startOfDay, endOfDay).flatMapLatest { logs ->
-            val logsFlow = if (logs.isEmpty()) {
-                flowOf(emptyList())
+            if (logs.isEmpty()) {
+                fetchSavedMeals(showDialog, query, emptyList())
             } else {
-                combine(logs.map { log ->
-                    foodCatalog.getMeal(log.mealId).map { meal ->
-                        meal?.let { MealLogUiModel(log, it) }
+                val mealLogsFlows: List<Flow<List<MealLogUiModel>>> = logs.map { log ->
+                    journal.getMealsForLog(log.id).flatMapLatest { meals ->
+                        if (meals.isEmpty()) flowOf(emptyList())
+                        else combine(meals.map { meal ->
+                            combine(
+                                journal.getMealAmountInLog(log.id, meal.id),
+                                journal.getMealCaloriesInLog(log.id, meal.id)
+                            ) { amount, calories ->
+                                MealLogUiModel(log.id, meal, calories, amount)
+                            }
+                        }) { it.toList() }
                     }
-                }) { it.filterNotNull() }
-            }
-
-            combine(
-                logsFlow,
-                foodCatalog.getMeals(query)
-            ) { mealLogs, savedMeals ->
-                DailyLogUiState(
-                    date = date,
-                    logs = mealLogs,
-                    savedMeals = savedMeals,
-                    totalCalories = mealLogs.sumOf { it.meal.totalCalories },
-                    showSearchDialog = showDialog,
-                    searchMealQuery = query
-                )
+                }
+                
+                combine(mealLogsFlows) { arrays ->
+                    arrays.flatMap { it }
+                }.flatMapLatest { mealLogs ->
+                    fetchSavedMeals(showDialog, query, mealLogs)
+                }
             }
         }
     }.stateIn(
@@ -90,6 +93,18 @@ class DailyLogViewModel(
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = DailyLogUiState(date = date)
     )
+
+    private fun fetchSavedMeals(showDialog: Boolean, query: String, mealLogs: List<MealLogUiModel>) =
+        foodCatalog.getMeals(query).map { savedMeals ->
+            DailyLogUiState(
+                date = date,
+                logs = mealLogs,
+                savedMeals = savedMeals,
+                totalCalories = mealLogs.sumOf { it.calories },
+                showSearchDialog = showDialog,
+                searchMealQuery = query
+            )
+        }
 
     fun openSearchDialog() {
         _showSearchDialog.value = true
@@ -111,13 +126,9 @@ class DailyLogViewModel(
                 date.atTime(12, 0).toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds()
             }
             
-            journal.addMealLog(
-                MealLog(
-                    mealId = mealId,
-                    amount = amount,
-                    createdAt = timestamp
-                )
-            )
+            val logId = UUID.randomUUID().toString()
+            journal.addMealLog(MealLog(id = logId, createdAt = timestamp))
+            journal.addMealToLog(logId, mealId, amount)
         }
     }
 

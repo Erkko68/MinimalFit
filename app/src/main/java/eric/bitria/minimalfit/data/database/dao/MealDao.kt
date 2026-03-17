@@ -6,6 +6,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import eric.bitria.minimalfit.data.entity.food.Meal
+import eric.bitria.minimalfit.data.entity.food.relations.MealIngredientCrossRef
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -27,4 +28,14 @@ interface MealDao {
 
     @Query("DELETE FROM meals WHERE id = :id")
     suspend fun deleteMeal(id: String)
+
+    // Relation methods
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertMealIngredientCrossRef(crossRef: MealIngredientCrossRef)
+
+    @Query("DELETE FROM meal_ingredient_cross_ref WHERE mealId = :mealId")
+    suspend fun deleteIngredientsForMeal(mealId: String)
+
+    @Query("SELECT * FROM meal_ingredient_cross_ref WHERE mealId = :mealId")
+    fun getIngredientsForMeal(mealId: String): Flow<List<MealIngredientCrossRef>>
 }

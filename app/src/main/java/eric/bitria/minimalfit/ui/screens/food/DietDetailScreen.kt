@@ -154,10 +154,11 @@ fun DietDetailScreen(
                         )
                     }
 
-                    items(uiState.relatedMeals, key = { it.id }) { meal ->
+                    items(uiState.relatedMeals, key = { it.meal.id }) { item ->
                         MealCard(
-                            meal = meal,
-                            onClick = { onNavigateToMealDetail(meal) }
+                            meal = item.meal,
+                            calories = item.calories,
+                            onClick = { onNavigateToMealDetail(item.meal) }
                         )
                     }
                 }
@@ -194,8 +195,8 @@ fun DietDetailScreen(
             itemContent = { meal ->
                 MealItem(
                     meal = meal,
-                    onAdd = {
-                        viewModel.addMeal(mealId = meal.id)
+                    onAdd = { amount ->
+                        viewModel.addMeal(mealId = meal.id, amount = amount)
                         viewModel.dismissSearchDialog()
                     }
                 )

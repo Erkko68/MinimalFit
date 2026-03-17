@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import eric.bitria.minimalfit.data.entity.food.Diet
 import eric.bitria.minimalfit.data.entity.food.Meal
-import eric.bitria.minimalfit.data.entity.food.MealLog
 import eric.bitria.minimalfit.data.repository.food.DietRepository
 import eric.bitria.minimalfit.data.repository.food.FoodCatalogRepository
 import eric.bitria.minimalfit.data.repository.food.JournalRepository
@@ -12,15 +11,15 @@ import eric.bitria.minimalfit.util.endOfDayEpoch
 import eric.bitria.minimalfit.util.last7DaysEndingToday
 import eric.bitria.minimalfit.util.shortWeekdayLabel
 import eric.bitria.minimalfit.util.startOfDayEpoch
-import eric.bitria.minimalfit.util.toLocalDate
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.datetime.LocalDate
 
 data class DailyCalorieData(
     val dayLabel: String,
@@ -54,18 +53,35 @@ class FoodViewModel(
         dietQuery to mealQuery
     }.flatMapLatest { (dietQuery, mealQuery) ->
         val days = last7DaysEndingToday()
-        val start = days.first().startOfDayEpoch()
-        val end = days.last().endOfDayEpoch()
+        
+        val weeklyProgressFlow = combine(days.map { date ->
+            val start = date.startOfDayEpoch()
+            val end = date.endOfDayEpoch()
+            journal.getMealLogsInRange(start, end).flatMapLatest { logs ->
+                if (logs.isEmpty()) flowOf(0)
+                else combine(logs.map { journal.getLogCalories(it.id) }) { it.sum() }
+            }.map { calories ->
+                DailyCalorieData(
+                    dayLabel = date.shortWeekdayLabel(),
+                    dayNumber = date.day,
+                    currentCalories = calories,
+                    goalCalories = 2500 // TODO Hardcoded for now
+                )
+            }
+        }) { it.toList() }
 
         combine(
-            journal.getMealLogsInRange(start, end),
+            weeklyProgressFlow,
             dietRepository.getDiets(dietQuery),
-            foodCatalog.getMeals(mealQuery),
-            foodCatalog.getMeals("") // Fetch all catalog meals to calculate calories from IDs
-        ) { logsList, diets, searchedMeals, allMeals ->
-            val allMealsMap = allMeals.associateBy { it.id }
-            val logsByDate = logsList.groupBy { it.createdAt.toLocalDate() }
-            buildUiState(logsByDate, allMealsMap, diets, searchedMeals, dietQuery, mealQuery, days)
+            foodCatalog.getMeals(mealQuery)
+        ) { progress, diets, meals ->
+            FoodUiState(
+                weeklyProgress = progress,
+                diets = diets,
+                meals = meals,
+                searchDietQuery = dietQuery,
+                searchMealQuery = mealQuery
+            )
         }
     }.stateIn(
         scope = viewModelScope,
@@ -79,35 +95,5 @@ class FoodViewModel(
 
     fun onSearchMealQueryChange(query: String) {
         _searchMealQuery.value = query
-    }
-
-    private fun buildUiState(
-        logsByDate: Map<LocalDate, List<MealLog>>,
-        allMealsMap: Map<String, Meal>,
-        diets: List<Diet>,
-        meals: List<Meal>,
-        dietQuery: String,
-        mealQuery: String,
-        days: List<LocalDate>
-    ): FoodUiState {
-        return FoodUiState(
-            weeklyProgress = days.map { date ->
-                val dailyLogs = logsByDate[date] ?: emptyList()
-                val dailyCalories = dailyLogs.sumOf { log ->
-                    allMealsMap[log.mealId]?.totalCalories ?: 0
-                }
-
-                DailyCalorieData(
-                    dayLabel = date.shortWeekdayLabel(),
-                    dayNumber = date.day,
-                    currentCalories = dailyCalories,
-                    goalCalories = 2500 // TODO Hardcoded for now
-                )
-            },
-            diets = diets,
-            meals = meals,
-            searchDietQuery = dietQuery,
-            searchMealQuery = mealQuery
-        )
     }
 }

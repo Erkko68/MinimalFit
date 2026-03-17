@@ -16,12 +16,19 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
+data class DietMealUiState(
+    val meal: Meal,
+    val calories: Int,
+    val amount: Float
+)
+
 data class DietDetailUiState(
     val diet: Diet? = null,
-    val relatedMeals: List<Meal> = emptyList(),
+    val relatedMeals: List<DietMealUiState> = emptyList(),
     val savedMeals: List<Meal> = emptyList(),
     val showSearchDialog: Boolean = false,
-    val searchMealQuery: String = ""
+    val searchMealQuery: String = "",
+    val totalCalories: Int = 0
 )
 
 class DietDetailViewModel(
@@ -43,25 +50,28 @@ class DietDetailViewModel(
         dietRepository.getDiet(dietId).flatMapLatest { diet ->
             if (diet == null) return@flatMapLatest flowOf(DietDetailUiState())
             
-            val mealIds = diet.mealIds
-            val mealsFlow = if (mealIds.isEmpty()) {
-                flowOf(emptyList())
-            } else {
-                combine(mealIds.map { foodCatalog.getMeal(it) }) { mealsArray ->
-                    mealsArray.filterNotNull()
-                }
-            }
-
             combine(
-                mealsFlow,
+                dietRepository.getMealsForDiet(dietId).flatMapLatest { meals ->
+                    if (meals.isEmpty()) flowOf(emptyList<DietMealUiState>())
+                    else combine(meals.map { meal ->
+                        combine(
+                            dietRepository.getMealAmountInDiet(dietId, meal.id),
+                            foodCatalog.getMealCalories(meal.id)
+                        ) { amount, baseCalories ->
+                            DietMealUiState(meal, (baseCalories * amount).toInt(), amount)
+                        }
+                    }) { it.toList() }
+                },
+                dietRepository.getDietCalories(dietId),
                 foodCatalog.getMeals(query)
-            ) { meals, savedMeals ->
+            ) { mealStates, totalCalories, savedMeals ->
                 DietDetailUiState(
                     diet = diet,
-                    relatedMeals = meals,
+                    relatedMeals = mealStates,
                     savedMeals = savedMeals,
                     showSearchDialog = showDialog,
-                    searchMealQuery = query
+                    searchMealQuery = query,
+                    totalCalories = totalCalories
                 )
             }
         }
@@ -83,15 +93,9 @@ class DietDetailViewModel(
         _searchMealQuery.value = query
     }
 
-    fun addMeal(mealId: String) {
+    fun addMeal(mealId: String, amount: Float = 1f) {
         viewModelScope.launch {
-            val currentDiet = uiState.value.diet ?: return@launch
-            if (!currentDiet.mealIds.contains(mealId)) {
-                val updatedDiet = currentDiet.copy(
-                    mealIds = currentDiet.mealIds + mealId
-                )
-                dietRepository.updateDiet(updatedDiet)
-            }
+            dietRepository.addMealToDiet(dietId, mealId, amount)
             dismissSearchDialog()
         }
     }

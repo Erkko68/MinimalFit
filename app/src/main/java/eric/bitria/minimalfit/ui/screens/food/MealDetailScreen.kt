@@ -114,7 +114,7 @@ fun MealDetailScreen(
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                             Text(
-                                text = "${meal?.totalCalories ?: 0} kcal",
+                                text = "${uiState.totalCalories} kcal",
                                 style = MaterialTheme.typography.titleLarge,
                                 color = MaterialTheme.colorScheme.primary,
                                 fontWeight = FontWeight.Bold

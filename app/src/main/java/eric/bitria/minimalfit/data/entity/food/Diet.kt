@@ -12,6 +12,5 @@ data class Diet(
     val id: String = UUID.randomUUID().toString(),
     val name: String,
     val description: String = "",
-    val imageUrl: String? = null,
-    val mealIds: List<String> = emptyList()
+    val imageUrl: String? = null
 )

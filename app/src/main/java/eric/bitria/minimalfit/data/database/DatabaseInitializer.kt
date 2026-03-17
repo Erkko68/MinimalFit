@@ -2,9 +2,10 @@ package eric.bitria.minimalfit.data.database
 
 import eric.bitria.minimalfit.data.entity.food.Diet
 import eric.bitria.minimalfit.data.entity.food.Ingredient
-import eric.bitria.minimalfit.data.entity.food.IngredientReference
 import eric.bitria.minimalfit.data.entity.food.Meal
 import eric.bitria.minimalfit.data.entity.food.MeasurementUnit
+import eric.bitria.minimalfit.data.entity.food.relations.DietMealCrossRef
+import eric.bitria.minimalfit.data.entity.food.relations.MealIngredientCrossRef
 import eric.bitria.minimalfit.data.entity.track.Track
 import eric.bitria.minimalfit.data.entity.track.TrackPoint
 import eric.bitria.minimalfit.util.today
@@ -95,52 +96,47 @@ class DatabaseInitializer(private val db: AppDatabase) {
                 id = "meal-oatmeal-berries",
                 name = "Oatmeal with Berries",
                 description = "Healthy breakfast bowl with fiber and antioxidants.",
-                imageUrl = "https://images.unsplash.com/photo-1517673132405-a56a62b18caf?q=80&w=500&auto=format&fit=crop",
-                ingredients = listOf(
-                    IngredientReference("ing-oats", 50f),
-                    IngredientReference("ing-blueberries", 30f)
-                )
+                imageUrl = "https://images.unsplash.com/photo-1517673132405-a56a62b18caf?q=80&w=500&auto=format&fit=crop"
             ),
             Meal(
                 id = "meal-grilled-chicken-salad",
                 name = "Grilled Chicken Salad",
                 description = "Balanced lunch with lean protein and greens.",
-                imageUrl = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=500&auto=format&fit=crop",
-                ingredients = listOf(
-                    IngredientReference("ing-chicken", 150f),
-                    IngredientReference("ing-avocado", 50f)
-                )
+                imageUrl = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=500&auto=format&fit=crop"
             ),
             Meal(
                 id = "meal-avocado-toast",
                 name = "Avocado Toast",
                 description = "Simple breakfast with healthy fats.",
-                imageUrl = "https://images.unsplash.com/photo-1525351484163-7529414344d8?q=80&w=500&auto=format&fit=crop",
-                ingredients = listOf(
-                    IngredientReference("ing-bread", 60f),
-                    IngredientReference("ing-avocado", 40f)
-                )
+                imageUrl = "https://images.unsplash.com/photo-1525351484163-7529414344d8?q=80&w=500&auto=format&fit=crop"
             ),
             Meal(
                 id = "meal-protein-shake",
                 name = "Post-Workout Shake",
-                description = "Quick recovery protein shake.",
-                ingredients = listOf(
-                    IngredientReference("ing-protein-powder", 1f)
-                )
+                description = "Quick recovery protein shake."
             ),
             Meal(
                 id = "meal-salmon-asparagus",
                 name = "Salmon and Asparagus",
                 description = "Omega-3 rich dinner.",
-                imageUrl = "https://images.unsplash.com/photo-1467003909585-2f8a72700288?q=80&w=500&auto=format&fit=crop",
-                ingredients = listOf(
-                    IngredientReference("ing-salmon", 200f),
-                    IngredientReference("ing-asparagus", 100f)
-                )
+                imageUrl = "https://images.unsplash.com/photo-1467003909585-2f8a72700288?q=80&w=500&auto=format&fit=crop"
             )
         )
         meals.forEach { mealDao.insertMeal(it) }
+
+        // Initialize Meal Ingredients
+        val mealIngredients = listOf(
+            MealIngredientCrossRef("meal-oatmeal-berries", "ing-oats", 50f),
+            MealIngredientCrossRef("meal-oatmeal-berries", "ing-blueberries", 30f),
+            MealIngredientCrossRef("meal-grilled-chicken-salad", "ing-chicken", 150f),
+            MealIngredientCrossRef("meal-grilled-chicken-salad", "ing-avocado", 50f),
+            MealIngredientCrossRef("meal-avocado-toast", "ing-bread", 60f),
+            MealIngredientCrossRef("meal-avocado-toast", "ing-avocado", 40f),
+            MealIngredientCrossRef("meal-protein-shake", "ing-protein-powder", 1f),
+            MealIngredientCrossRef("meal-salmon-asparagus", "ing-salmon", 200f),
+            MealIngredientCrossRef("meal-salmon-asparagus", "ing-asparagus", 100f)
+        )
+        mealIngredients.forEach { mealDao.insertMealIngredientCrossRef(it) }
 
         // 3. Initialize Diets
         val diets = listOf(
@@ -148,18 +144,25 @@ class DatabaseInitializer(private val db: AppDatabase) {
                 id = "diet-keto",
                 name = "Keto Diet",
                 description = "High-fat, low-carb diet.",
-                imageUrl = "https://images.unsplash.com/photo-1552332386-f8dd00dc2f85?q=80&w=2070&auto=format&fit=crop",
-                mealIds = listOf("meal-salmon-asparagus", "meal-grilled-chicken-salad")
+                imageUrl = "https://images.unsplash.com/photo-1552332386-f8dd00dc2f85?q=80&w=2070&auto=format&fit=crop"
             ),
             Diet(
                 id = "diet-vegan",
                 name = "Vegan",
                 description = "Excludes all animal products.",
-                imageUrl = "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=2070&auto=format&fit=crop",
-                mealIds = listOf("meal-oatmeal-berries", "meal-avocado-toast")
+                imageUrl = "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=2070&auto=format&fit=crop"
             )
         )
         diets.forEach { dietDao.insertDiet(it) }
+
+        // Initialize Diet Meals
+        val dietMeals = listOf(
+            DietMealCrossRef("diet-keto", "meal-salmon-asparagus", 1f),
+            DietMealCrossRef("diet-keto", "meal-grilled-chicken-salad", 1f),
+            DietMealCrossRef("diet-vegan", "meal-oatmeal-berries", 1f),
+            DietMealCrossRef("diet-vegan", "meal-avocado-toast", 1f)
+        )
+        dietMeals.forEach { dietDao.insertDietMealCrossRef(it) }
 
         // 4. Initialize Tracks
         val eveningRunPoints = listOf(

@@ -3,7 +3,6 @@ package eric.bitria.minimalfit.ui.viewmodels.food
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import eric.bitria.minimalfit.data.entity.food.Ingredient
-import eric.bitria.minimalfit.data.entity.food.IngredientReference
 import eric.bitria.minimalfit.data.entity.food.Meal
 import eric.bitria.minimalfit.data.repository.food.FoodCatalogRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -13,6 +12,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -26,7 +26,9 @@ data class MealDetailUiState(
     val ingredients: List<MealIngredientUiState> = emptyList(),
     val savedIngredients: List<Ingredient> = emptyList(),
     val showSearchDialog: Boolean = false,
-    val searchIngredientQuery: String = ""
+    val searchIngredientQuery: String = "",
+    val totalCalories: Int = 0,
+    val totalAmount: Float = 0f
 )
 
 class MealDetailViewModel(
@@ -47,30 +49,27 @@ class MealDetailViewModel(
         foodCatalog.getMeal(mealId).flatMapLatest { meal ->
             if (meal == null) return@flatMapLatest flowOf(MealDetailUiState())
 
-            val ingredientRefs = meal.ingredients
-            val ingredientsFlow = if (ingredientRefs.isEmpty()) {
-                flowOf(emptyList())
-            } else {
-                combine(ingredientRefs.map { ref ->
-                    foodCatalog.getIngredient(ref.ingredientId).flatMapLatest { ingredient ->
-                        if (ingredient == null) flowOf(null)
-                        else flowOf(MealIngredientUiState(ingredient, ref.amount))
-                    }
-                }) { ingredientsArray ->
-                    ingredientsArray.filterNotNull()
-                }
-            }
-
             combine(
-                ingredientsFlow,
+                foodCatalog.getIngredientsForMeal(mealId).flatMapLatest { ingredients ->
+                    if (ingredients.isEmpty()) flowOf(emptyList<MealIngredientUiState>())
+                    else combine(ingredients.map { ing ->
+                        foodCatalog.getIngredientAmountInMeal(mealId, ing.id).map { amt ->
+                            MealIngredientUiState(ing, amt)
+                        }
+                    }) { it.toList() }
+                },
+                foodCatalog.getMealCalories(mealId),
+                foodCatalog.getMealWeight(mealId),
                 foodCatalog.getIngredients(query)
-            ) { ingredients, savedIngredients ->
+            ) { ingredientStates, calories, weight, savedIngredients ->
                 MealDetailUiState(
                     meal = meal,
-                    ingredients = ingredients,
+                    ingredients = ingredientStates,
                     savedIngredients = savedIngredients,
                     showSearchDialog = showDialog,
-                    searchIngredientQuery = query
+                    searchIngredientQuery = query,
+                    totalCalories = calories,
+                    totalAmount = weight
                 )
             }
         }
@@ -94,10 +93,7 @@ class MealDetailViewModel(
 
     fun addIngredient(ingredient: Ingredient, amount: Float) {
         viewModelScope.launch {
-            val currentMeal = uiState.value.meal ?: return@launch
-            val updatedIngredients = currentMeal.ingredients + IngredientReference(ingredient.id, amount)
-            val updatedMeal = currentMeal.copy(ingredients = updatedIngredients)
-            foodCatalog.updateMeal(updatedMeal)
+            foodCatalog.addIngredientToMeal(mealId, ingredient.id, amount)
             dismissSearchDialog()
         }
     }

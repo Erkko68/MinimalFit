@@ -40,7 +40,7 @@ fun MealItem(
     onAdd: (Float) -> Unit
 ) {
     var amountText by rememberSaveable {
-        mutableStateOf(meal.totalAmount.toString().removeSuffix(".0"))
+        mutableStateOf("100")
     }
 
     val unitSuffix = when (meal.measurementUnit) {
@@ -48,16 +48,6 @@ fun MealItem(
         MeasurementUnit.MILLILITERS -> "ml"
         MeasurementUnit.PIECE -> "pcs"
     }
-
-    val unitLabel = when (meal.measurementUnit) {
-        MeasurementUnit.GRAMS -> "100g"
-        MeasurementUnit.MILLILITERS -> "100ml"
-        MeasurementUnit.PIECE -> "piece"
-    }
-
-    val caloriesPer100 = if (meal.totalAmount > 0) {
-        (meal.totalCalories / (meal.totalAmount / 100f)).toInt()
-    } else 0
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -77,11 +67,6 @@ fun MealItem(
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 maxLines = 1
-            )
-            Text(
-                text = "$caloriesPer100 kcal / $unitLabel",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
 

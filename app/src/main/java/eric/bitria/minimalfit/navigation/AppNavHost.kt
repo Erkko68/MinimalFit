@@ -29,7 +29,7 @@ fun AppNavHost(
 ) {
     NavHost(
         navController = navController,
-        startDestination = Route.Food,
+        startDestination = Route.Profile,
         modifier = Modifier.fillMaxSize()
     ) {
         composable<Route.Profile> {

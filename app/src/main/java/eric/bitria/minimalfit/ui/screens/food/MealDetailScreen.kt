@@ -77,7 +77,7 @@ fun MealDetailScreen(
                 .padding(bottom = paddingValues.calculateBottomPadding())
                 .background(backgroundColor)
         ) {
-            val headerHeight = maxHeight * 0.2f
+            val headerHeight = maxHeight * 0.3f
             var headerAreaHeight by remember { mutableIntStateOf(0) }
 
             // 1. SCROLLABLE CONTENT (Rendered first to be behind the header)

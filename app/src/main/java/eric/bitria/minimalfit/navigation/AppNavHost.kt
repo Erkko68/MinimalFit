@@ -87,17 +87,15 @@ fun AppNavHost(
             )
         }
         composable<Route.DailyLog> { backStackEntry ->
-            Box(Modifier.padding(contentPadding)) {
-                val dailyLog = backStackEntry.toRoute<Route.DailyLog>()
-                DailyLogScreen(
-                    date = LocalDate.parse(dailyLog.date),
-                    openSearch = dailyLog.openSearch,
-                    onBackClick = { navController.popBackStack() },
-                    onNavigateToMealDetail = { meal ->
-                        navController.navigate(Route.MealDetail(mealId = meal.id))
-                    }
-                )
-            }
+            val dailyLog = backStackEntry.toRoute<Route.DailyLog>()
+            DailyLogScreen(
+                date = LocalDate.parse(dailyLog.date),
+                openSearch = dailyLog.openSearch,
+                onBackClick = { navController.popBackStack() },
+                onNavigateToMealDetail = { meal ->
+                    navController.navigate(Route.MealDetail(mealId = meal.id))
+                }
+            )
         }
         composable<Route.DietDetail> { backStackEntry ->
             val dietDetail = backStackEntry.toRoute<Route.DietDetail>()

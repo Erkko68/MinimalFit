@@ -30,7 +30,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.em
-import eric.bitria.minimalfit.data.entity.food.LoggedMeal
 import eric.bitria.minimalfit.data.entity.food.Meal
 import eric.bitria.minimalfit.ui.components.animations.StaggeredSnapLayoutInfoProvider
 import eric.bitria.minimalfit.ui.components.animations.SwipeToDeleteCard
@@ -133,21 +132,21 @@ fun DailyLogScreen(
                     )
                 }
 
-                if (uiState.meals.isEmpty()) {
+                if (uiState.logs.isEmpty()) {
                     item(span = StaggeredGridItemSpan.FullLine) {
                         EmptyMealsPlaceholder()
                     }
                 } else {
                     items(
-                        items = uiState.meals,
-                        key = { it.id }
-                    ) { meal ->
+                        items = uiState.logs,
+                        key = { it.log.id }
+                    ) { model ->
                         SwipeToDeleteCard(
-                            onDismiss = { dailyLogViewModel.removeMeal(meal) }
+                            onDismiss = { dailyLogViewModel.removeMealLog(model.log.id) }
                         ) {
                             MealCard(
-                                meal = meal,
-                                onClick = { onNavigateToMealDetail(meal) }
+                                meal = model.meal,
+                                onClick = { onNavigateToMealDetail(model.meal) }
                             )
                         }
                     }
@@ -168,7 +167,7 @@ fun DailyLogScreen(
                 MealItem(
                     meal = meal,
                     onAdd = { amount ->
-                        dailyLogViewModel.addMeal(LoggedMeal(mealId = meal.id, amount = amount))
+                        dailyLogViewModel.addMeal(meal.id, amount)
                         dailyLogViewModel.dismissSearchDialog()
                     }
                 )

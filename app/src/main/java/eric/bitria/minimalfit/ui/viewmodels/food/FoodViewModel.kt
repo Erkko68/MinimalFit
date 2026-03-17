@@ -8,8 +8,11 @@ import eric.bitria.minimalfit.data.entity.food.MealLog
 import eric.bitria.minimalfit.data.repository.food.DietRepository
 import eric.bitria.minimalfit.data.repository.food.FoodCatalogRepository
 import eric.bitria.minimalfit.data.repository.food.JournalRepository
+import eric.bitria.minimalfit.util.endOfDayEpoch
 import eric.bitria.minimalfit.util.last7DaysEndingToday
 import eric.bitria.minimalfit.util.shortWeekdayLabel
+import eric.bitria.minimalfit.util.startOfDayEpoch
+import eric.bitria.minimalfit.util.toLocalDate
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -51,18 +54,18 @@ class FoodViewModel(
         dietQuery to mealQuery
     }.flatMapLatest { (dietQuery, mealQuery) ->
         val days = last7DaysEndingToday()
-        val start = days.first()
-        val end = days.last()
+        val start = days.first().startOfDayEpoch()
+        val end = days.last().endOfDayEpoch()
 
         combine(
-            journal.getMealLogs(start, end),
+            journal.getMealLogsInRange(start, end),
             dietRepository.getDiets(dietQuery),
             foodCatalog.getMeals(mealQuery),
             foodCatalog.getMeals("") // Fetch all catalog meals to calculate calories from IDs
         ) { logsList, diets, searchedMeals, allMeals ->
             val allMealsMap = allMeals.associateBy { it.id }
-            val logsMap = logsList.associateBy { it.date }
-            buildUiState(logsMap, allMealsMap, diets, searchedMeals, dietQuery, mealQuery, days)
+            val logsByDate = logsList.groupBy { it.createdAt.toLocalDate() }
+            buildUiState(logsByDate, allMealsMap, diets, searchedMeals, dietQuery, mealQuery, days)
         }
     }.stateIn(
         scope = viewModelScope,
@@ -79,7 +82,7 @@ class FoodViewModel(
     }
 
     private fun buildUiState(
-        logs: Map<LocalDate, MealLog>,
+        logsByDate: Map<LocalDate, List<MealLog>>,
         allMealsMap: Map<String, Meal>,
         diets: List<Diet>,
         meals: List<Meal>,
@@ -89,10 +92,10 @@ class FoodViewModel(
     ): FoodUiState {
         return FoodUiState(
             weeklyProgress = days.map { date ->
-                val log = logs[date]
-                val dailyCalories = log?.loggedMeals?.sumOf { loggedMeal ->
-                    allMealsMap[loggedMeal.mealId]?.totalCalories ?: 0
-                } ?: 0
+                val dailyLogs = logsByDate[date] ?: emptyList()
+                val dailyCalories = dailyLogs.sumOf { log ->
+                    allMealsMap[log.mealId]?.totalCalories ?: 0
+                }
 
                 DailyCalorieData(
                     dayLabel = date.shortWeekdayLabel(),

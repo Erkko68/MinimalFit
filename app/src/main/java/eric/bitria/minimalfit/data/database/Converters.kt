@@ -2,7 +2,6 @@ package eric.bitria.minimalfit.data.database
 
 import androidx.room.TypeConverter
 import eric.bitria.minimalfit.data.entity.food.IngredientReference
-import eric.bitria.minimalfit.data.entity.food.LoggedMeal
 import eric.bitria.minimalfit.data.entity.track.TrackPoint
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
@@ -46,10 +45,4 @@ class Converters {
 
     @TypeConverter
     fun toIngredientList(value: String?): List<IngredientReference>? = value?.let { Json.decodeFromString(it) }
-
-    @TypeConverter
-    fun fromLoggedMealList(value: List<LoggedMeal>?): String? = value?.let { Json.encodeToString(it) }
-
-    @TypeConverter
-    fun toLoggedMealList(value: String?): List<LoggedMeal>? = value?.let { Json.decodeFromString(it) }
 }

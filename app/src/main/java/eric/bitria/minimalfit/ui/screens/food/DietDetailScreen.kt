@@ -35,7 +35,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import coil.compose.AsyncImage
-import eric.bitria.minimalfit.data.entity.food.LoggedMeal
 import eric.bitria.minimalfit.data.entity.food.Meal
 import eric.bitria.minimalfit.ui.components.food.actions.AddEntryFab
 import eric.bitria.minimalfit.ui.components.food.cards.MealCard
@@ -195,8 +194,8 @@ fun DietDetailScreen(
             itemContent = { meal ->
                 MealItem(
                     meal = meal,
-                    onAdd = { amount ->
-                        viewModel.addMeal(LoggedMeal(mealId = meal.id, amount = amount))
+                    onAdd = {
+                        viewModel.addMeal(mealId = meal.id)
                         viewModel.dismissSearchDialog()
                     }
                 )

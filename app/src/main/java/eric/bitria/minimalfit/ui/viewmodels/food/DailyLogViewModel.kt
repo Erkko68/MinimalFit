@@ -2,10 +2,12 @@ package eric.bitria.minimalfit.ui.viewmodels.food
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import eric.bitria.minimalfit.data.entity.food.LoggedMeal
 import eric.bitria.minimalfit.data.entity.food.Meal
+import eric.bitria.minimalfit.data.entity.food.MealLog
 import eric.bitria.minimalfit.data.repository.food.FoodCatalogRepository
 import eric.bitria.minimalfit.data.repository.food.JournalRepository
+import eric.bitria.minimalfit.util.nowInstant
+import eric.bitria.minimalfit.util.today
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -13,13 +15,23 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
+import kotlinx.datetime.atTime
+import kotlinx.datetime.toInstant
+
+data class MealLogUiModel(
+    val log: MealLog,
+    val meal: Meal
+)
 
 data class DailyLogUiState(
     val date: LocalDate,
-    val meals: List<Meal> = emptyList(),
+    val logs: List<MealLogUiModel> = emptyList(),
     val savedMeals: List<Meal> = emptyList(),
     val calorieGoal: Int = 2500,
     val totalCalories: Int = 0,
@@ -43,27 +55,31 @@ class DailyLogViewModel(
     ) { showDialog, query ->
         showDialog to query
     }.flatMapLatest { (showDialog, query) ->
-        journal.getMealLog(date).flatMapLatest { log ->
-            val mealIds = log?.loggedMeals?.map { it.mealId } ?: emptyList()
-            
-            val mealsFlow = if (mealIds.isEmpty()) {
+        val timeZone = TimeZone.currentSystemDefault()
+        val startOfDay = date.atStartOfDayIn(timeZone).toEpochMilliseconds()
+        val endOfDay = date.atTime(23, 59, 59, 999_999_999)
+            .toInstant(timeZone).toEpochMilliseconds()
+
+        journal.getMealLogsInRange(startOfDay, endOfDay).flatMapLatest { logs ->
+            val logsFlow = if (logs.isEmpty()) {
                 flowOf(emptyList())
             } else {
-                // Combine individual meal flows from the catalog
-                combine(mealIds.map { foodCatalog.getMeal(it) }) { mealsArray ->
-                    mealsArray.filterNotNull()
-                }
+                combine(logs.map { log ->
+                    foodCatalog.getMeal(log.mealId).map { meal ->
+                        meal?.let { MealLogUiModel(log, it) }
+                    }
+                }) { it.filterNotNull() }
             }
 
             combine(
-                mealsFlow,
+                logsFlow,
                 foodCatalog.getMeals(query)
-            ) { meals, savedMeals ->
+            ) { mealLogs, savedMeals ->
                 DailyLogUiState(
                     date = date,
-                    meals = meals,
+                    logs = mealLogs,
                     savedMeals = savedMeals,
-                    totalCalories = meals.sumOf { it.totalCalories },
+                    totalCalories = mealLogs.sumOf { it.meal.totalCalories },
                     showSearchDialog = showDialog,
                     searchMealQuery = query
                 )
@@ -87,15 +103,27 @@ class DailyLogViewModel(
         _searchMealQuery.value = query
     }
 
-    fun addMeal(loggedMeal: LoggedMeal) {
+    fun addMeal(mealId: String, amount: Float) {
         viewModelScope.launch {
-            journal.addMealToLog(date, loggedMeal)
+            val timestamp = if (date == today()) {
+                System.currentTimeMillis()
+            } else {
+                date.atTime(12, 0).toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds()
+            }
+            
+            journal.addMealLog(
+                MealLog(
+                    mealId = mealId,
+                    amount = amount,
+                    createdAt = timestamp
+                )
+            )
         }
     }
 
-    fun removeMeal(meal: Meal) {
+    fun removeMealLog(logId: String) {
         viewModelScope.launch {
-            journal.removeMealFromLog(date, meal.id)
+            journal.removeMealLog(logId)
         }
     }
 }

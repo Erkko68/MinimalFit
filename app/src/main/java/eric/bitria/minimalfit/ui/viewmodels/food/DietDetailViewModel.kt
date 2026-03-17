@@ -3,7 +3,6 @@ package eric.bitria.minimalfit.ui.viewmodels.food
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import eric.bitria.minimalfit.data.entity.food.Diet
-import eric.bitria.minimalfit.data.entity.food.LoggedMeal
 import eric.bitria.minimalfit.data.entity.food.Meal
 import eric.bitria.minimalfit.data.repository.food.DietRepository
 import eric.bitria.minimalfit.data.repository.food.FoodCatalogRepository
@@ -84,12 +83,12 @@ class DietDetailViewModel(
         _searchMealQuery.value = query
     }
 
-    fun addMeal(loggedMeal: LoggedMeal) {
+    fun addMeal(mealId: String) {
         viewModelScope.launch {
             val currentDiet = uiState.value.diet ?: return@launch
-            if (!currentDiet.mealIds.contains(loggedMeal.mealId)) {
+            if (!currentDiet.mealIds.contains(mealId)) {
                 val updatedDiet = currentDiet.copy(
-                    mealIds = currentDiet.mealIds + loggedMeal.mealId
+                    mealIds = currentDiet.mealIds + mealId
                 )
                 dietRepository.updateDiet(updatedDiet)
             }

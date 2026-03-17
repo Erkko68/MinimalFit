@@ -6,7 +6,10 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
+import kotlinx.datetime.atTime
 import kotlinx.datetime.minus
+import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
 import kotlin.time.Instant
@@ -50,6 +53,15 @@ fun currentDateAndTime(timeZone: TimeZone = TimeZone.currentSystemDefault()): Pa
     val now = nowDateTime(timeZone)
     return now.date to now.time
 }
+
+fun LocalDate.startOfDayEpoch(timeZone: TimeZone = TimeZone.currentSystemDefault()): Long =
+    atStartOfDayIn(timeZone).toEpochMilliseconds()
+
+fun LocalDate.endOfDayEpoch(timeZone: TimeZone = TimeZone.currentSystemDefault()): Long =
+    atTime(23, 59, 59, 999_999_999).toInstant(timeZone).toEpochMilliseconds()
+
+fun Long.toLocalDate(timeZone: TimeZone = TimeZone.currentSystemDefault()): LocalDate =
+    Instant.fromEpochMilliseconds(this).toLocalDateTime(timeZone).date
 
 fun LocalDate.shortMonthDay(): String = "${shortMonthNames[monthIndex()]} $day"
 

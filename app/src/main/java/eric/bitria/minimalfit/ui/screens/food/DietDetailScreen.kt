@@ -1,5 +1,7 @@
 package eric.bitria.minimalfit.ui.screens.food
 
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -38,7 +40,7 @@ import eric.bitria.minimalfit.ui.viewmodels.food.DietDetailViewModel
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun DietDetailScreen(
     dietId: String,
@@ -127,7 +129,13 @@ fun DietDetailScreen(
                     items(uiState.relatedMeals, key = { it.meal.id }) { item ->
                         SwipeToDeleteCard(
                             onDismiss = { viewModel.removeMealFromDiet(item.meal.id) },
-                            modifier = Modifier.clip(MaterialTheme.shapes.extraLarge)
+                            modifier = Modifier
+                                .clip(MaterialTheme.shapes.extraLarge)
+                                .animateItem(
+                                    fadeInSpec = tween(durationMillis = 300),
+                                    fadeOutSpec = tween(durationMillis = 300),
+                                    placementSpec = tween(durationMillis = 300)
+                                )
                         ) {
                             MealCard(
                                 meal = item.meal,

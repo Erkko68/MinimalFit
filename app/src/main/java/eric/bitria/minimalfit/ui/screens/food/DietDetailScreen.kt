@@ -1,48 +1,34 @@
 package eric.bitria.minimalfit.ui.screens.food
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import coil.compose.AsyncImage
 import eric.bitria.minimalfit.data.entity.food.Meal
 import eric.bitria.minimalfit.ui.components.animations.SwipeToDeleteCard
+import eric.bitria.minimalfit.ui.components.food.FlexibleHeaderScaffold
 import eric.bitria.minimalfit.ui.components.food.actions.AddEntryFab
 import eric.bitria.minimalfit.ui.components.food.cards.MealCard
 import eric.bitria.minimalfit.ui.components.food.dialogs.SearchableItemDialog
@@ -52,6 +38,7 @@ import eric.bitria.minimalfit.ui.viewmodels.food.DietDetailViewModel
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DietDetailScreen(
     dietId: String,
@@ -61,42 +48,81 @@ fun DietDetailScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val diet = uiState.diet
-    val backgroundColor = MaterialTheme.colorScheme.background
 
-    Scaffold(
-        floatingActionButtonPosition = FabPosition.Center,
+    FlexibleHeaderScaffold(
+        backgroundImage = {
+            if (diet != null && !diet.imageUrl.isNullOrEmpty()) {
+                AsyncImage(
+                    model = diet.imageUrl,
+                    contentDescription = diet.name,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            }
+        },
+        title = {
+            Text(
+                text = diet?.name ?: "",
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.ExtraBold)
+            )
+        },
+        subtitle = {
+            Column {
+                if (diet != null && diet.description.isNotEmpty()) {
+                    Text(
+                        text = diet.description,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+        },
+        navigationIcon = {
+            FilledIconButton(
+                onClick = onBackClick,
+                colors = IconButtonDefaults.filledIconButtonColors(
+                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
+                    contentColor = MaterialTheme.colorScheme.onSurface
+                )
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Navigate back"
+                )
+            }
+        },
         floatingActionButton = {
             AddEntryFab(
                 onClick = { viewModel.openSearchDialog() },
                 text = "Add Meal"
             )
-        }
-    ) { paddingValues ->
-        BoxWithConstraints(
+        },
+        floatingActionButtonPosition = FabPosition.Center
+    ) { innerPadding ->
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = paddingValues.calculateBottomPadding())
-                .background(backgroundColor)
+                .padding(top = innerPadding.calculateTopPadding())
         ) {
-            val headerHeight = maxHeight * 0.3f
-            var headerAreaHeight by remember { mutableIntStateOf(0) }
-
-            // 1. SCROLLABLE CONTENT (Rendered first to be below the header)
+            Text(
+                text = "Meals",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(horizontal = Spacing.m, vertical = Spacing.s)
+            )
             LazyVerticalStaggeredGrid(
                 columns = StaggeredGridCells.Fixed(2),
-                modifier = Modifier
-                    .fillMaxSize()
-                    .navigationBarsPadding(),
+                modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(
                     start = Spacing.m,
                     end = Spacing.m,
-                    top = with(LocalDensity.current) { headerAreaHeight.toDp() },
-                    bottom = Spacing.m
+                    bottom = innerPadding.calculateBottomPadding() + Spacing.m
                 ),
                 horizontalArrangement = Arrangement.spacedBy(Spacing.m),
                 verticalItemSpacing = Spacing.m
             ) {
-                // Related Meals
                 if (uiState.relatedMeals.isNotEmpty()) {
                     items(uiState.relatedMeals, key = { it.meal.id }) { item ->
                         SwipeToDeleteCard(
@@ -111,88 +137,6 @@ fun DietDetailScreen(
                         }
                     }
                 }
-            }
-
-            // 2. FIXED HEADER SECTION (Rendered second to be on top)
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .onSizeChanged { headerAreaHeight = it.height }
-                    .background(backgroundColor)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(headerHeight)
-                ) {
-                    if (diet != null && !diet.imageUrl.isNullOrEmpty()) {
-                        AsyncImage(
-                            model = diet.imageUrl,
-                            contentDescription = diet.name,
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop
-                        )
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                Brush.verticalGradient(
-                                    0.3f to Color.Transparent,
-                                    1.0f to backgroundColor
-                                )
-                            )
-                    )
-
-                    Text(
-                        text = diet?.name ?: "",
-                        style = MaterialTheme.typography.displaySmall,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier
-                            .align(Alignment.BottomStart)
-                            .padding(horizontal = Spacing.m, vertical = Spacing.s)
-                    )
-                }
-
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = Spacing.m, vertical = Spacing.s)
-                ) {
-                    if (diet != null && diet.description.isNotEmpty()) {
-                        Text(
-                            text = diet.description,
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(Spacing.m))
-                    Text(
-                        text = "Meals",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-
-            // 3. FIXED BACK BUTTON
-            FilledIconButton(
-                onClick = onBackClick,
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .statusBarsPadding()
-                    .padding(Spacing.m),
-                colors = IconButtonDefaults.filledIconButtonColors(
-                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
-                    contentColor = MaterialTheme.colorScheme.onSurface
-                )
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Navigate back"
-                )
             }
         }
     }

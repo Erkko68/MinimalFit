@@ -12,6 +12,8 @@ import eric.bitria.minimalfit.navigation.QuickAction
 import eric.bitria.minimalfit.navigation.composables.BottomNavigationBar
 import eric.bitria.minimalfit.navigation.composables.QuickActionButton
 
+// TODO FER QUE LA APP REACCIONI AL ESTAT DE LA XARXA, DATOS ACTIVATS O WIFI NO ACTIVATS
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun App() {

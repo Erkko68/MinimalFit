@@ -76,7 +76,9 @@ fun AppNavHost(
         }
         composable<Route.IndoorActivities> {
             Box(Modifier.padding(contentPadding)) {
-                IndoorActivitiesScreen()
+                IndoorActivitiesScreen(
+                    onNavigateBack = { navController.popBackStack() }
+                )
             }
         }
         composable<Route.TrackDetail> { backStackEntry ->

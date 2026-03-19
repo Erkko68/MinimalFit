@@ -4,6 +4,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import eric.bitria.minimalfit.navigation.AppNavHost
@@ -36,7 +37,21 @@ fun App() {
                 QuickActionButton(
                     actions = QuickAction.entries,
                     onActionClick = { action ->
-                        action.createRoute()?.let { navController.navigate(it) }
+                        action.createRoute()?.let { route ->
+                            navController.navigate(route) {
+                                // Pop up to the start destination of the graph to
+                                // avoid building up a large stack of destinations
+                                // on the back stack as users select items
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
+                                }
+                                // Avoid multiple copies of the same destination when
+                                // reselecting the same item
+                                launchSingleTop = true
+                                // Restore state when reselecting a previously selected item
+                                restoreState = true
+                            }
+                        }
                     }
                 )
             }

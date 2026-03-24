@@ -9,11 +9,13 @@ import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.PathMeasure
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.SpanStyle
@@ -21,8 +23,6 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import eric.bitria.minimalfit.ui.components.profile.StatCardLayout
 import eric.bitria.minimalfit.ui.theme.Spacing
 import eric.bitria.minimalfit.ui.theme.toVerticalGradient
@@ -64,74 +64,58 @@ fun CalorieCard(
                 val strokeWidth = size.minDimension * 0.22f
                 val spacing = strokeWidth * 1.25f
 
-                val eatenRadius = size.minDimension * 0.9f
+                val eatenRadius = size.minDimension * 0.7f
                 val burnedRadius = eatenRadius - spacing
 
-                // Paths
-                val eatenPath = Path().apply {
-                    moveTo(-strokeWidth, size.height - eatenRadius)
-                    quadraticTo(
-                        x1 = eatenRadius,
-                        y1 = size.height - eatenRadius,
-                        x2 = eatenRadius,
-                        y2 = size.height + strokeWidth
-                    )
-                }
+                // To anchor to the bottom-left, the center of the circle must be (0, size.height).
+                // The bounding box starts at x = -radius, and y = size.height - radius.
+                fun getArcTopLeft(radius: Float) = Offset(-radius, size.height - radius)
+                fun getArcSize(radius: Float) = Size(radius * 2f, radius * 2f)
 
-                val burnedPath = Path().apply {
-                    moveTo(-strokeWidth, size.height - burnedRadius)
-                    quadraticTo(
-                        x1 = burnedRadius,
-                        y1 = size.height - burnedRadius,
-                        x2 = burnedRadius,
-                        y2 = size.height + strokeWidth
-                    )
-                }
+                // Start pointing UP (Left edge) and sweep 90 degrees clockwise (to Bottom edge)
+                val startAngle = 270f
+                val maxSweepAngle = 90f
 
                 // --- TRACKS (background arcs)
-                drawPath(
-                    path = eatenPath,
+                drawArc(
                     color = eatenColor.copy(alpha = 0.18f),
+                    startAngle = startAngle,
+                    sweepAngle = maxSweepAngle,
+                    useCenter = false,
+                    topLeft = getArcTopLeft(eatenRadius),
+                    size = getArcSize(eatenRadius),
                     style = Stroke(strokeWidth, cap = StrokeCap.Round)
                 )
 
-                drawPath(
-                    path = burnedPath,
+                drawArc(
                     color = burnedColor.copy(alpha = 0.18f),
+                    startAngle = startAngle,
+                    sweepAngle = maxSweepAngle,
+                    useCenter = false,
+                    topLeft = getArcTopLeft(burnedRadius),
+                    size = getArcSize(burnedRadius),
                     style = Stroke(strokeWidth, cap = StrokeCap.Round)
                 )
-
-                val pathMeasure = PathMeasure()
 
                 // --- EATEN PROGRESS
-                pathMeasure.setPath(eatenPath, false)
-                val eatenProgressPath = Path()
-                pathMeasure.getSegment(
-                    0f,
-                    pathMeasure.length * eatenProgress,
-                    eatenProgressPath
-                )
-
-                // Main gradient stroke
-                drawPath(
-                    path = eatenProgressPath,
+                drawArc(
                     brush = eatenBrush,
+                    startAngle = startAngle,
+                    sweepAngle = maxSweepAngle * eatenProgress, // Fills from Left edge down to Bottom edge
+                    useCenter = false,
+                    topLeft = getArcTopLeft(eatenRadius),
+                    size = getArcSize(eatenRadius),
                     style = Stroke(strokeWidth, cap = StrokeCap.Round)
                 )
 
                 // --- BURNED PROGRESS
-                pathMeasure.setPath(burnedPath, false)
-                val burnedProgressPath = Path()
-                pathMeasure.getSegment(
-                    0f,
-                    pathMeasure.length * burnedProgress,
-                    burnedProgressPath
-                )
-
-                // Main gradient stroke
-                drawPath(
-                    path = burnedProgressPath,
+                drawArc(
                     brush = burnedBrush,
+                    startAngle = startAngle,
+                    sweepAngle = maxSweepAngle * burnedProgress,
+                    useCenter = false,
+                    topLeft = getArcTopLeft(burnedRadius),
+                    size = getArcSize(burnedRadius),
                     style = Stroke(strokeWidth, cap = StrokeCap.Round)
                 )
             }

@@ -2,7 +2,6 @@ package eric.bitria.minimalfit.ui.components.profile
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.DirectionsRun
 import androidx.compose.material3.MaterialTheme
@@ -11,9 +10,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import eric.bitria.minimalfit.ui.theme.Spacing
 
 @Composable
@@ -28,47 +30,87 @@ fun TrackCard(
 
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(28.dp))
+            .fillMaxWidth()
+            .wrapContentHeight()
+            .clip(MaterialTheme.shapes.extraLarge)
             .background(containerColor)
-            .padding(Spacing.m)
+            .drawBehind {
+                val pathTint = contentColor.copy(alpha = 0.08f)
+                val strokeWidth = size.height * 0.25f
+
+                // Draw a smooth, winding route across the entire card
+                val trackPath = Path().apply {
+                    // Start off-screen on the left
+                    moveTo(-size.width * 0.1f, size.height * 0.7f)
+
+                    // First curve (swoops down then up)
+                    quadraticTo(
+                        x1 = size.width * 0.3f,
+                        y1 = size.height * 1.3f,
+                        x2 = size.width * 0.6f,
+                        y2 = size.height * 0.5f
+                    )
+
+                    // Second curve (swoops up then exits right)
+                    quadraticTo(
+                        x1 = size.width * 0.8f,
+                        y1 = -size.height * 0.1f,
+                        x2 = size.width * 1.1f,
+                        y2 = size.height * 0.6f
+                    )
+                }
+
+                drawPath(
+                    path = trackPath,
+                    color = pathTint,
+                    style = Stroke(
+                        width = strokeWidth,
+                        cap = StrokeCap.Round,
+                        join = StrokeJoin.Round
+                    )
+                )
+            }
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(Spacing.m),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(Spacing.m),
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.Top
         ) {
-            StatCardIcon(
-                icon = Icons.AutoMirrored.Outlined.DirectionsRun,
-                contentColor = contentColor
-            )
-
-            Column {
+            // Text Column (Left)
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(Spacing.xs)
+            ) {
                 Text(
                     text = "Morning Run",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = contentColor.copy(alpha = 0.9f)
                 )
+
                 Row(verticalAlignment = Alignment.Bottom) {
                     Text(
                         text = distance,
                         style = MaterialTheme.typography.headlineLarge,
                         fontWeight = FontWeight.Black,
-                        color = contentColor
+                        color = contentColor,
+                        modifier = Modifier.alignByBaseline()
                     )
                     Text(
                         text = " km",
-                        style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.Light,
-                        color = contentColor,
-                        modifier = Modifier.padding(bottom = Spacing.xs)
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = contentColor.copy(alpha = 0.6f),
+                        modifier = Modifier.alignByBaseline()
                     )
                 }
-                
+
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(Spacing.s),
-                    modifier = Modifier.padding(top = Spacing.s)
+                    modifier = Modifier.padding(top = Spacing.xs)
                 ) {
                     StatCardChip(
                         text = duration,
@@ -82,6 +124,12 @@ fun TrackCard(
                     )
                 }
             }
+
+            // Foreground Icon (Right)
+            StatCardIcon(
+                icon = Icons.AutoMirrored.Outlined.DirectionsRun,
+                contentColor = contentColor
+            )
         }
     }
 }

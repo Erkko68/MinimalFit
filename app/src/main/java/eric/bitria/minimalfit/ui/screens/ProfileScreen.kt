@@ -42,31 +42,19 @@ fun ProfileScreen(
                 text = "Thursday, October 24",
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.secondary,
-                modifier = Modifier.padding(top = Spacing.s)
+                color = MaterialTheme.colorScheme.secondary
             )
         }
 
         CalorieCard(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
             eaten = 800,
             eatenGoal = 1000,
             burned = 300,
             burnedGoal = 1000
         )
 
-        GymCard(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(0.8f)
-        )
+        GymCard()
 
-        TrackCard(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(0.8f)
-        )
+        TrackCard()
     }
 }

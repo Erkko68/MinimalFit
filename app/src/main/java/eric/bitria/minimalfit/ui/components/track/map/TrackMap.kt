@@ -1,5 +1,6 @@
 package eric.bitria.minimalfit.ui.components.track.map
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -40,7 +41,10 @@ fun TrackMap(
             options = MapOptions(
                 ornamentOptions = OrnamentOptions.AllDisabled
             ),
-            baseStyle = BaseStyle.Uri("https://tiles.openfreemap.org/styles/dark"),
+            baseStyle = BaseStyle.Uri(
+                if (isSystemInDarkTheme()) "https://tiles.openfreemap.org/styles/dark"
+                else "https://tiles.openfreemap.org/styles/liberty"
+            ),
             cameraState = cameraState,
             styleState = styleState,
         ) {

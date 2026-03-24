@@ -5,7 +5,6 @@ import eric.bitria.minimalfit.data.sensor.ActivitySensor
 import eric.bitria.minimalfit.data.sensor.ActivityType
 import eric.bitria.minimalfit.data.sensor.LocationSensor
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 

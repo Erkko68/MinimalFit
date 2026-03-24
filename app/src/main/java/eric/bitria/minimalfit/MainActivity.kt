@@ -10,6 +10,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import eric.bitria.minimalfit.service.LocationService
+import eric.bitria.minimalfit.ui.theme.MinimalFitTheme
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 
@@ -36,7 +37,9 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         setContent {
-            App()
+            MinimalFitTheme {
+                App()
+            }
         }
     }
 

@@ -20,11 +20,14 @@ import eric.bitria.minimalfit.data.sensor.LocationSensor
 import eric.bitria.minimalfit.data.track.AndroidTrackingManager
 import eric.bitria.minimalfit.data.track.TrackingLogic
 import eric.bitria.minimalfit.data.track.TrackingManager
-import eric.bitria.minimalfit.ui.viewmodels.ProfileViewModel
+import eric.bitria.minimalfit.ui.viewmodels.profile.ProfileViewModel
 import eric.bitria.minimalfit.ui.viewmodels.food.DailyLogViewModel
 import eric.bitria.minimalfit.ui.viewmodels.food.DietDetailViewModel
 import eric.bitria.minimalfit.ui.viewmodels.food.FoodViewModel
 import eric.bitria.minimalfit.ui.viewmodels.food.MealDetailViewModel
+import eric.bitria.minimalfit.ui.viewmodels.profile.card.CalorieViewModel
+import eric.bitria.minimalfit.ui.viewmodels.profile.card.GymViewModel
+import eric.bitria.minimalfit.ui.viewmodels.profile.card.WaterViewModel
 import eric.bitria.minimalfit.ui.viewmodels.track.TrackDetailViewModel
 import eric.bitria.minimalfit.ui.viewmodels.track.TrackRecordingViewModel
 import eric.bitria.minimalfit.ui.viewmodels.track.TrackViewModel
@@ -122,7 +125,14 @@ val viewModels = module {
         TrackDetailViewModel(trackId = trackId, repository = get())
     }
     viewModelOf(::TrackRecordingViewModel)
+
+    // Profile
+
     viewModelOf(::ProfileViewModel)
+    viewModelOf(::WaterViewModel)
+    viewModelOf(::GymViewModel)
+    viewModelOf(::CalorieViewModel)
+    viewModelOf(::TrackViewModel)
 }
 
 fun initKoin(appDeclaration: KoinAppDeclaration = {}) {

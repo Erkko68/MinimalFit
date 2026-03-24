@@ -8,8 +8,27 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+
+@Immutable
+data class ExtendedColors(
+    val quaternary: Color
+)
+
+val LocalExtendedColors = staticCompositionLocalOf {
+    ExtendedColors(
+        quaternary = Color.Unspecified
+    )
+}
+
+// Extension properties for easy access to the extended colors
+val MaterialTheme.extendedColors: ExtendedColors
+    @Composable
+    get() = LocalExtendedColors.current
 
 private val DarkColorScheme = darkColorScheme(
     primary = Purple80,
@@ -47,9 +66,15 @@ fun MinimalFitTheme(
         else -> LightColorScheme
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content
+    val extendedColors = ExtendedColors(
+        quaternary = Quaternary
     )
+
+    CompositionLocalProvider(LocalExtendedColors provides extendedColors) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = Typography,
+            content = content
+        )
+    }
 }

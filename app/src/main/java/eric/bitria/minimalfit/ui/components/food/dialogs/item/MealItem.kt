@@ -1,16 +1,14 @@
 package eric.bitria.minimalfit.ui.components.food.dialogs.item
 
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -32,9 +30,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.dp
 import eric.bitria.minimalfit.data.entity.food.Meal
 import eric.bitria.minimalfit.data.entity.food.MeasurementUnit
+import eric.bitria.minimalfit.ui.theme.Dimensions
 import eric.bitria.minimalfit.ui.theme.Spacing
 import eric.bitria.minimalfit.ui.viewmodels.food.MealPortionMode
 
@@ -43,24 +41,30 @@ fun MealItem(
     meal: Meal,
     onAdd: (Float, MealPortionMode) -> Unit
 ) {
-    var amountText by rememberSaveable { mutableStateOf("100") }
     var portionMode by rememberSaveable { mutableStateOf(MealPortionMode.WEIGHT) }
 
-    val unitSuffix = when (meal.measurementUnit) {
-        MeasurementUnit.GRAMS -> "g"
-        MeasurementUnit.MILLILITERS -> "ml"
-        MeasurementUnit.PIECE -> "pcs"
+    val initialAmount = rememberSaveable(meal.measurementUnit, portionMode) {
+        if (portionMode == MealPortionMode.FULL_MEAL) "1"
+        else if (meal.measurementUnit == MeasurementUnit.PIECE) "1" else "100"
     }
 
-    val defaultWeight = 100f
+    var amountText by rememberSaveable(portionMode) { mutableStateOf(initialAmount) }
+
+    val unitSuffix = when (portionMode) {
+        MealPortionMode.FULL_MEAL -> "meal"
+        MealPortionMode.WEIGHT -> when (meal.measurementUnit) {
+            MeasurementUnit.GRAMS -> "g"
+            MeasurementUnit.MILLILITERS -> "ml"
+            MeasurementUnit.PIECE -> "pcs"
+        }
+    }
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Spacing.m),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.s),
         modifier = Modifier
             .fillMaxWidth()
-            .height(IntrinsicSize.Min)
-            .padding(horizontal = Spacing.m, vertical = Spacing.s)
+            .height(Dimensions.listItemHeight)
     ) {
         // Meal info - Takes up all available space
         Column(
@@ -76,7 +80,10 @@ fun MealItem(
 
             Spacer(modifier = Modifier.height(Spacing.xs))
 
-            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+            Row(
+                modifier = Modifier.horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
+            ) {
                 FilterChip(
                     selected = portionMode == MealPortionMode.WEIGHT,
                     onClick = { portionMode = MealPortionMode.WEIGHT },
@@ -92,57 +99,41 @@ fun MealItem(
             }
         }
 
-        // Amount input + add button - Compact layout
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(Spacing.s),
-            modifier = Modifier.fillMaxHeight()
-        ) {
-            OutlinedTextField(
-                value = amountText,
-                onValueChange = { amountText = it },
-                modifier = Modifier.width(84.dp),
-                enabled = portionMode == MealPortionMode.WEIGHT,
-                singleLine = true,
-                textStyle = MaterialTheme.typography.bodyMedium,
-                shape = MaterialTheme.shapes.medium,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                suffix = {
-                    Text(
-                        text = unitSuffix,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                },
-                colors = OutlinedTextFieldDefaults.colors(
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+        OutlinedTextField(
+            value = amountText,
+            onValueChange = { amountText = it },
+            modifier = Modifier.weight(0.45f),
+            singleLine = true,
+            textStyle = MaterialTheme.typography.bodyMedium,
+            shape = MaterialTheme.shapes.medium,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            suffix = {
+                Text(
+                    text = unitSuffix,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary
                 )
+            },
+            colors = OutlinedTextFieldDefaults.colors(
+                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
             )
+        )
 
-            FilledIconButton(
-                onClick = {
-                    val selectedAmount = if (portionMode == MealPortionMode.FULL_MEAL) {
-                        defaultWeight
-                    } else {
-                        amountText.toFloatOrNull() ?: 0f
-                    }
-                    if (selectedAmount > 0f) onAdd(selectedAmount, portionMode)
-                },
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .padding(vertical = Spacing.xs)
-                    .aspectRatio(1f),
-                shape = CircleShape
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Add meal",
-                    tint = MaterialTheme.colorScheme.onPrimary
-                )
-            }
+        FilledIconButton(
+            onClick = {
+                val selectedAmount = amountText.toFloatOrNull() ?: 0f
+                if (selectedAmount > 0f) onAdd(selectedAmount, portionMode)
+            },
+            shape = CircleShape
+        ) {
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = "Add meal",
+                tint = MaterialTheme.colorScheme.onPrimary
+            )
         }
     }
 }

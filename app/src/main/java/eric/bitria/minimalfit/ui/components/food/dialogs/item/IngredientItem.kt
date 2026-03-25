@@ -2,15 +2,12 @@ package eric.bitria.minimalfit.ui.components.food.dialogs.item
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.FilledIconButton
@@ -27,9 +24,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.input.KeyboardType
 import eric.bitria.minimalfit.data.entity.food.Ingredient
 import eric.bitria.minimalfit.data.entity.food.MeasurementUnit
+import eric.bitria.minimalfit.ui.theme.Dimensions
 import eric.bitria.minimalfit.ui.theme.Spacing
 
 @Composable
@@ -37,7 +35,10 @@ fun IngredientItem(
     ingredient: Ingredient,
     onAdd: (Float) -> Unit
 ) {
-    var amountText by remember { mutableStateOf("100") }
+    val initialAmount = remember(ingredient.measurementUnit) {
+        if (ingredient.measurementUnit == MeasurementUnit.PIECE) "1" else "100"
+    }
+    var amountText by remember { mutableStateOf(initialAmount) }
 
     val unitSuffix = when (ingredient.measurementUnit) {
         MeasurementUnit.GRAMS -> "g"
@@ -53,11 +54,10 @@ fun IngredientItem(
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Spacing.m),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.s),
         modifier = Modifier
             .fillMaxWidth()
-            .height(IntrinsicSize.Min)
-            .padding(horizontal = Spacing.m, vertical = Spacing.s)
+            .height(Dimensions.listItemHeight)
     ) {
         // Ingredient info - Takes up all available space
         Column(
@@ -77,52 +77,42 @@ fun IngredientItem(
             )
         }
 
-        // Amount input + add button - Compact layout
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(Spacing.s),
-            modifier = Modifier.fillMaxHeight()
-        ) {
-            OutlinedTextField(
-                value = amountText,
-                onValueChange = { amountText = it },
-                modifier = Modifier.width(84.dp),
-                singleLine = true,
-                textStyle = MaterialTheme.typography.bodyMedium,
-                shape = MaterialTheme.shapes.medium,
-                suffix = {
-                    Text(
-                        text = unitSuffix,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                },
-                colors = OutlinedTextFieldDefaults.colors(
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+        OutlinedTextField(
+            value = amountText,
+            onValueChange = { amountText = it },
+            modifier = Modifier.weight(0.4f),
+            singleLine = true,
+            textStyle = MaterialTheme.typography.bodyMedium,
+            shape = MaterialTheme.shapes.medium,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            suffix = {
+                Text(
+                    text = unitSuffix,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary
                 )
+            },
+            colors = OutlinedTextFieldDefaults.colors(
+                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
             )
+        )
 
-            FilledIconButton(
-                onClick = {
-                    amountText.toFloatOrNull()?.let { amount ->
-                        if (amount > 0) onAdd(amount)
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .padding(vertical = Spacing.xs)
-                    .aspectRatio(1f),
-                shape = CircleShape
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Add ingredient",
-                    tint = MaterialTheme.colorScheme.onPrimary
-                )
-            }
+        FilledIconButton(
+            onClick = {
+                amountText.toFloatOrNull()?.let { amount ->
+                    if (amount > 0) onAdd(amount)
+                }
+            },
+            shape = CircleShape
+        ) {
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = "Add ingredient",
+                tint = MaterialTheme.colorScheme.onPrimary
+            )
         }
     }
 }

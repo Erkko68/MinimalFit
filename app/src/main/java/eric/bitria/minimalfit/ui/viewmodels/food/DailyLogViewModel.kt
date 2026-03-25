@@ -130,7 +130,7 @@ class DailyLogViewModel(
             val normalizedAmount = when (portionMode) {
                 MealPortionMode.FULL_MEAL -> {
                     val mealWeight = foodCatalog.getMealWeight(mealId).first()
-                    if (mealWeight > 0f) mealWeight else amount
+                    if (mealWeight > 0f) mealWeight * amount else amount
                 }
                 MealPortionMode.WEIGHT -> amount
             }

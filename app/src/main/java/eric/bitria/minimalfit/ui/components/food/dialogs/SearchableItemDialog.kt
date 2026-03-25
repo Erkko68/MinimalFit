@@ -75,7 +75,6 @@ fun <T> SearchableItemDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .heightIn(max = maxHeightConstraint),
-                    verticalArrangement = Arrangement.spacedBy(Spacing.xs),
                     contentPadding = PaddingValues(bottom = Spacing.xl)
                 ) {
                     items(

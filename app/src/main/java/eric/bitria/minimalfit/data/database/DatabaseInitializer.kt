@@ -60,8 +60,8 @@ class DatabaseInitializer(private val db: AppDatabase) {
             Ingredient(
                 id = "ing-protein-powder",
                 name = "Whey Protein",
-                baseCalories = 120, // per piece (scoop)
-                measurementUnit = MeasurementUnit.PIECE
+                baseCalories = 120, // per 100g
+                measurementUnit = MeasurementUnit.GRAMS
             ),
             Ingredient(
                 id = "ing-salmon",

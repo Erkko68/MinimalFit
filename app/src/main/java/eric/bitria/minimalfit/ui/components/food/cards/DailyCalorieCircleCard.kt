@@ -22,7 +22,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
-import eric.bitria.minimalfit.ui.theme.Spacing
 import eric.bitria.minimalfit.ui.viewmodels.food.DailyCalorieData
 
 @Composable
@@ -59,8 +58,7 @@ fun DailyCalorieCircleCard(
         )
 
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(Spacing.s)
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Compact date row
             Row(

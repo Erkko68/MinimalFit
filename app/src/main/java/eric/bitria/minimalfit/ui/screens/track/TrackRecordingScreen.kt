@@ -50,7 +50,8 @@ fun TrackRecordingScreen(
 ) {
     ScreenConfiguration(
         bottomBar = false,
-        quickActions = false
+        quickActions = false,
+        fullScreen = true
     )
 
     var locationPermissionGranted by remember { mutableStateOf(false) }

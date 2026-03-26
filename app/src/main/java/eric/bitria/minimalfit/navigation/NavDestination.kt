@@ -6,7 +6,6 @@ import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.RestaurantMenu
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.navigation.NavDestination.Companion.hasRoute
 
 enum class NavDestination(
     val route: Route,
@@ -29,10 +28,5 @@ enum class NavDestination(
         Route.OutdoorActivities,
         "Track",
         Icons.AutoMirrored.Filled.DirectionsRun,
-    );
-
-    companion object {
-        fun fromNavDestination(destination: androidx.navigation.NavDestination?): NavDestination? =
-            entries.firstOrNull { destination?.hasRoute(it.route::class) == true }
-    }
+    )
 }

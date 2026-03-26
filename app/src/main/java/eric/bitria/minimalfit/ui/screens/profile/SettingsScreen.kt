@@ -1,4 +1,4 @@
-package eric.bitria.minimalfit.ui.screens
+package eric.bitria.minimalfit.ui.screens.profile
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize

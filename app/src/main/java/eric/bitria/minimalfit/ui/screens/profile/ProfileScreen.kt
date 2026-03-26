@@ -1,4 +1,4 @@
-package eric.bitria.minimalfit.ui.screens
+package eric.bitria.minimalfit.ui.screens.profile
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues

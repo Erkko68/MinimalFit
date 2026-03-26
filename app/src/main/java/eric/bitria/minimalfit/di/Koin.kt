@@ -3,11 +3,11 @@ package eric.bitria.minimalfit.di
 import androidx.room.Room
 import eric.bitria.minimalfit.data.database.AppDatabase
 import eric.bitria.minimalfit.data.database.DatabaseInitializer
-import eric.bitria.minimalfit.data.repository.food.DietRepository
-import eric.bitria.minimalfit.data.repository.food.FoodCatalogRepository
 import eric.bitria.minimalfit.data.repository.food.DefaultDietRepository
 import eric.bitria.minimalfit.data.repository.food.DefaultFoodCatalogRepository
 import eric.bitria.minimalfit.data.repository.food.DefaultJournalRepository
+import eric.bitria.minimalfit.data.repository.food.DietRepository
+import eric.bitria.minimalfit.data.repository.food.FoodCatalogRepository
 import eric.bitria.minimalfit.data.repository.food.JournalRepository
 import eric.bitria.minimalfit.data.repository.track.DefaultTrackRepository
 import eric.bitria.minimalfit.data.repository.track.LocationRepository
@@ -20,11 +20,11 @@ import eric.bitria.minimalfit.data.sensor.LocationSensor
 import eric.bitria.minimalfit.data.track.AndroidTrackingManager
 import eric.bitria.minimalfit.data.track.TrackingLogic
 import eric.bitria.minimalfit.data.track.TrackingManager
-import eric.bitria.minimalfit.ui.viewmodels.profile.ProfileViewModel
 import eric.bitria.minimalfit.ui.viewmodels.food.DailyLogViewModel
 import eric.bitria.minimalfit.ui.viewmodels.food.DietDetailViewModel
 import eric.bitria.minimalfit.ui.viewmodels.food.FoodViewModel
 import eric.bitria.minimalfit.ui.viewmodels.food.MealDetailViewModel
+import eric.bitria.minimalfit.ui.viewmodels.profile.ProfileViewModel
 import eric.bitria.minimalfit.ui.viewmodels.profile.card.CalorieViewModel
 import eric.bitria.minimalfit.ui.viewmodels.profile.card.GymViewModel
 import eric.bitria.minimalfit.ui.viewmodels.profile.card.WaterViewModel
@@ -34,6 +34,7 @@ import eric.bitria.minimalfit.ui.viewmodels.track.TrackViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.datetime.LocalDate
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 import org.koin.core.module.dsl.singleOf
@@ -42,7 +43,6 @@ import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.KoinAppDeclaration
 import org.koin.dsl.bind
 import org.koin.dsl.module
-import kotlinx.datetime.LocalDate
 
 val dataModule = module {
     single {

@@ -60,7 +60,8 @@ fun TrackDetailScreen(
 
     ScreenConfiguration(
         bottomBar = false,
-        quickActions = false
+        quickActions = false,
+        fullScreen = true
     )
 
     if (track != null) {

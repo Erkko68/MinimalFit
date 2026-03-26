@@ -75,7 +75,14 @@ fun App() {
             contentWindowInsets = config.contentWindowInsets ?: ScaffoldDefaults.contentWindowInsets
         ) { contentPadding ->
             Box(
-                modifier = Modifier.padding(contentPadding)
+                modifier = Modifier
+                    .then(
+                        if (config.fullScreen) {
+                            Modifier.fillMaxSize()
+                        } else {
+                            Modifier.padding(contentPadding)
+                        }
+                    ),
             ) {
                 AppNavHost(
                     navController = navController

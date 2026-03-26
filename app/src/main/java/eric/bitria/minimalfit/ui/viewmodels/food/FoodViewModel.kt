@@ -11,6 +11,7 @@ import eric.bitria.minimalfit.util.endOfDayEpoch
 import eric.bitria.minimalfit.util.last7DaysEndingToday
 import eric.bitria.minimalfit.util.shortWeekdayLabel
 import eric.bitria.minimalfit.util.startOfDayEpoch
+import kotlinx.datetime.LocalDate
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -22,6 +23,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
 data class DailyCalorieData(
+    val date: LocalDate,
     val dayLabel: String,
     val dayNumber: Int,
     val currentCalories: Int,
@@ -64,6 +66,7 @@ class FoodViewModel(
                 }
             }.map { calories ->
                 DailyCalorieData(
+                    date = date,
                     dayLabel = date.shortWeekdayLabel(),
                     dayNumber = date.day,
                     currentCalories = calories,

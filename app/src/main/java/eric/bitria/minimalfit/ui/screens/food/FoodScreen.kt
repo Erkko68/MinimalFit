@@ -19,7 +19,6 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
@@ -28,12 +27,13 @@ import eric.bitria.minimalfit.data.entity.food.Meal
 import eric.bitria.minimalfit.navigation.ScreenConfiguration
 import eric.bitria.minimalfit.ui.components.food.cards.MealCard
 import eric.bitria.minimalfit.ui.components.food.lists.DietList
+import eric.bitria.minimalfit.ui.components.shared.progress.CalorieCircularProgressIndicator
 import eric.bitria.minimalfit.ui.components.shared.progress.DailyProgressPager
 import eric.bitria.minimalfit.ui.theme.Spacing
 import eric.bitria.minimalfit.ui.viewmodels.food.FoodViewModel
-import eric.bitria.minimalfit.util.last7DaysEndingToday
 import kotlinx.datetime.LocalDate
 import org.koin.androidx.compose.koinViewModel
+import java.text.NumberFormat
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,7 +44,6 @@ fun FoodScreen(
     viewModel: FoodViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val weekDates = remember { last7DaysEndingToday() }
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     ScreenConfiguration(
@@ -54,7 +53,7 @@ fun FoodScreen(
                 title = {
                     Text(
                         text = "Food Tracker",
-                        style = MaterialTheme.typography.displayMedium,
+                        style = MaterialTheme.typography.displaySmall,
                         fontWeight = FontWeight.Black,
                         color = MaterialTheme.colorScheme.onBackground
                     )
@@ -69,7 +68,7 @@ fun FoodScreen(
     BoxWithConstraints(
         modifier = Modifier.fillMaxSize()
     ) {
-        val headerHeight = maxHeight * 0.5f
+        val headerHeight = maxHeight * 0.4f
 
         LazyVerticalStaggeredGrid(
             columns = StaggeredGridCells.Fixed(2),
@@ -82,11 +81,25 @@ fun FoodScreen(
             item(span = StaggeredGridItemSpan.FullLine) {
                 Column(modifier = Modifier.height(headerHeight)) {
                     DailyProgressPager(
-                        uiState = uiState,
-                        dates = weekDates,
-                        onDayClick = onNavigateToDailyLog,
+                        pageCount = uiState.weeklyProgress.size,
+                        onPageClick = { pageIndex ->
+                            onNavigateToDailyLog(uiState.weeklyProgress[pageIndex].date)
+                        },
                         modifier = Modifier.weight(0.6f)
-                    )
+                    ) { pageIndex ->
+                        val dailyData = uiState.weeklyProgress[pageIndex]
+                        val progress = if (dailyData.goalCalories > 0) {
+                            dailyData.currentCalories.toFloat() / dailyData.goalCalories
+                        } else 0f
+
+                        CalorieCircularProgressIndicator(
+                            progress = progress,
+                            dayLabel = dailyData.dayLabel,
+                            dayNumber = dailyData.dayNumber,
+                            formattedCalories = NumberFormat.getIntegerInstance()
+                                .format(dailyData.currentCalories),
+                        )
+                    }
 
                     Text(
                         text = "Your Diets",

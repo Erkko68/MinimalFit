@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
@@ -28,6 +27,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -36,7 +36,7 @@ import eric.bitria.minimalfit.navigation.ScreenConfiguration
 import eric.bitria.minimalfit.ui.components.animations.SwipeToDeleteCard
 import eric.bitria.minimalfit.ui.components.food.FlexibleTopBar
 import eric.bitria.minimalfit.ui.components.food.actions.PrimaryFloatingActionButton
-import eric.bitria.minimalfit.ui.components.food.cards.DailyCalorieCircleCard
+import eric.bitria.minimalfit.ui.components.shared.progress.CalorieCircularProgressIndicator
 import eric.bitria.minimalfit.ui.components.food.cards.MealCard
 import eric.bitria.minimalfit.ui.components.food.dialogs.SearchableItemDialog
 import eric.bitria.minimalfit.ui.components.food.dialogs.item.MealItem
@@ -70,6 +70,7 @@ fun DailyLogScreen(
     } else 0f
 
     val dailyData = DailyCalorieData(
+        date = date,
         dayLabel = date.dayOfWeek.name.take(3),
         dayNumber = date.day,
         currentCalories = uiState.totalCalories,
@@ -120,7 +121,12 @@ fun DailyLogScreen(
                                 .fillMaxHeight(0.6f)
                                 .aspectRatio(1f)
                         ) {
-                            DailyCalorieCircleCard(dailyData, progress)
+                            CalorieCircularProgressIndicator(
+                                progress = progress,
+                                dayLabel = dailyData.dayLabel,
+                                dayNumber = dailyData.dayNumber,
+                                formattedCalories = dailyData.currentCalories.toString()
+                            )
                         }
                     }
                 },
@@ -164,7 +170,9 @@ fun DailyLogScreen(
             items(uiState.logs, key = { it.logId }) { log ->
                 SwipeToDeleteCard(
                     onDismiss = { dailyLogViewModel.removeMealLog(log.logId) },
-                    modifier = Modifier.animateItem()
+                    modifier = Modifier
+                        .clip(MaterialTheme.shapes.extraLarge)
+                        .animateItem()
                 ) {
                     MealCard(
                         meal = log.meal,

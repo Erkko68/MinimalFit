@@ -4,18 +4,18 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
@@ -23,33 +23,22 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.util.lerp
-import eric.bitria.minimalfit.ui.components.food.cards.DailyCalorieCircleCard
 import eric.bitria.minimalfit.ui.theme.Spacing
-import eric.bitria.minimalfit.ui.viewmodels.food.FoodUiState
-import kotlinx.datetime.LocalDate
-import kotlin.math.absoluteValue
 
 @Composable
 fun DailyProgressPager(
-    uiState: FoodUiState,
-    dates: List<LocalDate>,
-    onDayClick: (LocalDate) -> Unit,
-    modifier: Modifier = Modifier
+    pageCount: Int,
+    modifier: Modifier = Modifier,
+    pagerState: PagerState = rememberPagerState(initialPage = (pageCount - 1).coerceAtLeast(0), pageCount = { pageCount }),
+    onPageClick: ((Int) -> Unit)? = null,
+    content: @Composable (Int) -> Unit
 ) {
-    val pagerState = rememberPagerState(
-        initialPage = (uiState.weeklyProgress.size - 1).coerceAtLeast(0),
-        pageCount = { uiState.weeklyProgress.size }
-    )
-
-    LaunchedEffect(uiState.weeklyProgress.size) {
-        if (uiState.weeklyProgress.isNotEmpty()) {
-            pagerState.scrollToPage(uiState.weeklyProgress.size - 1)
+    LaunchedEffect(pageCount) {
+        if (pageCount > 0) {
+            pagerState.scrollToPage(pageCount - 1)
         }
     }
 
@@ -61,45 +50,21 @@ fun DailyProgressPager(
             state = pagerState,
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f),
-            contentPadding = PaddingValues(horizontal = Spacing.xxxl),
-            pageSpacing = Spacing.m
+                .weight(1f)
         ) { pageIndex ->
-            val dailyData = uiState.weeklyProgress[pageIndex]
-            val progress = if (dailyData.goalCalories > 0) {
-                dailyData.currentCalories.toFloat() / dailyData.goalCalories
-            } else 0f
-
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(vertical = Spacing.m)
-                    .graphicsLayer {
-                        val pageOffset = (
-                                (pagerState.currentPage - pageIndex) + pagerState.currentPageOffsetFraction
-                                ).absoluteValue
-                        val scale = lerp(
-                            start = 0.85f,
-                            stop = 1f,
-                            fraction = 1f - pageOffset.coerceIn(0f, 1f)
-                        )
-                        scaleX = scale
-                        scaleY = scale
-                        alpha = lerp(
-                            start = 0.5f,
-                            stop = 1f,
-                            fraction = 1f - pageOffset.coerceIn(0f, 1f)
-                        )
+                    .let { base ->
+                        if (onPageClick == null) base
+                        else base.clickable { onPageClick(pageIndex) }
                     }
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                        onClick = { onDayClick(dates[pageIndex]) }
-                    )
             ) {
-                DailyCalorieCircleCard(dailyData, progress)
+                content(pageIndex)
             }
         }
+
+        Spacer(modifier = Modifier.height(Spacing.m))
 
         // Pill indicator row
         Row(
@@ -107,7 +72,7 @@ fun DailyProgressPager(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            repeat(uiState.weeklyProgress.size) { iteration ->
+            repeat(pageCount) { iteration ->
                 val isSelected = pagerState.currentPage == iteration
 
                 val color by animateColorAsState(

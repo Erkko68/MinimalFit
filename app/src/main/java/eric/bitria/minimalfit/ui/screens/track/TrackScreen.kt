@@ -5,10 +5,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -68,22 +66,6 @@ fun TrackScreen(
             .nestedScroll(scrollBehavior.nestedScrollConnection)
             .padding(horizontal = Spacing.m),
     ) {
-        // Fixed top part
-        Spacer(modifier = Modifier.height(Spacing.xs))
-        NewTrackCard(onClick = onNewTrackClick)
-        Text(
-            text = "Your Track History",
-            style = MaterialTheme.typography.titleLarge.copy(
-                fontWeight = FontWeight.ExtraBold
-            ),
-            letterSpacing = (-0.02).em,
-            color = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.surface)
-                .padding(vertical = Spacing.s)
-        )
-
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(
@@ -91,6 +73,24 @@ fun TrackScreen(
             ),
             verticalArrangement = Arrangement.spacedBy(Spacing.m)
         ) {
+            item {
+                NewTrackCard(onClick = onNewTrackClick)
+            }
+            item {
+                Text(
+                    text = "Your Track History",
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontWeight = FontWeight.ExtraBold
+                    ),
+                    letterSpacing = (-0.02).em,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.surface)
+                        .padding(vertical = Spacing.s)
+                )
+            }
+
             items(tracks, key = { it.id }) { track ->
                 SwipeToDeleteCard(
                     onDismiss = { viewModel.deleteActivity(track.id) },

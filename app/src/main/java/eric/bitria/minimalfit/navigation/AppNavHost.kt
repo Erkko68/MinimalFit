@@ -1,22 +1,19 @@
 package eric.bitria.minimalfit.navigation
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
-import eric.bitria.minimalfit.ui.screens.IndoorActivitiesScreen
 import eric.bitria.minimalfit.ui.screens.ProfileScreen
 import eric.bitria.minimalfit.ui.screens.SettingsScreen
 import eric.bitria.minimalfit.ui.screens.food.DailyLogScreen
 import eric.bitria.minimalfit.ui.screens.food.DietDetailScreen
 import eric.bitria.minimalfit.ui.screens.food.FoodScreen
 import eric.bitria.minimalfit.ui.screens.food.MealDetailScreen
+import eric.bitria.minimalfit.ui.screens.gym.GymScreen
 import eric.bitria.minimalfit.ui.screens.track.TrackDetailScreen
 import eric.bitria.minimalfit.ui.screens.track.TrackRecordingScreen
 import eric.bitria.minimalfit.ui.screens.track.TrackScreen
@@ -24,8 +21,7 @@ import kotlinx.datetime.LocalDate
 
 @Composable
 fun AppNavHost(
-    navController: NavHostController,
-    contentPadding: PaddingValues,
+    navController: NavHostController
 ) {
     NavHost(
         navController = navController,
@@ -34,7 +30,6 @@ fun AppNavHost(
     ) {
         composable<Route.Profile> {
             ProfileScreen(
-                contentPadding = contentPadding,
                 onSettingsClick = {
                     navController.navigate(Route.Settings)
                 }
@@ -49,7 +44,6 @@ fun AppNavHost(
         }
         composable<Route.Food> {
             FoodScreen(
-                contentPadding = contentPadding,
                 onNavigateToDailyLog = { date ->
                     navController.navigate(Route.DailyLog(date = date.toString()))
                 },
@@ -62,16 +56,14 @@ fun AppNavHost(
             )
         }
         composable<Route.OutdoorActivities> {
-            Box(Modifier.padding(contentPadding)) {
-                TrackScreen(
-                    onTrackClick = { trackId ->
-                        navController.navigate(Route.TrackDetail(trackId = trackId))
-                    },
-                    onNewTrackClick = {
-                        navController.navigate(Route.TrackRecording)
-                    }
-                )
-            }
+            TrackScreen(
+                onTrackClick = { trackId ->
+                    navController.navigate(Route.TrackDetail(trackId = trackId))
+                },
+                onNewTrackClick = {
+                    navController.navigate(Route.TrackRecording)
+                }
+            )
         }
         composable<Route.TrackRecording> {
             TrackRecordingScreen(
@@ -79,11 +71,9 @@ fun AppNavHost(
             )
         }
         composable<Route.IndoorActivities> {
-            Box(Modifier.padding(contentPadding)) {
-                IndoorActivitiesScreen(
-                    onNavigateBack = { navController.popBackStack() }
-                )
-            }
+            GymScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
         }
         composable<Route.TrackDetail> { backStackEntry ->
             val trackDetail = backStackEntry.toRoute<Route.TrackDetail>()

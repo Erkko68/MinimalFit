@@ -1,10 +1,8 @@
 package eric.bitria.minimalfit.ui.screens.food
 
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -23,19 +21,21 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import eric.bitria.minimalfit.data.entity.food.Meal
+import eric.bitria.minimalfit.navigation.ScreenConfiguration
 import eric.bitria.minimalfit.ui.components.animations.SwipeToDeleteCard
-import eric.bitria.minimalfit.ui.components.food.FlexibleHeaderScaffold
-import eric.bitria.minimalfit.ui.components.food.actions.AddEntryFab
+import eric.bitria.minimalfit.ui.components.food.FlexibleTopBar
+import eric.bitria.minimalfit.ui.components.food.actions.PrimaryFloatingActionButton
 import eric.bitria.minimalfit.ui.components.food.cards.DailyCalorieCircleCard
 import eric.bitria.minimalfit.ui.components.food.cards.MealCard
 import eric.bitria.minimalfit.ui.components.food.dialogs.SearchableItemDialog
@@ -76,132 +76,126 @@ fun DailyLogScreen(
         goalCalories = uiState.calorieGoal
     )
 
-    FlexibleHeaderScaffold(
-        backgroundImage = {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxHeight(0.6f)
-                        .aspectRatio(1f)
-                ) {
-                    DailyCalorieCircleCard(dailyData, progress)
-                }
-            }
-        },
-        title = {
-            Text(
-                text = "Daily Log",
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.ExtraBold)
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+
+    ScreenConfiguration(
+        topBar = {
+            FlexibleTopBar(
+                title = {
+                    Text(
+                        text = "Daily Log",
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.ExtraBold)
+                    )
+                },
+                subtitle = {
+                    Text(
+                        text = "${date.dayOfWeek.name.lowercase().replaceFirstChar { it.uppercase() }}, ${date.day} ${date.month.name.lowercase().replaceFirstChar { it.uppercase() }}",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                },
+                navigationIcon = {
+                    FilledIconButton(
+                        onClick = onBackClick,
+                        colors = IconButtonDefaults.filledIconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
+                            contentColor = MaterialTheme.colorScheme.onSurface
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Navigate back"
+                        )
+                    }
+                },
+                backgroundImage = {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxHeight(0.6f)
+                                .aspectRatio(1f)
+                        ) {
+                            DailyCalorieCircleCard(dailyData, progress)
+                        }
+                    }
+                },
+                scrollBehavior = scrollBehavior
             )
-        },
-        subtitle = {
-            Text(
-                text = "${date.dayOfWeek.name.lowercase().replaceFirstChar { it.uppercase() }}, ${date.day} ${date.month.name.lowercase().replaceFirstChar { it.uppercase() }}",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        },
-        navigationIcon = {
-            FilledIconButton(
-                onClick = onBackClick,
-                colors = IconButtonDefaults.filledIconButtonColors(
-                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
-                    contentColor = MaterialTheme.colorScheme.onSurface
-                )
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Navigate back"
-                )
-            }
         },
         floatingActionButton = {
-            AddEntryFab(
+            PrimaryFloatingActionButton(
                 onClick = { dailyLogViewModel.openSearchDialog() },
                 text = "Add Meal"
             )
         },
-        floatingActionButtonPosition = FabPosition.Center
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = innerPadding.calculateTopPadding())
+        floatingActionButtonPosition = FabPosition.Center,
+        bottomBar = false,
+        quickActions = false
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .nestedScroll(scrollBehavior.nestedScrollConnection)
+    ) {
+        LazyVerticalStaggeredGrid(
+            columns = StaggeredGridCells.Fixed(2),
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(
+                start = Spacing.m,
+                end = Spacing.m,
+                top = Spacing.m,
+                bottom = Spacing.xl * 2
+            ),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.m),
+            verticalItemSpacing = Spacing.m
         ) {
-            Text(
-                text = "Meals",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(horizontal = Spacing.m, vertical = Spacing.s)
-            )
-            LazyVerticalStaggeredGrid(
-                columns = StaggeredGridCells.Fixed(2),
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(
-                    start = Spacing.m,
-                    end = Spacing.m,
-                    bottom = innerPadding.calculateBottomPadding() + Spacing.m
-                ),
-                horizontalArrangement = Arrangement.spacedBy(Spacing.m),
-                verticalItemSpacing = Spacing.m
-            ) {
-                if (uiState.logs.isEmpty()) {
-                    item(span = StaggeredGridItemSpan.FullLine) {
-                        EmptyMealsPlaceholder()
-                    }
-                } else {
-                    items(
-                        items = uiState.logs,
-                        key = { it.logId }
-                    ) { model ->
-                        SwipeToDeleteCard(
-                            modifier = Modifier
-                                .clip(MaterialTheme.shapes.extraLarge)
-                                .animateItem(
-                                    fadeInSpec = tween(300),
-                                    fadeOutSpec = tween(300),
-                                    placementSpec = tween(300)
-                                ),
-                            onDismiss = {
-                                dailyLogViewModel.removeMealLog(model.logId)
-                            }
-                        ) {
-                            MealCard(
-                                meal = model.meal,
-                                calories = model.calories,
-                                onClick = { onNavigateToMealDetail(model.meal) }
-                            )
-                        }
-                    }
+            if (uiState.logs.isEmpty()) {
+                item(span = StaggeredGridItemSpan.FullLine) {
+                    EmptyMealsPlaceholder()
+                }
+            }
+
+            items(uiState.logs, key = { it.logId }) { log ->
+                SwipeToDeleteCard(
+                    onDismiss = { dailyLogViewModel.removeMealLog(log.logId) },
+                    modifier = Modifier.animateItem()
+                ) {
+                    MealCard(
+                        meal = log.meal,
+                        calories = log.calories,
+                        onClick = { onNavigateToMealDetail(log.meal) }
+                    )
                 }
             }
         }
-    }
 
-    if (uiState.showSearchDialog) {
-        SearchableItemDialog(
-            title = "Log Meal",
-            placeholder = "e.g., Chicken Salad",
-            items = uiState.savedMeals,
-            itemKey = { it.id },
-            filter = { meal, query ->
-                meal.name.contains(query, ignoreCase = true)
-            },
-            onDismiss = { dailyLogViewModel.dismissSearchDialog() },
-            itemContent = { meal ->
-                MealItem(
-                    meal = meal,
-                    onAdd = { amount, portionMode ->
-                        dailyLogViewModel.addMeal(meal.id, amount, portionMode)
-                        dailyLogViewModel.dismissSearchDialog()
-                    }
-                )
-            }
-        )
+
+        if (uiState.showSearchDialog) {
+            SearchableItemDialog(
+                title = "Log Meal",
+                placeholder = "e.g., Chicken Salad",
+                items = uiState.savedMeals,
+                itemKey = { it.id },
+                filter = { meal, query ->
+                    meal.name.contains(query, ignoreCase = true)
+                },
+                onDismiss = { dailyLogViewModel.dismissSearchDialog() },
+                itemContent = { meal ->
+                    MealItem(
+                        meal = meal,
+                        onAdd = { amount, portionMode ->
+                            dailyLogViewModel.addMeal(meal.id, amount, portionMode)
+                            dailyLogViewModel.dismissSearchDialog()
+                        }
+                    )
+                }
+            )
+        }
     }
 }

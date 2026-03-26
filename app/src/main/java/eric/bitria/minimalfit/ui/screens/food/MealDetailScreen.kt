@@ -1,6 +1,5 @@
 package eric.bitria.minimalfit.ui.screens.food
 
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -11,24 +10,26 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import coil.compose.AsyncImage
+import eric.bitria.minimalfit.navigation.ScreenConfiguration
 import eric.bitria.minimalfit.ui.components.animations.SwipeToDeleteCard
-import eric.bitria.minimalfit.ui.components.food.FlexibleHeaderScaffold
-import eric.bitria.minimalfit.ui.components.food.actions.AddEntryFab
+import eric.bitria.minimalfit.ui.components.food.FlexibleTopBar
+import eric.bitria.minimalfit.ui.components.food.actions.PrimaryFloatingActionButton
 import eric.bitria.minimalfit.ui.components.food.dialogs.SearchableItemDialog
 import eric.bitria.minimalfit.ui.components.food.dialogs.item.IngredientItem
 import eric.bitria.minimalfit.ui.components.food.lists.IngredientListItem
@@ -46,100 +47,102 @@ fun MealDetailScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val meal = uiState.meal
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
-    FlexibleHeaderScaffold(
-        backgroundImage = {
-            if (meal != null && !meal.imageUrl.isNullOrEmpty()) {
-                AsyncImage(
-                    model = meal.imageUrl,
-                    contentDescription = meal.name,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
-            }
-        },
-        title = {
-            Text(
-                text = meal?.name ?: "",
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.ExtraBold)
+    ScreenConfiguration(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        topBar = {
+            FlexibleTopBar(
+                backgroundImage = {
+                    if (meal != null && !meal.imageUrl.isNullOrEmpty()) {
+                        AsyncImage(
+                            model = meal.imageUrl,
+                            contentDescription = meal.name,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+                },
+                title = {
+                    Text(
+                        text = meal?.name ?: "",
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.ExtraBold)
+                    )
+                },
+                subtitle = {
+                    Column {
+                        Text(
+                            text = "${uiState.totalCalories} kcal",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold
+                        )
+                        if (meal != null && meal.description.isNotEmpty()) {
+                            Text(
+                                text = meal.description,
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                },
+                navigationIcon = {
+                    FilledIconButton(
+                        onClick = onBackClick,
+                        colors = IconButtonDefaults.filledIconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
+                            contentColor = MaterialTheme.colorScheme.onSurface
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Navigate back"
+                        )
+                    }
+                },
+                scrollBehavior = scrollBehavior
             )
         },
-        subtitle = {
-            Column {
-                Text(
-                    text = "${uiState.totalCalories} kcal",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold
-                )
-                if (meal != null && meal.description.isNotEmpty()) {
-                    Text(
-                        text = meal.description,
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
-        },
-        navigationIcon = {
-            FilledIconButton(
-                onClick = onBackClick,
-                colors = IconButtonDefaults.filledIconButtonColors(
-                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
-                    contentColor = MaterialTheme.colorScheme.onSurface
-                )
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Navigate back"
-                )
-            }
-        },
         floatingActionButton = {
-            AddEntryFab(
+            PrimaryFloatingActionButton(
                 onClick = { viewModel.openSearchDialog() },
                 text = "Add Ingredient"
             )
         },
-        floatingActionButtonPosition = FabPosition.Center
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = innerPadding.calculateTopPadding())
-        ) {
-            Text(
-                text = "Ingredients",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(horizontal = Spacing.m, vertical = Spacing.s)
+        bottomBar = false,
+        quickActions = false
+    )
+
+    Column(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        Text(
+            text = "Ingredients",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(horizontal = Spacing.m, vertical = Spacing.s)
+        )
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(
+                bottom = Spacing.xl * 2
             )
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(
-                    bottom = innerPadding.calculateBottomPadding() + Spacing.m
-                )
-            ) {
-                if (uiState.ingredients.isNotEmpty()) {
-                    items(uiState.ingredients, key = { it.ingredient.id }) { itemState ->
-                        SwipeToDeleteCard(
-                            onDismiss = { viewModel.deleteIngredient(itemState.ingredient) },
-                            modifier = Modifier
-                                .padding(horizontal = Spacing.m, vertical = Spacing.xs)
-                                .clip(MaterialTheme.shapes.medium)
-                                .animateItem(
-                                    fadeInSpec = tween(durationMillis = 300),
-                                    fadeOutSpec = tween(durationMillis = 300),
-                                    placementSpec = tween(durationMillis = 300)
-                                )
-                        ) {
-                            IngredientListItem(
-                                ingredient = itemState.ingredient,
-                                amount = itemState.amount
-                            )
-                        }
+        ) {
+            if (uiState.ingredients.isNotEmpty()) {
+                items(uiState.ingredients, key = { it.ingredient.id }) { itemState ->
+                    SwipeToDeleteCard(
+                        onDismiss = { viewModel.deleteIngredient(itemState.ingredient) },
+                        modifier = Modifier
+                            .padding(horizontal = Spacing.m, vertical = Spacing.xs)
+                            .clip(MaterialTheme.shapes.medium)
+                            .animateItem()
+                    ) {
+                        IngredientListItem(
+                            ingredient = itemState.ingredient,
+                            amount = itemState.amount
+                        )
                     }
                 }
             }

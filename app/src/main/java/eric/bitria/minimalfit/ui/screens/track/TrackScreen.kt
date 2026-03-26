@@ -1,6 +1,5 @@
 package eric.bitria.minimalfit.ui.screens.track
 
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -13,15 +12,20 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.em
+import eric.bitria.minimalfit.navigation.ScreenConfiguration
 import eric.bitria.minimalfit.ui.components.animations.SwipeToDeleteCard
 import eric.bitria.minimalfit.ui.components.track.cards.NewTrackCard
 import eric.bitria.minimalfit.ui.components.track.cards.TrackCard
@@ -29,7 +33,7 @@ import eric.bitria.minimalfit.ui.theme.Spacing
 import eric.bitria.minimalfit.ui.viewmodels.track.TrackViewModel
 import org.koin.androidx.compose.koinViewModel
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun TrackScreen(
     onTrackClick: (String) -> Unit = {},
@@ -38,10 +42,30 @@ fun TrackScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val tracks = uiState.activities
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+
+    ScreenConfiguration(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = "Activities",
+                        style = MaterialTheme.typography.displayMedium,
+                        fontWeight = FontWeight.Black,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                },
+                scrollBehavior = scrollBehavior
+            )
+        },
+        quickActions = true,
+        bottomBar = true
+    )
 
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .nestedScroll(scrollBehavior.nestedScrollConnection)
             .padding(horizontal = Spacing.m),
     ) {
         // Fixed top part
@@ -72,11 +96,7 @@ fun TrackScreen(
                     onDismiss = { viewModel.deleteActivity(track.id) },
                     modifier = Modifier
                         .clip(MaterialTheme.shapes.extraLarge)
-                        .animateItem(
-                        fadeInSpec = tween(durationMillis = 300),
-                        fadeOutSpec = tween(durationMillis = 300),
-                        placementSpec = tween(durationMillis = 300)
-                    )
+                        .animateItem()
                 ) {
                     TrackCard(
                         track = track,

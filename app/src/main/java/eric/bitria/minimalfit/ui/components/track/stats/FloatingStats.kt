@@ -52,7 +52,7 @@ fun FloatingStats(
                 letterSpacing = (-0.04).em,
                 shadow = mapTextShadow
             ),
-            color = Color.White
+            color =  MaterialTheme.colorScheme.onSurface
         )
         Text(
             // This will now correctly format decimals based on the user's system

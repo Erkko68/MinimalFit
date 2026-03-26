@@ -32,11 +32,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
+import eric.bitria.minimalfit.navigation.ScreenConfiguration
 import eric.bitria.minimalfit.ui.components.track.map.TrackMap
 import eric.bitria.minimalfit.ui.components.track.map.fitRoute
 import eric.bitria.minimalfit.ui.theme.Spacing
@@ -57,6 +57,11 @@ fun TrackDetailScreen(
     val track = uiState.track
     var editedName by remember(track?.name) { mutableStateOf(track?.name ?: "") }
     val cameraState = rememberCameraState()
+
+    ScreenConfiguration(
+        bottomBar = false,
+        quickActions = false
+    )
 
     if (track != null) {
         LaunchedEffect(track.routePoints) {
@@ -89,7 +94,7 @@ fun TrackDetailScreen(
                 ) {
                     IconButton(
                         onClick = onNavigateBack,
-                        colors = IconButtonDefaults.iconButtonColors(contentColor = Color.White)
+                        colors = IconButtonDefaults.iconButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)
                     ) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
@@ -116,10 +121,10 @@ fun TrackDetailScreen(
                     },
                     textStyle = MaterialTheme.typography.displayMedium.copy(
                         fontWeight = FontWeight.Black,
-                        color = Color.White,
+                        color =  MaterialTheme.colorScheme.onSurface,
                         letterSpacing = (-0.03).em
                     ),
-                    cursorBrush = SolidColor(Color.White),
+                    cursorBrush = SolidColor( MaterialTheme.colorScheme.onSurface),
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -128,7 +133,7 @@ fun TrackDetailScreen(
                 Text(
                     text = dateTime,
                     style = MaterialTheme.typography.titleLarge,
-                    color = Color.White.copy(alpha = 0.9f),
+                    color =  MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f),
                     fontWeight = FontWeight.SemiBold
                 )
             }

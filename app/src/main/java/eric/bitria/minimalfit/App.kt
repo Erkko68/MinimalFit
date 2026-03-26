@@ -1,65 +1,86 @@
 package eric.bitria.minimalfit
 
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.navigation.NavGraph.Companion.findStartDestination
-import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import eric.bitria.minimalfit.navigation.AppNavHost
-import eric.bitria.minimalfit.navigation.NavDestination
+import eric.bitria.minimalfit.navigation.LocalScreenConfig
 import eric.bitria.minimalfit.navigation.QuickAction
+import eric.bitria.minimalfit.navigation.ScreenConfigState
 import eric.bitria.minimalfit.navigation.composables.BottomNavigationBar
 import eric.bitria.minimalfit.navigation.composables.QuickActionButton
 
-// TODO FER QUE LA APP REACCIONI AL ESTAT DE LA XARXA, DATOS ACTIVATS O WIFI NO ACTIVATS
-
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun App() {
     val navController = rememberNavController()
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentDestination = navBackStackEntry?.destination
-    val currentTopLevelDestination = NavDestination.fromNavDestination(currentDestination)
+    
+    val screenConfigState = remember { ScreenConfigState() }
 
-    val showBottomBar = currentTopLevelDestination?.showBottomBar == true
-    val showGlobalQuickActions = currentTopLevelDestination != null
+    CompositionLocalProvider(LocalScreenConfig provides screenConfigState) {
+        val config = screenConfigState.config
+        val quickActionEntries = remember { QuickAction.entries }
 
-    Scaffold(
-        bottomBar = {
-            if (showBottomBar) {
-                BottomNavigationBar(navController)
-            }
-        },
-        floatingActionButton = {
-            if (showGlobalQuickActions) {
-                QuickActionButton(
-                    actions = QuickAction.entries,
-                    onActionClick = { action ->
-                        action.createRoute()?.let { route ->
-                            navController.navigate(route) {
-                                // Pop up to the start destination of the graph to
-                                // avoid building up a large stack of destinations
-                                // on the back stack as users select items
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
-                                }
-                                // Avoid multiple copies of the same destination when
-                                // reselecting the same item
-                                launchSingleTop = true
-                                // Restore state when reselecting a previously selected item
-                                restoreState = true
-                            }
-                        }
+        Scaffold(
+            modifier = config.modifier.fillMaxSize(),
+            topBar = config.topBar,
+            snackbarHost = config.snackbarHost,
+            floatingActionButton = {
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    // Floating Action Button centered
+                    Box(modifier = Modifier.align(Alignment.Center)) {
+                        config.floatingActionButton()
                     }
+
+                    // Quick Actions Button aligned to the right
+                    if (config.quickActions) {
+                        QuickActionButton(
+                            actions = quickActionEntries,
+                            onActionClick = { action ->
+                                action.createRoute()?.let { route ->
+                                    navController.navigate(route) {
+                                        popUpTo(navController.graph.findStartDestination().id) {
+                                            saveState = true
+                                        }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                }
+                            },
+                            modifier = Modifier
+                                .align(Alignment.CenterEnd)
+                                .padding(end = ScaffoldDefaults.contentWindowInsets.asPaddingValues().calculateEndPadding(LayoutDirection.Ltr))
+                        )
+                    }
+                }
+            },
+            floatingActionButtonPosition = config.floatingActionButtonPosition,
+            bottomBar = {
+                if (config.bottomBar) {
+                    BottomNavigationBar(navController)
+                }
+            },
+            contentWindowInsets = config.contentWindowInsets ?: ScaffoldDefaults.contentWindowInsets
+        ) { contentPadding ->
+            Box(
+                modifier = Modifier.padding(contentPadding)
+            ) {
+                AppNavHost(
+                    navController = navController
                 )
             }
         }
-    ) { contentPadding ->
-        AppNavHost(
-            navController = navController,
-            contentPadding = contentPadding
-        )
     }
 }

@@ -13,7 +13,6 @@ import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -26,19 +25,19 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import eric.bitria.minimalfit.data.entity.food.Diet
 import eric.bitria.minimalfit.data.entity.food.Meal
+import eric.bitria.minimalfit.navigation.ScreenConfiguration
 import eric.bitria.minimalfit.ui.components.food.cards.MealCard
 import eric.bitria.minimalfit.ui.components.food.lists.DietList
 import eric.bitria.minimalfit.ui.components.shared.progress.DailyProgressPager
 import eric.bitria.minimalfit.ui.theme.Spacing
 import eric.bitria.minimalfit.ui.viewmodels.food.FoodViewModel
 import eric.bitria.minimalfit.util.last7DaysEndingToday
-import org.koin.androidx.compose.koinViewModel
 import kotlinx.datetime.LocalDate
+import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FoodScreen(
-    contentPadding: PaddingValues,
     onNavigateToDailyLog: (LocalDate) -> Unit,
     onNavigateToDietDetail: (Diet) -> Unit,
     onNavigateToMealDetail: (Meal) -> Unit,
@@ -48,7 +47,7 @@ fun FoodScreen(
     val weekDates = remember { last7DaysEndingToday() }
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
-    Scaffold(
+    ScreenConfiguration(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             TopAppBar(
@@ -62,68 +61,63 @@ fun FoodScreen(
                 },
                 scrollBehavior = scrollBehavior
             )
-        }
-    ) { innerPadding ->
-        BoxWithConstraints(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
+        },
+        quickActions = true,
+        bottomBar = true
+    )
+
+    BoxWithConstraints(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        val headerHeight = maxHeight * 0.5f
+
+        LazyVerticalStaggeredGrid(
+            columns = StaggeredGridCells.Fixed(2),
+            modifier = Modifier.fillMaxSize(),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.m),
+            verticalItemSpacing = Spacing.m,
+            contentPadding = PaddingValues(Spacing.m)
         ) {
-            val headerHeight = maxHeight * 0.5f
+            // 1. HEADER SECTION
+            item(span = StaggeredGridItemSpan.FullLine) {
+                Column(modifier = Modifier.height(headerHeight)) {
+                    DailyProgressPager(
+                        uiState = uiState,
+                        dates = weekDates,
+                        onDayClick = onNavigateToDailyLog,
+                        modifier = Modifier.weight(0.6f)
+                    )
 
-            LazyVerticalStaggeredGrid(
-                columns = StaggeredGridCells.Fixed(2),
-                modifier = Modifier.fillMaxSize(),
-                horizontalArrangement = Arrangement.spacedBy(Spacing.m),
-                verticalItemSpacing = Spacing.m,
-                contentPadding = PaddingValues(
-                    bottom = contentPadding.calculateBottomPadding() + Spacing.m,
-                    start = Spacing.m,
-                    end = Spacing.m,
-                    top = Spacing.m
-                )
-            ) {
-                // 1. HEADER SECTION
-                item(span = StaggeredGridItemSpan.FullLine) {
-                    Column(modifier = Modifier.height(headerHeight)) {
-                        DailyProgressPager(
-                            uiState = uiState,
-                            dates = weekDates,
-                            onDayClick = onNavigateToDailyLog,
-                            modifier = Modifier.weight(0.6f)
-                        )
-
-                        Text(
-                            text = "Your Diets",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.ExtraBold,
-                            modifier = Modifier.padding(vertical = Spacing.s)
-                        )
-
-                        DietList(
-                            diets = uiState.diets,
-                            onDietClick = onNavigateToDietDetail,
-                            modifier = Modifier.weight(0.4f)
-                        )
-                    }
-                }
-
-                // 2. MEALS TITLE
-                item(span = StaggeredGridItemSpan.FullLine) {
                     Text(
-                        text = "Your Meals",
+                        text = "Your Diets",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.ExtraBold,
+                        modifier = Modifier.padding(vertical = Spacing.s)
                     )
-                }
 
-                // 3. GRID ITEMS
-                items(items = uiState.meals, key = { it.id }) { meal ->
-                    MealCard(
-                        meal = meal,
-                        onClick = { onNavigateToMealDetail(meal) }
+                    DietList(
+                        diets = uiState.diets,
+                        onDietClick = onNavigateToDietDetail,
+                        modifier = Modifier.weight(0.4f)
                     )
                 }
+            }
+
+            // 2. MEALS TITLE
+            item(span = StaggeredGridItemSpan.FullLine) {
+                Text(
+                    text = "Your Meals",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.ExtraBold,
+                )
+            }
+
+            // 3. GRID ITEMS
+            items(items = uiState.meals, key = { it.id }) { meal ->
+                MealCard(
+                    meal = meal,
+                    onClick = { onNavigateToMealDetail(meal) }
+                )
             }
         }
     }

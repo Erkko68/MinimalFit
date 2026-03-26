@@ -10,10 +10,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 
 @Composable
-fun AddEntryFab(
+fun PrimaryFloatingActionButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    text: String = "Add Entry"
+    text: String = ""
 ) {
     ExtendedFloatingActionButton(
         onClick = onClick,

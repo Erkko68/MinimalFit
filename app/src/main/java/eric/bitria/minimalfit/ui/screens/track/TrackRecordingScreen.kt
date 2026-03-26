@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
@@ -20,6 +21,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import eric.bitria.minimalfit.navigation.ScreenConfiguration
 import eric.bitria.minimalfit.ui.components.permission.RequireActivityRecognitionPermission
 import eric.bitria.minimalfit.ui.components.permission.RequireBackgroundLocationPermission
 import eric.bitria.minimalfit.ui.components.permission.RequireLocationPermission
@@ -40,11 +42,17 @@ import org.maplibre.compose.camera.CameraPosition
 import org.maplibre.compose.camera.rememberCameraState
 import org.maplibre.spatialk.geojson.Position
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TrackRecordingScreen(
     onNavigateBack: () -> Unit,
     viewModel: TrackRecordingViewModel = koinViewModel()
 ) {
+    ScreenConfiguration(
+        bottomBar = false,
+        quickActions = false
+    )
+
     var locationPermissionGranted by remember { mutableStateOf(false) }
     var backgroundLocationPermissionGranted by remember { mutableStateOf(false) }
     var activityPermissionGranted by remember { mutableStateOf(false) }

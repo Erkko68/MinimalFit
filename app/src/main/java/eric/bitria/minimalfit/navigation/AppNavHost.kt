@@ -33,29 +33,33 @@ fun AppNavHost(
         modifier = Modifier.fillMaxSize()
     ) {
         composable<Route.Profile> {
-            Box(Modifier.padding(contentPadding)) {
-                ProfileScreen()
-            }
+            ProfileScreen(
+                contentPadding = contentPadding,
+                onSettingsClick = {
+                    navController.navigate(Route.Settings)
+                }
+            )
         }
         composable<Route.Settings> {
-            Box(Modifier.padding(contentPadding)) {
-                SettingsScreen()
-            }
+            SettingsScreen(
+                onBackClick = {
+                    navController.popBackStack()
+                }
+            )
         }
         composable<Route.Food> {
-            Box(Modifier.padding(contentPadding)) {
-                FoodScreen(
-                    onNavigateToDailyLog = { date ->
-                        navController.navigate(Route.DailyLog(date = date.toString()))
-                    },
-                    onNavigateToDietDetail = { diet ->
-                        navController.navigate(Route.DietDetail(dietId = diet.id))
-                    },
-                    onNavigateToMealDetail = { meal ->
-                        navController.navigate(Route.MealDetail(mealId = meal.id))
-                    }
-                )
-            }
+            FoodScreen(
+                contentPadding = contentPadding,
+                onNavigateToDailyLog = { date ->
+                    navController.navigate(Route.DailyLog(date = date.toString()))
+                },
+                onNavigateToDietDetail = { diet ->
+                    navController.navigate(Route.DietDetail(dietId = diet.id))
+                },
+                onNavigateToMealDetail = { meal ->
+                    navController.navigate(Route.MealDetail(mealId = meal.id))
+                }
+            )
         }
         composable<Route.OutdoorActivities> {
             Box(Modifier.padding(contentPadding)) {

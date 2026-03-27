@@ -28,7 +28,7 @@ fun GymScreen(
                 title = {
                     Text(
                         text = "Gym Activities",
-                        style = MaterialTheme.typography.displayMedium,
+                        style = MaterialTheme.typography.displaySmall,
                         fontWeight = FontWeight.Black,
                         color = MaterialTheme.colorScheme.onBackground
                     )

@@ -48,7 +48,7 @@ fun TrackScreen(
                 title = {
                     Text(
                         text = "Activities",
-                        style = MaterialTheme.typography.displayMedium,
+                        style = MaterialTheme.typography.displaySmall,
                         fontWeight = FontWeight.Black,
                         color = MaterialTheme.colorScheme.onBackground
                     )

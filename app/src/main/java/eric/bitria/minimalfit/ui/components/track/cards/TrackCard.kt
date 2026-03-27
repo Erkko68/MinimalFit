@@ -1,29 +1,24 @@
 package eric.bitria.minimalfit.ui.components.track.cards
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import eric.bitria.minimalfit.data.entity.track.Track
-import eric.bitria.minimalfit.ui.components.track.route.TrackRouteCanvas
+import eric.bitria.minimalfit.ui.components.track.route.drawTrackRoute
 import eric.bitria.minimalfit.ui.theme.Spacing
 import eric.bitria.minimalfit.util.hourMinute
 import eric.bitria.minimalfit.util.shortMonthDay
@@ -34,73 +29,70 @@ fun TrackCard(
     modifier: Modifier = Modifier,
     onClick: () -> Unit = {}
 ) {
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val surfaceColor = MaterialTheme.colorScheme.surfaceContainerHigh
+    val spacingM = with(LocalDensity.current) { Spacing.m.toPx() }
+    val widerStroke = with(LocalDensity.current) { 8.dp.toPx() }
+
     Card(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.extraLarge,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+            containerColor = surfaceColor
         )
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(Spacing.m),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Text Content Column
-            Column(
-                modifier = Modifier.weight(0.65f), // Takes 65% of the row width
-                verticalArrangement = Arrangement.spacedBy(Spacing.xs)
-            ) {
-                val dateTime = "${track.date.shortMonthDay()} • ${track.time.hourMinute()}"
-                Text(
-                    text = dateTime,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary, // Using primary color for emphasis
-                    fontWeight = FontWeight.Bold
-                )
-
-                // Name
-                Text(
-                    text = track.name,
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Black, // Heavier weight for expressive hierarchy
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-
-                Spacer(modifier = Modifier.height(Spacing.s))
-
-                // Stats Row
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    val distanceText = "%.2f".format(track.distance)
-
-                    StatItem(label = "Distance", value = "$distanceText km")
-                    StatItem(label = "Time", value = track.duration.toString())
-                    StatItem(label = "Pace", value = track.pace)
+                .drawBehind {
+                    drawTrackRoute(
+                        points = track.routePoints,
+                        color = primaryColor.copy(alpha = 0.12f),
+                        strokeWidth = widerStroke,
+                        padding = spacingM
+                    )
                 }
-            }
+                .padding(Spacing.m),
+            verticalArrangement = Arrangement.spacedBy(Spacing.xs)
+        ) {
+            val dateTime = "${track.date.shortMonthDay()} • ${track.time.hourMinute()}"
+            Text(
+                text = dateTime,
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Bold
+            )
 
-            Spacer(modifier = Modifier.width(Spacing.m))
+            Text(
+                text = track.name,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Black,
+                color = MaterialTheme.colorScheme.onSurface
+            )
 
-            // Map Image Container
-            Box(
-                modifier = Modifier
-                    .weight(0.35f)
-                    .aspectRatio(1f)
-                    .clip(MaterialTheme.shapes.extraLarge),
-                contentAlignment = Alignment.Center,
+            Spacer(modifier = Modifier.height(Spacing.m))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(0.8f),
+                horizontalArrangement = Arrangement.Start
             ) {
-                TrackRouteCanvas(
-                    track = track,
-                    routeColor = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.primaryContainer),
-                    strokeWidth = 5.dp
+                val distanceText = "%.2f".format(track.distance)
+
+                StatItem(
+                    label = "Distance",
+                    value = "$distanceText km",
+                    modifier = Modifier.weight(1f)
+                )
+                StatItem(
+                    label = "Time",
+                    value = track.duration.toString(),
+                    modifier = Modifier.weight(1f)
+                )
+                StatItem(
+                    label = "Pace",
+                    value = track.pace,
+                    modifier = Modifier.weight(1f)
                 )
             }
         }
@@ -108,8 +100,12 @@ fun TrackCard(
 }
 
 @Composable
-private fun StatItem(label: String, value: String) {
-    Column {
+private fun StatItem(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier) {
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall,

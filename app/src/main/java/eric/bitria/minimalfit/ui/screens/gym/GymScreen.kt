@@ -4,14 +4,15 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.text.font.FontWeight
 import eric.bitria.minimalfit.navigation.ScreenConfiguration
-import eric.bitria.minimalfit.navigation.composables.ScreenTitle
 import eric.bitria.minimalfit.ui.theme.Spacing
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -25,7 +26,12 @@ fun GymScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    ScreenTitle(title = "Gym Activities")
+                    Text(
+                        text = "Gym Activities",
+                        style = MaterialTheme.typography.displayMedium,
+                        fontWeight = FontWeight.Black,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
                 },
                 scrollBehavior = scrollBehavior
             )

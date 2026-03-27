@@ -1,6 +1,7 @@
 package eric.bitria.minimalfit.ui.screens.profile
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -10,13 +11,15 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.text.font.FontWeight
 import eric.bitria.minimalfit.navigation.ScreenConfiguration
-import eric.bitria.minimalfit.navigation.composables.ScreenTitle
 import eric.bitria.minimalfit.ui.components.profile.card.CalorieCard
 import eric.bitria.minimalfit.ui.components.profile.card.GymCard
 import eric.bitria.minimalfit.ui.components.profile.card.TrackCard
@@ -39,10 +42,21 @@ fun ProfileScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    ScreenTitle(
-                        title = "Welcome\nBack!",
-                        subtitle = "Thursday, October 24"
-                    )
+                    Column {
+                        Text(
+                            text = "Welcome\nBack!",
+                            style = MaterialTheme.typography.displayMedium,
+                            fontWeight = FontWeight.Black,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+
+                        Text(
+                            text = "Thursday, October 24",
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.secondary
+                        )
+                    }
                 },
                 actions = {
                     IconButton(onClick = onSettingsClick) {

@@ -15,7 +15,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import eric.bitria.minimalfit.data.entity.food.Diet
 import eric.bitria.minimalfit.ui.theme.Spacing
@@ -31,20 +33,24 @@ fun DietCard(
         shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.secondaryContainer
-        )
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            if (!diet.imageUrl.isNullOrEmpty()) {
+            val hasImage = !diet.imageUrl.isNullOrEmpty()
+
+            if (hasImage) {
                 AsyncImage(
                     model = diet.imageUrl,
                     contentDescription = diet.name,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
                 )
+
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.3f))
+                        .background(Color.Black.copy(alpha = 0.4f))
                 )
             }
 
@@ -52,11 +58,12 @@ fun DietCard(
                 text = diet.name,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = if (!diet.imageUrl.isNullOrEmpty()) Color.White else MaterialTheme.colorScheme.onSecondaryContainer,
-                maxLines = 1,
+                color = if (hasImage) Color.White else MaterialTheme.colorScheme.onSecondaryContainer,
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
+                textAlign = if (hasImage) TextAlign.Start else TextAlign.Center,
                 modifier = Modifier
-                    .align(Alignment.BottomStart)
+                    .align(if (hasImage) Alignment.BottomStart else Alignment.Center)
                     .padding(Spacing.m)
             )
         }

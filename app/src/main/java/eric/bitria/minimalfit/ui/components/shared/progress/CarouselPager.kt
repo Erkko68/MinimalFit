@@ -8,8 +8,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -29,7 +27,7 @@ import androidx.compose.ui.unit.dp
 import eric.bitria.minimalfit.ui.theme.Spacing
 
 @Composable
-fun DailyProgressPager(
+fun CarouselPager(
     pageCount: Int,
     modifier: Modifier = Modifier,
     pagerState: PagerState = rememberPagerState(initialPage = (pageCount - 1).coerceAtLeast(0), pageCount = { pageCount }),
@@ -43,28 +41,26 @@ fun DailyProgressPager(
     }
 
     Column(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         HorizontalPager(
             state = pagerState,
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
+            modifier = Modifier.fillMaxWidth()
         ) { pageIndex ->
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .fillMaxWidth()
+                    .padding(Spacing.m)
                     .let { base ->
                         if (onPageClick == null) base
                         else base.clickable { onPageClick(pageIndex) }
-                    }
+                    },
+                contentAlignment = Alignment.Center
             ) {
                 content(pageIndex)
             }
         }
-
-        Spacer(modifier = Modifier.height(Spacing.m))
 
         // Pill indicator row
         Row(

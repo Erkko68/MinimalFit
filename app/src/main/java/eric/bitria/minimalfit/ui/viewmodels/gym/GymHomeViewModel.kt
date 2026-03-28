@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.Duration
+import eric.bitria.minimalfit.data.entity.gym.GymExerciseEntity
 
 data class GymSessionSummaryUi(
     val id: String,
@@ -38,9 +39,30 @@ class GymHomeViewModel(
             initialValue = emptyList()
         )
 
+    val exercises: StateFlow<List<GymExerciseEntity>> = repository
+        .getExercises()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+
     fun deleteSession(sessionId: String) {
         viewModelScope.launch {
             repository.deleteSession(sessionId)
+        }
+    }
+
+    fun addExercise(name: String) {
+        if (name.isBlank()) return
+        viewModelScope.launch {
+            repository.addExercise(name)
+        }
+    }
+
+    fun deleteExercise(exerciseId: String) {
+        viewModelScope.launch {
+            repository.deleteExercise(exerciseId)
         }
     }
 
@@ -58,10 +80,9 @@ class GymHomeViewModel(
             val start = LocalDateTime.of(session.date.year, session.date.monthNumber, session.date.dayOfMonth, session.startTime.hour, session.startTime.minute, session.startTime.second)
             val end = LocalDateTime.of(session.date.year, session.date.monthNumber, session.date.dayOfMonth, session.endTime.hour, session.endTime.minute, session.endTime.second)
             val duration = Duration.between(start, end)
-            val hours = duration.toHours()
-            val mins = duration.toMinutesPart()
+            val totalMinutes = duration.toMinutes()
             val secs = duration.toSecondsPart()
-            durationText = if (hours > 0) String.format("%d:%02d:%02d", hours, mins, secs) else String.format("%02d:%02d", mins, secs)
+            durationText = String.format("%02d:%02d", totalMinutes, secs)
         }
 
         return GymSessionSummaryUi(

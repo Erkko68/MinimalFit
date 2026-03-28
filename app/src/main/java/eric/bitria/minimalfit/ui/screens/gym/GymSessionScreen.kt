@@ -8,11 +8,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Button
@@ -22,6 +26,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -39,6 +44,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import eric.bitria.minimalfit.data.entity.gym.GymSessionStatus
 import eric.bitria.minimalfit.navigation.ScreenConfiguration
+import eric.bitria.minimalfit.ui.components.animations.SwipeToDeleteCard
+import eric.bitria.minimalfit.ui.components.food.dialogs.SearchableItemDialog
 import eric.bitria.minimalfit.ui.theme.Spacing
 import eric.bitria.minimalfit.ui.viewmodels.gym.GymSessionViewModel
 import org.koin.androidx.compose.koinViewModel
@@ -56,6 +63,9 @@ fun GymSessionScreen(
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     var showFinishDialog by remember { mutableStateOf(false) }
+    var showExerciseSearchDialog by remember { mutableStateOf(false) }
+    var newExerciseName by remember { mutableStateOf("") }
+    val catalogExercises by viewModel.catalogExercises.collectAsState(initial = emptyList())
 
     if (showFinishDialog) {
         androidx.compose.material3.AlertDialog(
@@ -91,6 +101,38 @@ fun GymSessionScreen(
                 }
             }
         )
+    }
+
+    if (showExerciseSearchDialog) {
+        SearchableItemDialog(
+            title = "Add Exercise",
+            placeholder = "Search or create new...",
+            items = catalogExercises,
+            itemKey = { it.id },
+            filter = { item, query -> item.name.contains(query, ignoreCase = true) },
+            onDismiss = { showExerciseSearchDialog = false },
+            onCreateNew = { newName ->
+                viewModel.createNewExerciseAndAddSet(newName)
+                showExerciseSearchDialog = false
+            }
+        ) { exercise ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        viewModel.addSet(exercise.id)
+                        showExerciseSearchDialog = false
+                    }
+                    .padding(horizontal = Spacing.m, vertical = Spacing.l),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = exercise.name,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        }
     }
 
     androidx.activity.compose.BackHandler(enabled = uiState.session?.session?.status == GymSessionStatus.ACTIVE) {
@@ -152,35 +194,6 @@ fun GymSessionScreen(
     ) {
         val isActive = uiState.session?.session?.status == GymSessionStatus.ACTIVE
 
-        if (isActive) {
-            var newExerciseName by remember { mutableStateOf("") }
-
-            // Header: añadir ejercicio
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(Spacing.s)
-            ) {
-                OutlinedTextField(
-                    value = newExerciseName,
-                    onValueChange = { newExerciseName = it },
-                    label = { Text("Add exercise") },
-                    modifier = Modifier.weight(1f)
-                )
-                Button(
-                    onClick = {
-                        if (newExerciseName.isNotBlank()) {
-                            viewModel.addExercise(newExerciseName.trim())
-                            newExerciseName = ""
-                        }
-                    }
-                ) {
-                    Icon(Icons.Filled.PlayArrow, contentDescription = null)
-                    Text("Add")
-                }
-            }
-        }
-
         // Lista de ejercicios y sets
         LazyColumn(
             modifier = Modifier
@@ -190,7 +203,11 @@ fun GymSessionScreen(
         ) {
             items(uiState.exercises, key = { it.exercise.id }) { item ->
                 Card(
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.extraLarge,
+                    colors = androidx.compose.material3.CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+                    )
                 ) {
                     Column(
                         modifier = Modifier.padding(Spacing.m),
@@ -291,6 +308,14 @@ fun GymSessionScreen(
                 Button(onClick = { showFinishDialog = true }) {
                     Icon(Icons.Filled.Check, contentDescription = null)
                     Text("Finish workout", modifier = Modifier.padding(start = 8.dp))
+                }
+
+                Button(
+                    onClick = { showExerciseSearchDialog = true },
+                    modifier = Modifier.fillMaxWidth().padding(bottom = Spacing.xl)
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.padding(end = 8.dp))
+                    Text("Add Exercise")
                 }
             }
         }

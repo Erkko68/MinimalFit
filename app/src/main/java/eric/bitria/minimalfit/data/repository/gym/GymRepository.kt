@@ -4,6 +4,7 @@ import eric.bitria.minimalfit.data.entity.gym.GymExerciseEntity
 import eric.bitria.minimalfit.data.entity.gym.GymSessionEntity
 import eric.bitria.minimalfit.data.entity.gym.GymSessionWithSets
 import eric.bitria.minimalfit.data.entity.gym.GymSetEntity
+import eric.bitria.minimalfit.data.entity.gym.GymSetWithSession
 import kotlinx.coroutines.flow.Flow
 
 interface GymRepository {
@@ -18,7 +19,11 @@ interface GymRepository {
     suspend fun finishSession()
 
     fun getExercises(): Flow<List<GymExerciseEntity>>
+    fun getSetsForExercise(exerciseId: String): Flow<List<GymSetEntity>>
+    fun getSetsWithSessionForExercise(exerciseId: String): Flow<List<GymSetWithSession>>
+
     suspend fun addExercise(name: String): GymExerciseEntity
+    suspend fun deleteExercise(exerciseId: String)
 
     suspend fun addSet(
         sessionId: String,

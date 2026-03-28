@@ -6,6 +6,7 @@ import eric.bitria.minimalfit.data.entity.gym.GymSessionEntity
 import eric.bitria.minimalfit.data.entity.gym.GymSessionStatus
 import eric.bitria.minimalfit.data.entity.gym.GymSessionWithSets
 import eric.bitria.minimalfit.data.entity.gym.GymSetEntity
+import eric.bitria.minimalfit.data.entity.gym.GymSetWithSession
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -68,10 +69,22 @@ class DefaultGymRepository(
     override fun getExercises(): Flow<List<GymExerciseEntity>> =
         gymDao.getExercises()
 
+    override fun getSetsForExercise(exerciseId: String): Flow<List<GymSetEntity>> {
+        return gymDao.getSetsForExercise(exerciseId)
+    }
+
+    override fun getSetsWithSessionForExercise(exerciseId: String): Flow<List<GymSetWithSession>> {
+        return gymDao.getSetsWithSessionForExercise(exerciseId)
+    }
+
     override suspend fun addExercise(name: String): GymExerciseEntity {
         val exercise = GymExerciseEntity(name = name)
         gymDao.insertExercise(exercise)
         return exercise
+    }
+
+    override suspend fun deleteExercise(exerciseId: String) {
+        gymDao.deleteExercise(exerciseId)
     }
 
     override suspend fun addSet(
@@ -107,7 +120,7 @@ class DefaultGymRepository(
     }
 
     override suspend fun deleteSession(sessionId: String) {
-        gymDao.deleteSession(sessionId)
+        gymDao.deleteSessionAndSets(sessionId)
     }
 
     override suspend fun copyPreviousSet(sessionId: String, exerciseId: String): GymSetEntity? {

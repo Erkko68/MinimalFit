@@ -61,3 +61,11 @@ data class GymSessionWithSets(
     val sets: List<GymSetEntity>
 )
 
+data class GymSetWithSession(
+    @Embedded val set: GymSetEntity,
+    @Relation(
+        parentColumn = "sessionId",
+        entityColumn = "id"
+    )
+    val session: GymSessionEntity?
+)

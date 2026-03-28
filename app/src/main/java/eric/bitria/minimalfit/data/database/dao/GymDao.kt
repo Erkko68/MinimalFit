@@ -11,6 +11,7 @@ import eric.bitria.minimalfit.data.entity.gym.GymSessionEntity
 import eric.bitria.minimalfit.data.entity.gym.GymSessionStatus
 import eric.bitria.minimalfit.data.entity.gym.GymSessionWithSets
 import eric.bitria.minimalfit.data.entity.gym.GymSetEntity
+import eric.bitria.minimalfit.data.entity.gym.GymSetWithSession
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -22,6 +23,9 @@ interface GymDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertExercise(exercise: GymExerciseEntity)
+
+    @Query("DELETE FROM gym_exercises WHERE id = :exerciseId")
+    suspend fun deleteExercise(exerciseId: String)
 
     // Sessions
     @Query("SELECT * FROM gym_sessions ORDER BY date DESC, startTime DESC LIMIT :limit")
@@ -40,6 +44,13 @@ interface GymDao {
     suspend fun updateSession(session: GymSessionEntity)
 
     // Sets
+    @Transaction
+    @Query("SELECT * FROM gym_sets WHERE exerciseId = :exerciseId")
+    fun getSetsWithSessionForExercise(exerciseId: String): Flow<List<GymSetWithSession>>
+
+    @Query("SELECT gym_sets.* FROM gym_sets INNER JOIN gym_sessions ON gym_sets.sessionId = gym_sessions.id WHERE gym_sets.exerciseId = :exerciseId ORDER BY gym_sessions.date ASC, gym_sessions.startTime ASC")
+    fun getSetsForExercise(exerciseId: String): Flow<List<GymSetEntity>>
+
     @Query("SELECT * FROM gym_sets WHERE sessionId = :sessionId ORDER BY orderInSession ASC")
     fun getSetsForSession(sessionId: String): Flow<List<GymSetEntity>>
 
@@ -52,8 +63,17 @@ interface GymDao {
     @Query("DELETE FROM gym_sets WHERE id = :setId")
     suspend fun deleteSet(setId: String)
 
+    @Query("DELETE FROM gym_sets WHERE sessionId = :sessionId")
+    suspend fun deleteSetsForSession(sessionId: String)
+
     @Query("DELETE FROM gym_sessions WHERE id = :sessionId")
     suspend fun deleteSession(sessionId: String)
+
+    @Transaction
+    suspend fun deleteSessionAndSets(sessionId: String) {
+        deleteSetsForSession(sessionId)
+        deleteSession(sessionId)
+    }
 
     @Transaction
     @Query("SELECT * FROM gym_sessions WHERE id = :sessionId")

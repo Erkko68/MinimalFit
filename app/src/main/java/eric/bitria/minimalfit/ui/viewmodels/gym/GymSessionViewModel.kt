@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.Duration
@@ -38,6 +39,13 @@ class GymSessionViewModel(
     private val refreshTrigger = MutableStateFlow(0)
     private val _timerText = MutableStateFlow("00:00")
     val timerText: StateFlow<String> = _timerText.asStateFlow()
+
+    val catalogExercises: StateFlow<List<GymExerciseEntity>> = repository.getExercises()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
 
     val uiState: StateFlow<GymSessionUiState> = combine(
         if (sessionId != null) repository.getSession(sessionId) else repository.getActiveSession(),
@@ -91,14 +99,9 @@ class GymSessionViewModel(
                         )
                         val now = LocalDateTime.now()
                         val duration = Duration.between(start, now)
-                        val hours = duration.toHours()
-                        val mins = duration.toMinutesPart()
+                        val totalMinutes = duration.toMinutes()
                         val secs = duration.toSecondsPart()
-                        _timerText.value = if (hours > 0) {
-                            String.format("%d:%02d:%02d", hours, mins, secs)
-                        } else {
-                            String.format("%02d:%02d", mins, secs)
-                        }
+                        _timerText.value = String.format("%02d:%02d", totalMinutes, secs)
                     } else if (sessionEntity.status == GymSessionStatus.COMPLETED && sessionEntity.endTime != null) {
                         val start = LocalDateTime.of(
                             sessionEntity.date.year,
@@ -117,14 +120,9 @@ class GymSessionViewModel(
                             sessionEntity.endTime.second
                         )
                         val duration = Duration.between(start, end)
-                        val hours = duration.toHours()
-                        val mins = duration.toMinutesPart()
+                        val totalMinutes = duration.toMinutes()
                         val secs = duration.toSecondsPart()
-                        _timerText.value = if (hours > 0) {
-                            String.format("%d:%02d:%02d", hours, mins, secs)
-                        } else {
-                            String.format("%02d:%02d", mins, secs)
-                        }
+                        _timerText.value = String.format("%02d:%02d", totalMinutes, secs)
                     }
                 }
                 delay(1000)
@@ -139,20 +137,10 @@ class GymSessionViewModel(
         }
     }
 
-    fun addExercise(name: String) {
+    fun createNewExerciseAndAddSet(name: String) {
         viewModelScope.launch {
             val exercise = repository.addExercise(name)
-            val session = uiState.value.session ?: return@launch
-            repository.addSet(
-                sessionId = session.session.id,
-                exerciseId = exercise.id,
-                weight = 0f,
-                reps = 0,
-                rpe = null,
-                isWarmup = false,
-                notes = ""
-            )
-            refreshTrigger.value++
+            addSet(exercise.id)
         }
     }
 

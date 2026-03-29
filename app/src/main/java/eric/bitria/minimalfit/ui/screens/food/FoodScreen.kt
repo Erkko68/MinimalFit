@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import eric.bitria.minimalfit.data.entity.food.Diet
 import eric.bitria.minimalfit.data.entity.food.Meal
 import eric.bitria.minimalfit.navigation.ScreenConfiguration
+import eric.bitria.minimalfit.ui.components.food.actions.PrimaryFloatingActionButton
 import eric.bitria.minimalfit.ui.components.food.cards.DietCard
 import eric.bitria.minimalfit.ui.components.food.cards.MealCard
 import eric.bitria.minimalfit.ui.components.shared.progress.CalorieCircularProgressIndicator
@@ -42,6 +43,7 @@ import java.text.NumberFormat
 @Composable
 fun FoodScreen(
     onNavigateToDailyLog: (LocalDate) -> Unit,
+    onRegisterDailyMeal: () -> Unit,
     onNavigateToDietDetail: (Diet) -> Unit,
     onNavigateToMealDetail: (Meal) -> Unit,
     viewModel: FoodViewModel = koinViewModel(),
@@ -67,7 +69,13 @@ fun FoodScreen(
                 scrollBehavior = scrollBehavior
             )
         },
-        quickActions = true,
+        floatingActionButton = {
+            PrimaryFloatingActionButton(
+                onClick = onRegisterDailyMeal,
+                text = "Register new meal"
+            )
+        },
+        quickActions = false,
         bottomBar = true
     )
 

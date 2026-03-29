@@ -17,6 +17,7 @@ import eric.bitria.minimalfit.ui.screens.profile.SettingsScreen
 import eric.bitria.minimalfit.ui.screens.track.TrackDetailScreen
 import eric.bitria.minimalfit.ui.screens.track.TrackRecordingScreen
 import eric.bitria.minimalfit.ui.screens.track.TrackScreen
+import eric.bitria.minimalfit.util.today
 import kotlinx.datetime.LocalDate
 
 @Composable
@@ -46,6 +47,9 @@ fun AppNavHost(
             FoodScreen(
                 onNavigateToDailyLog = { date ->
                     navController.navigate(Route.DailyLog(date = date.toString()))
+                },
+                onRegisterDailyMeal = {
+                    navController.navigate(Route.DailyLog(date = today().toString(), openSearch = true))
                 },
                 onNavigateToDietDetail = { diet ->
                     navController.navigate(Route.DietDetail(dietId = diet.id))

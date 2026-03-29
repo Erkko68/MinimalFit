@@ -38,9 +38,11 @@ fun App() {
             topBar = config.topBar,
             snackbarHost = config.snackbarHost,
             floatingActionButton = {
-                Box(modifier = Modifier.fillMaxWidth()) {
+                Box(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
                     // Floating Action Button centered
-                    Box(modifier = Modifier.align(Alignment.Center)) {
+                    Box(modifier = Modifier.align(Alignment.TopCenter)) {
                         config.floatingActionButton()
                     }
 
@@ -60,7 +62,7 @@ fun App() {
                                 }
                             },
                             modifier = Modifier
-                                .align(Alignment.CenterEnd)
+                                .align(Alignment.BottomEnd)
                                 .padding(end = ScaffoldDefaults.contentWindowInsets.asPaddingValues().calculateEndPadding(LayoutDirection.Ltr))
                         )
                     }

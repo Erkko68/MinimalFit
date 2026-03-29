@@ -1,7 +1,6 @@
 package eric.bitria.minimalfit.ui.screens.track
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -22,10 +21,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.em
 import eric.bitria.minimalfit.navigation.ScreenConfiguration
 import eric.bitria.minimalfit.ui.components.animations.SwipeToDeleteCard
-import eric.bitria.minimalfit.ui.components.track.cards.NewTrackCard
+import eric.bitria.minimalfit.ui.components.food.actions.PrimaryFloatingActionButton
+import eric.bitria.minimalfit.ui.components.track.cards.EmptyTrackPlaceholder
 import eric.bitria.minimalfit.ui.components.track.cards.TrackCard
 import eric.bitria.minimalfit.ui.theme.Spacing
 import eric.bitria.minimalfit.ui.viewmodels.track.TrackViewModel
@@ -47,7 +46,7 @@ fun TrackScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Activities",
+                        text = "Tracks",
                         style = MaterialTheme.typography.displaySmall,
                         fontWeight = FontWeight.Black,
                         color = MaterialTheme.colorScheme.onBackground
@@ -56,7 +55,13 @@ fun TrackScreen(
                 scrollBehavior = scrollBehavior
             )
         },
-        quickActions = true,
+        floatingActionButton = {
+            PrimaryFloatingActionButton(
+                onClick = onNewTrackClick,
+                text = "Start a new track"
+            )
+        },
+        quickActions = false,
         bottomBar = true
     )
 
@@ -74,23 +79,21 @@ fun TrackScreen(
             verticalArrangement = Arrangement.spacedBy(Spacing.m)
         ) {
             item {
-                NewTrackCard(onClick = onNewTrackClick)
-            }
-            item {
                 Text(
-                    text = "Your Track History",
-                    style = MaterialTheme.typography.titleLarge.copy(
-                        fontWeight = FontWeight.ExtraBold
-                    ),
-                    letterSpacing = (-0.02).em,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(MaterialTheme.colorScheme.surface)
-                        .padding(vertical = Spacing.s)
+                    text = "Past Tracks",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.ExtraBold
                 )
             }
 
+            if (tracks.isEmpty()) {
+                item {
+                    EmptyTrackPlaceholder(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                    )
+                }
+            }
             items(tracks, key = { it.id }) { track ->
                 SwipeToDeleteCard(
                     onDismiss = { viewModel.deleteActivity(track.id) },

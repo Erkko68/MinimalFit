@@ -13,6 +13,8 @@ import eric.bitria.minimalfit.data.repository.track.DefaultTrackRepository
 import eric.bitria.minimalfit.data.repository.track.LocationRepository
 import eric.bitria.minimalfit.data.repository.track.TrackRepository
 import eric.bitria.minimalfit.data.repository.track.TrackingLocationRepository
+import eric.bitria.minimalfit.data.repository.gym.DefaultGymRepository
+import eric.bitria.minimalfit.data.repository.gym.GymRepository
 import eric.bitria.minimalfit.data.sensor.ActivitySensor
 import eric.bitria.minimalfit.data.sensor.AndroidActivitySensor
 import eric.bitria.minimalfit.data.sensor.AndroidLocationSensor
@@ -24,6 +26,9 @@ import eric.bitria.minimalfit.ui.viewmodels.food.DailyLogViewModel
 import eric.bitria.minimalfit.ui.viewmodels.food.DietDetailViewModel
 import eric.bitria.minimalfit.ui.viewmodels.food.FoodViewModel
 import eric.bitria.minimalfit.ui.viewmodels.food.MealDetailViewModel
+import eric.bitria.minimalfit.ui.viewmodels.gym.GymHomeViewModel
+import eric.bitria.minimalfit.ui.viewmodels.gym.GymSessionViewModel
+import eric.bitria.minimalfit.ui.viewmodels.gym.ExerciseProgressionViewModel
 import eric.bitria.minimalfit.ui.viewmodels.profile.ProfileViewModel
 import eric.bitria.minimalfit.ui.viewmodels.profile.card.CalorieViewModel
 import eric.bitria.minimalfit.ui.viewmodels.profile.card.GymViewModel
@@ -58,6 +63,7 @@ val dataModule = module {
     single { get<AppDatabase>().ingredientDao() }
     single { get<AppDatabase>().dietDao() }
     single { get<AppDatabase>().mealLogDao() }
+    single { get<AppDatabase>().gymDao() }
 
     singleOf(::DatabaseInitializer)
     
@@ -88,6 +94,9 @@ val dataModule = module {
     }
 
     singleOf(::DefaultTrackRepository) bind TrackRepository::class
+
+    // Gym Repository
+    single<GymRepository> { DefaultGymRepository(gymDao = get()) }
 
     // Sensors
     single { AndroidLocationSensor(androidContext()) } bind LocationSensor::class
@@ -133,6 +142,15 @@ val viewModels = module {
     viewModelOf(::GymViewModel)
     viewModelOf(::CalorieViewModel)
     viewModelOf(::TrackViewModel)
+
+    // Gym
+    viewModelOf(::GymHomeViewModel)
+    viewModel { (sessionId: String?) ->
+        GymSessionViewModel(sessionId = sessionId, repository = get())
+    }
+    viewModel { (exerciseId: String) ->
+        ExerciseProgressionViewModel(exerciseId = exerciseId, repository = get())
+    }
 }
 
 fun initKoin(appDeclaration: KoinAppDeclaration = {}) {

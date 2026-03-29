@@ -12,6 +12,8 @@ import eric.bitria.minimalfit.ui.screens.food.DietDetailScreen
 import eric.bitria.minimalfit.ui.screens.food.FoodScreen
 import eric.bitria.minimalfit.ui.screens.food.MealDetailScreen
 import eric.bitria.minimalfit.ui.screens.gym.GymScreen
+import eric.bitria.minimalfit.ui.screens.gym.GymSessionScreen
+import eric.bitria.minimalfit.ui.screens.gym.ExerciseProgressionScreen
 import eric.bitria.minimalfit.ui.screens.profile.ProfileScreen
 import eric.bitria.minimalfit.ui.screens.profile.SettingsScreen
 import eric.bitria.minimalfit.ui.screens.track.TrackDetailScreen
@@ -59,6 +61,35 @@ fun AppNavHost(
                 }
             )
         }
+        composable<Route.DailyLog> { backStackEntry ->
+            val args = backStackEntry.toRoute<Route.DailyLog>()
+            val date = LocalDate.parse(args.date)
+            DailyLogScreen(
+                date = date,
+                openSearch = args.openSearch,
+                onBackClick = { navController.popBackStack() },
+                onNavigateToMealDetail = { meal ->
+                    navController.navigate(Route.MealDetail(mealId = meal.id))
+                }
+            )
+        }
+        composable<Route.DietDetail> { backStackEntry ->
+            val args = backStackEntry.toRoute<Route.DietDetail>()
+            DietDetailScreen(
+                dietId = args.dietId,
+                onBackClick = { navController.popBackStack() },
+                onNavigateToMealDetail = { meal ->
+                    navController.navigate(Route.MealDetail(mealId = meal.id))
+                }
+            )
+        }
+        composable<Route.MealDetail> { backStackEntry ->
+            val args = backStackEntry.toRoute<Route.MealDetail>()
+            MealDetailScreen(
+                mealId = args.mealId,
+                onBackClick = { navController.popBackStack() }
+            )
+        }
         composable<Route.OutdoorActivities> {
             TrackScreen(
                 onTrackClick = { trackId ->
@@ -76,6 +107,18 @@ fun AppNavHost(
         }
         composable<Route.IndoorActivities> {
             GymScreen(
+                onNavigateToSession = { sessionId ->
+                    navController.navigate(Route.GymSession(sessionId = sessionId))
+                },
+                onNavigateToExerciseProgression = { exerciseId ->
+                    navController.navigate(Route.ExerciseProgression(exerciseId = exerciseId))
+                }
+            )
+        }
+        composable<Route.GymSession> { backStackEntry ->
+            val args = backStackEntry.toRoute<Route.GymSession>()
+            GymSessionScreen(
+                sessionId = args.sessionId,
                 onNavigateBack = { navController.popBackStack() }
             )
         }
@@ -86,32 +129,11 @@ fun AppNavHost(
                 onNavigateBack = { navController.popBackStack() }
             )
         }
-        composable<Route.DailyLog> { backStackEntry ->
-            val dailyLog = backStackEntry.toRoute<Route.DailyLog>()
-            DailyLogScreen(
-                date = LocalDate.parse(dailyLog.date),
-                openSearch = dailyLog.openSearch,
-                onBackClick = { navController.popBackStack() },
-                onNavigateToMealDetail = { meal ->
-                    navController.navigate(Route.MealDetail(mealId = meal.id))
-                }
-            )
-        }
-        composable<Route.DietDetail> { backStackEntry ->
-            val dietDetail = backStackEntry.toRoute<Route.DietDetail>()
-            DietDetailScreen(
-                dietId = dietDetail.dietId,
-                onBackClick = { navController.popBackStack() },
-                onNavigateToMealDetail = { meal ->
-                    navController.navigate(Route.MealDetail(mealId = meal.id))
-                }
-            )
-        }
-        composable<Route.MealDetail> { backStackEntry ->
-            val mealDetail = backStackEntry.toRoute<Route.MealDetail>()
-            MealDetailScreen(
-                mealId = mealDetail.mealId,
-                onBackClick = { navController.popBackStack() }
+        composable<Route.ExerciseProgression> { backStackEntry ->
+            val args = backStackEntry.toRoute<Route.ExerciseProgression>()
+            ExerciseProgressionScreen(
+                exerciseId = args.exerciseId,
+                onNavigateBack = { navController.popBackStack() }
             )
         }
     }

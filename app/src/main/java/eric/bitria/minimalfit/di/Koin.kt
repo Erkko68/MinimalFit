@@ -69,7 +69,9 @@ val dataModule = module {
     single { get<AppDatabase>().ingredientDao() }
     single { get<AppDatabase>().dietDao() }
     single { get<AppDatabase>().mealLogDao() }
-    single { get<AppDatabase>().gymDao() }
+    single { get<AppDatabase>().exerciseDao() }
+    single { get<AppDatabase>().sessionDao() }
+    single { get<AppDatabase>().setDao() }
 
     singleOf(::DatabaseInitializer)
     
@@ -102,9 +104,9 @@ val dataModule = module {
     singleOf(::DefaultTrackRepository) bind TrackRepository::class
 
     // Gym Repositories
-    single<SessionRepository> { DefaultSessionRepository(gymDao = get()) }
-    single<ExerciseRepository> { DefaultExerciseRepository(gymDao = get()) }
-    single<SetRepository> { DefaultSetRepository(gymDao = get()) }
+    single<SessionRepository> { DefaultSessionRepository(sessionDao = get(), setDao = get()) }
+    single<ExerciseRepository> { DefaultExerciseRepository(exerciseDao = get()) }
+    single<SetRepository> { DefaultSetRepository(setDao = get()) }
 
     // Sensors
     single { AndroidLocationSensor(androidContext()) } bind LocationSensor::class

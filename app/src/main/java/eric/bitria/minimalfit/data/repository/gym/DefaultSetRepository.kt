@@ -1,6 +1,6 @@
 package eric.bitria.minimalfit.data.repository.gym
 
-import eric.bitria.minimalfit.data.database.dao.GymDao
+import eric.bitria.minimalfit.data.database.dao.SetDao
 import eric.bitria.minimalfit.data.entity.gym.Session
 import eric.bitria.minimalfit.data.entity.gym.Set
 import eric.bitria.minimalfit.data.entity.gym.relations.SetSessionCrossRef
@@ -9,17 +9,17 @@ import kotlinx.coroutines.flow.first
 import java.util.UUID
 
 class DefaultSetRepository(
-    private val gymDao: GymDao
+    private val setDao: SetDao
 ) : SetRepository {
 
     override fun getSetsForExercise(exerciseId: String): Flow<List<Set>> =
-        gymDao.getSetsForExercise(exerciseId)
+        setDao.getSetsForExercise(exerciseId)
 
     override fun getSetsForSession(sessionId: String): Flow<List<Set>> =
-        gymDao.getSetsForSession(sessionId)
+        setDao.getSetsForSession(sessionId)
 
     override fun getSessionForSet(setId: String): Flow<Session?> =
-        gymDao.getSessionForSet(setId)
+        setDao.getSessionForSet(setId)
 
     override suspend fun addSet(
         sessionId: String,
@@ -30,7 +30,7 @@ class DefaultSetRepository(
         isWarmup: Boolean,
         notes: String
     ) {
-        val sets = gymDao.getSetsForSession(sessionId).first()
+        val sets = setDao.getSetsForSession(sessionId).first()
         val order = (sets.maxOfOrNull { it.orderInSession } ?: 0) + 1
         val set = Set(
             exerciseId = exerciseId,
@@ -41,20 +41,20 @@ class DefaultSetRepository(
             isWarmup = isWarmup,
             notes = notes
         )
-        gymDao.insertSet(set)
-        gymDao.insertSetSessionCrossRef(SetSessionCrossRef(setId = set.id, sessionId = sessionId))
+        setDao.insertSet(set)
+        setDao.insertSetSessionCrossRef(SetSessionCrossRef(setId = set.id, sessionId = sessionId))
     }
 
     override suspend fun updateSet(set: Set) {
-        gymDao.updateSet(set)
+        setDao.updateSet(set)
     }
 
     override suspend fun deleteSet(setId: String) {
-        gymDao.deleteSetAndRelations(setId)
+        setDao.deleteSetAndRelations(setId)
     }
 
     override suspend fun copyPreviousSet(sessionId: String, exerciseId: String): Set? {
-        val sets = gymDao.getSetsForSession(sessionId).first()
+        val sets = setDao.getSetsForSession(sessionId).first()
         val lastSet = sets.lastOrNull { it.exerciseId == exerciseId } ?: return null
         val order = (sets.maxOfOrNull { it.orderInSession } ?: 0) + 1
         val newSet = lastSet.copy(
@@ -62,8 +62,8 @@ class DefaultSetRepository(
             orderInSession = order,
             isCompleted = false
         )
-        gymDao.insertSet(newSet)
-        gymDao.insertSetSessionCrossRef(SetSessionCrossRef(setId = newSet.id, sessionId = sessionId))
+        setDao.insertSet(newSet)
+        setDao.insertSetSessionCrossRef(SetSessionCrossRef(setId = newSet.id, sessionId = sessionId))
         return newSet
     }
 }

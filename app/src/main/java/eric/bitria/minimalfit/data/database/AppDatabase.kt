@@ -6,10 +6,12 @@ import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import eric.bitria.minimalfit.data.database.dao.DietDao
-import eric.bitria.minimalfit.data.database.dao.GymDao
+import eric.bitria.minimalfit.data.database.dao.ExerciseDao
 import eric.bitria.minimalfit.data.database.dao.IngredientDao
 import eric.bitria.minimalfit.data.database.dao.MealDao
 import eric.bitria.minimalfit.data.database.dao.MealLogDao
+import eric.bitria.minimalfit.data.database.dao.SessionDao
+import eric.bitria.minimalfit.data.database.dao.SetDao
 import eric.bitria.minimalfit.data.database.dao.TrackDao
 import eric.bitria.minimalfit.data.entity.food.Diet
 import eric.bitria.minimalfit.data.entity.food.Ingredient
@@ -48,7 +50,9 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun mealDao(): MealDao
     abstract fun dietDao(): DietDao
     abstract fun mealLogDao(): MealLogDao
-    abstract fun gymDao(): GymDao
+    abstract fun exerciseDao(): ExerciseDao
+    abstract fun sessionDao(): SessionDao
+    abstract fun setDao(): SetDao
 
     companion object {
         val MIGRATION_2_3: Migration = object : Migration(2, 3) {

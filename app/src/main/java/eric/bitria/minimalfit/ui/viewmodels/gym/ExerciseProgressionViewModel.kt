@@ -2,8 +2,8 @@ package eric.bitria.minimalfit.ui.viewmodels.gym
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import eric.bitria.minimalfit.data.entity.gym.GymExerciseEntity
-import eric.bitria.minimalfit.data.entity.gym.GymSetEntity
+import eric.bitria.minimalfit.data.entity.gym.Exercise
+import eric.bitria.minimalfit.data.entity.gym.Set
 import eric.bitria.minimalfit.data.entity.gym.GymSetWithSession
 import eric.bitria.minimalfit.data.repository.gym.GymRepository
 import kotlinx.coroutines.flow.SharingStarted
@@ -15,10 +15,10 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 
 data class ExerciseProgressionUiState(
-    val exercise: GymExerciseEntity? = null,
+    val exercise: Exercise? = null,
     val dates: List<String> = emptyList(),
     val maxWeights: List<Float> = emptyList(),
-    val setsHistory: List<GymSetEntity> = emptyList(),
+    val setsHistory: List<Set> = emptyList(),
     val groupedHistory: Map<String, List<GymSetWithSession>> = emptyMap()
 )
 

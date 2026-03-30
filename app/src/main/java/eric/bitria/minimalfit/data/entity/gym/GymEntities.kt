@@ -7,8 +7,8 @@ import androidx.room.Relation
 import kotlin.time.Instant
 import java.util.UUID
 
-@Entity(tableName = "gym_exercises")
-data class GymExerciseEntity(
+@Entity(tableName = "exercises")
+data class Exercise(
     @PrimaryKey
     val id: String = UUID.randomUUID().toString(),
     val name: String,
@@ -16,18 +16,18 @@ data class GymExerciseEntity(
     val muscleGroup: String? = null,
 )
 
-@Entity(tableName = "gym_sessions")
-data class GymSessionEntity(
+@Entity(tableName = "sessions")
+data class Session(
     @PrimaryKey
     val id: String = UUID.randomUUID().toString(),
     val startTime: Instant,
     val endTime: Instant? = null,
-    val status: GymSessionStatus = GymSessionStatus.ACTIVE,
+    val status: SessionStatus = SessionStatus.ACTIVE,
     val notes: String = ""
 )
 
-@Entity(tableName = "gym_sets")
-data class GymSetEntity(
+@Entity(tableName = "sets")
+data class Set(
     @PrimaryKey
     val id: String = UUID.randomUUID().toString(),
     val sessionId: String,
@@ -41,7 +41,7 @@ data class GymSetEntity(
     val notes: String = ""
 )
 
-enum class GymSessionStatus {
+enum class SessionStatus {
     ACTIVE,
     PAUSED,
     COMPLETED,
@@ -51,19 +51,19 @@ enum class GymSessionStatus {
 // Relations
 
 data class GymSessionWithSets(
-    @Embedded val session: GymSessionEntity,
+    @Embedded val session: Session,
     @Relation(
         parentColumn = "id",
         entityColumn = "sessionId"
     )
-    val sets: List<GymSetEntity>
+    val sets: List<Set>
 )
 
 data class GymSetWithSession(
-    @Embedded val set: GymSetEntity,
+    @Embedded val set: Set,
     @Relation(
         parentColumn = "sessionId",
         entityColumn = "id"
     )
-    val session: GymSessionEntity?
+    val session: Session?
 )

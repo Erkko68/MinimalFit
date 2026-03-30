@@ -16,9 +16,9 @@ import eric.bitria.minimalfit.data.entity.food.MealLog
 import eric.bitria.minimalfit.data.entity.food.relations.DietMealCrossRef
 import eric.bitria.minimalfit.data.entity.food.relations.MealIngredientCrossRef
 import eric.bitria.minimalfit.data.entity.food.relations.MealLogMealCrossRef
-import eric.bitria.minimalfit.data.entity.gym.GymExerciseEntity
-import eric.bitria.minimalfit.data.entity.gym.GymSessionEntity
-import eric.bitria.minimalfit.data.entity.gym.GymSetEntity
+import eric.bitria.minimalfit.data.entity.gym.Exercise
+import eric.bitria.minimalfit.data.entity.gym.Session
+import eric.bitria.minimalfit.data.entity.gym.Set
 import eric.bitria.minimalfit.data.entity.track.Track
 
 @Database(
@@ -31,9 +31,9 @@ import eric.bitria.minimalfit.data.entity.track.Track
         MealIngredientCrossRef::class,
         DietMealCrossRef::class,
         MealLogMealCrossRef::class,
-        GymExerciseEntity::class,
-        GymSessionEntity::class,
-        GymSetEntity::class
+        Exercise::class,
+        Session::class,
+        Set::class
     ],
     version = 2
 )

@@ -2,10 +2,10 @@ package eric.bitria.minimalfit.ui.viewmodels.gym
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import eric.bitria.minimalfit.data.entity.gym.GymExerciseEntity
-import eric.bitria.minimalfit.data.entity.gym.GymSessionStatus
+import eric.bitria.minimalfit.data.entity.gym.Exercise
+import eric.bitria.minimalfit.data.entity.gym.SessionStatus
 import eric.bitria.minimalfit.data.entity.gym.GymSessionWithSets
-import eric.bitria.minimalfit.data.entity.gym.GymSetEntity
+import eric.bitria.minimalfit.data.entity.gym.Set
 import eric.bitria.minimalfit.data.repository.gym.GymRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,8 +19,8 @@ import kotlinx.coroutines.launch
 import kotlin.time.Clock
 
 data class GymExerciseUi(
-    val exercise: GymExerciseEntity,
-    val sets: List<GymSetEntity>
+    val exercise: Exercise,
+    val sets: List<Set>
 )
 
 data class GymSessionUiState(
@@ -38,7 +38,7 @@ class GymSessionViewModel(
     private val _timerText = MutableStateFlow("00:00")
     val timerText: StateFlow<String> = _timerText.asStateFlow()
 
-    val catalogExercises: StateFlow<List<GymExerciseEntity>> = repository.getExercises()
+    val catalogExercises: StateFlow<List<Exercise>> = repository.getExercises()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
@@ -87,10 +87,10 @@ class GymSessionViewModel(
                 if (sessionOpt != null) {
                     val sessionEntity = sessionOpt.session
                     val duration = when (sessionEntity.status) {
-                        GymSessionStatus.ACTIVE -> {
+                        SessionStatus.ACTIVE -> {
                             Clock.System.now() - sessionEntity.startTime
                         }
-                        GymSessionStatus.COMPLETED -> {
+                        SessionStatus.COMPLETED -> {
                             sessionEntity.endTime?.let { it - sessionEntity.startTime }
                         }
                         else -> {
@@ -148,7 +148,7 @@ class GymSessionViewModel(
         }
     }
 
-    fun updateSet(set: GymSetEntity) {
+    fun updateSet(set: Set) {
         viewModelScope.launch {
             repository.updateSet(set)
             refreshTrigger.value++

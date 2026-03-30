@@ -6,11 +6,11 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
-import eric.bitria.minimalfit.data.entity.gym.GymExerciseEntity
-import eric.bitria.minimalfit.data.entity.gym.GymSessionEntity
-import eric.bitria.minimalfit.data.entity.gym.GymSessionStatus
+import eric.bitria.minimalfit.data.entity.gym.Exercise
+import eric.bitria.minimalfit.data.entity.gym.Session
+import eric.bitria.minimalfit.data.entity.gym.SessionStatus
 import eric.bitria.minimalfit.data.entity.gym.GymSessionWithSets
-import eric.bitria.minimalfit.data.entity.gym.GymSetEntity
+import eric.bitria.minimalfit.data.entity.gym.Set
 import eric.bitria.minimalfit.data.entity.gym.GymSetWithSession
 import kotlinx.coroutines.flow.Flow
 
@@ -18,55 +18,55 @@ import kotlinx.coroutines.flow.Flow
 interface GymDao {
 
     // Exercises catalog
-    @Query("SELECT * FROM gym_exercises ORDER BY name ASC")
-    fun getExercises(): Flow<List<GymExerciseEntity>>
+    @Query("SELECT * FROM exercises ORDER BY name ASC")
+    fun getExercises(): Flow<List<Exercise>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertExercise(exercise: GymExerciseEntity)
+    suspend fun insertExercise(exercise: Exercise)
 
-    @Query("DELETE FROM gym_exercises WHERE id = :exerciseId")
+    @Query("DELETE FROM exercises WHERE id = :exerciseId")
     suspend fun deleteExercise(exerciseId: String)
 
     // Sessions
-    @Query("SELECT * FROM gym_sessions ORDER BY startTime DESC LIMIT :limit")
-    fun getRecentSessions(limit: Int): Flow<List<GymSessionEntity>>
+    @Query("SELECT * FROM sessions ORDER BY startTime DESC LIMIT :limit")
+    fun getRecentSessions(limit: Int): Flow<List<Session>>
 
-    @Query("SELECT * FROM gym_sessions WHERE id = :id")
-    fun getSession(id: String): Flow<GymSessionEntity?>
+    @Query("SELECT * FROM sessions WHERE id = :id")
+    fun getSession(id: String): Flow<Session?>
 
-    @Query("SELECT * FROM gym_sessions WHERE status IN (:activeStatuses) ORDER BY startTime DESC LIMIT 1")
-    fun getActiveSession(activeStatuses: List<GymSessionStatus> = listOf(GymSessionStatus.ACTIVE, GymSessionStatus.PAUSED)): Flow<GymSessionEntity?>
+    @Query("SELECT * FROM sessions WHERE status IN (:activeStatuses) ORDER BY startTime DESC LIMIT 1")
+    fun getActiveSession(activeStatuses: List<SessionStatus> = listOf(SessionStatus.ACTIVE, SessionStatus.PAUSED)): Flow<Session?>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertSession(session: GymSessionEntity)
+    suspend fun insertSession(session: Session)
 
     @Update
-    suspend fun updateSession(session: GymSessionEntity)
+    suspend fun updateSession(session: Session)
 
     // Sets
     @Transaction
-    @Query("SELECT * FROM gym_sets WHERE exerciseId = :exerciseId")
+    @Query("SELECT * FROM sets WHERE exerciseId = :exerciseId")
     fun getSetsWithSessionForExercise(exerciseId: String): Flow<List<GymSetWithSession>>
 
-    @Query("SELECT gym_sets.* FROM gym_sets INNER JOIN gym_sessions ON gym_sets.sessionId = gym_sessions.id WHERE gym_sets.exerciseId = :exerciseId ORDER BY gym_sessions.startTime ASC")
-    fun getSetsForExercise(exerciseId: String): Flow<List<GymSetEntity>>
+    @Query("SELECT sets.* FROM sets INNER JOIN sessions ON sets.sessionId = sessions.id WHERE sets.exerciseId = :exerciseId ORDER BY sessions.startTime ASC")
+    fun getSetsForExercise(exerciseId: String): Flow<List<Set>>
 
-    @Query("SELECT * FROM gym_sets WHERE sessionId = :sessionId ORDER BY orderInSession ASC")
-    fun getSetsForSession(sessionId: String): Flow<List<GymSetEntity>>
+    @Query("SELECT * FROM sets WHERE sessionId = :sessionId ORDER BY orderInSession ASC")
+    fun getSetsForSession(sessionId: String): Flow<List<Set>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertSet(set: GymSetEntity)
+    suspend fun insertSet(set: Set)
 
     @Update
-    suspend fun updateSet(set: GymSetEntity)
+    suspend fun updateSet(set: Set)
 
-    @Query("DELETE FROM gym_sets WHERE id = :setId")
+    @Query("DELETE FROM sets WHERE id = :setId")
     suspend fun deleteSet(setId: String)
 
-    @Query("DELETE FROM gym_sets WHERE sessionId = :sessionId")
+    @Query("DELETE FROM sets WHERE sessionId = :sessionId")
     suspend fun deleteSetsForSession(sessionId: String)
 
-    @Query("DELETE FROM gym_sessions WHERE id = :sessionId")
+    @Query("DELETE FROM sessions WHERE id = :sessionId")
     suspend fun deleteSession(sessionId: String)
 
     @Transaction
@@ -76,10 +76,10 @@ interface GymDao {
     }
 
     @Transaction
-    @Query("SELECT * FROM gym_sessions WHERE id = :sessionId")
+    @Query("SELECT * FROM sessions WHERE id = :sessionId")
     fun getSessionWithSets(sessionId: String): Flow<GymSessionWithSets?>
 
     @Transaction
-    @Query("SELECT * FROM gym_sessions ORDER BY startTime DESC LIMIT :limit")
+    @Query("SELECT * FROM sessions ORDER BY startTime DESC LIMIT :limit")
     fun getRecentSessionsWithSets(limit: Int): Flow<List<GymSessionWithSets>>
 }

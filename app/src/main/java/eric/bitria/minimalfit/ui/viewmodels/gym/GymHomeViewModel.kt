@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import eric.bitria.minimalfit.data.entity.gym.GymExerciseEntity
+import eric.bitria.minimalfit.data.entity.gym.Exercise
 import eric.bitria.minimalfit.util.shortMonthDay
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -39,7 +39,7 @@ class GymHomeViewModel(
             initialValue = emptyList()
         )
 
-    val exercises: StateFlow<List<GymExerciseEntity>> = repository
+    val exercises: StateFlow<List<Exercise>> = repository
         .getExercises()
         .stateIn(
             scope = viewModelScope,

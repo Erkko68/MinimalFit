@@ -8,8 +8,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.LazyColumn
@@ -18,7 +16,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -26,12 +23,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -42,9 +37,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import eric.bitria.minimalfit.data.entity.gym.GymSessionStatus
+import eric.bitria.minimalfit.data.entity.gym.SessionStatus
 import eric.bitria.minimalfit.navigation.ScreenConfiguration
-import eric.bitria.minimalfit.ui.components.animations.SwipeToDeleteCard
 import eric.bitria.minimalfit.ui.components.food.dialogs.SearchableItemDialog
 import eric.bitria.minimalfit.ui.theme.Spacing
 import eric.bitria.minimalfit.ui.viewmodels.gym.GymSessionViewModel
@@ -135,7 +129,7 @@ fun GymSessionScreen(
         }
     }
 
-    androidx.activity.compose.BackHandler(enabled = uiState.session?.session?.status == GymSessionStatus.ACTIVE) {
+    androidx.activity.compose.BackHandler(enabled = uiState.session?.session?.status == SessionStatus.ACTIVE) {
         showFinishDialog = true
     }
 
@@ -161,7 +155,7 @@ fun GymSessionScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = {
-                        if (uiState.session?.session?.status == GymSessionStatus.ACTIVE) {
+                        if (uiState.session?.session?.status == SessionStatus.ACTIVE) {
                             showFinishDialog = true
                         } else {
                             onNavigateBack()
@@ -171,7 +165,7 @@ fun GymSessionScreen(
                     }
                 },
                 actions = {
-                    if (uiState.session?.session?.status == GymSessionStatus.ACTIVE) {
+                    if (uiState.session?.session?.status == SessionStatus.ACTIVE) {
                         IconButton(onClick = {
                             showFinishDialog = true
                         }) {
@@ -192,7 +186,7 @@ fun GymSessionScreen(
             .padding(Spacing.m),
         verticalArrangement = Arrangement.spacedBy(Spacing.m)
     ) {
-        val isActive = uiState.session?.session?.status == GymSessionStatus.ACTIVE
+        val isActive = uiState.session?.session?.status == SessionStatus.ACTIVE
 
         // Lista de ejercicios y sets
         LazyColumn(

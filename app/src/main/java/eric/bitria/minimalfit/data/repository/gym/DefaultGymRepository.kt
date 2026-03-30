@@ -1,11 +1,11 @@
 package eric.bitria.minimalfit.data.repository.gym
 
 import eric.bitria.minimalfit.data.database.dao.GymDao
-import eric.bitria.minimalfit.data.entity.gym.GymExerciseEntity
-import eric.bitria.minimalfit.data.entity.gym.GymSessionEntity
-import eric.bitria.minimalfit.data.entity.gym.GymSessionStatus
+import eric.bitria.minimalfit.data.entity.gym.Exercise
+import eric.bitria.minimalfit.data.entity.gym.Session
+import eric.bitria.minimalfit.data.entity.gym.SessionStatus
 import eric.bitria.minimalfit.data.entity.gym.GymSessionWithSets
-import eric.bitria.minimalfit.data.entity.gym.GymSetEntity
+import eric.bitria.minimalfit.data.entity.gym.Set
 import eric.bitria.minimalfit.data.entity.gym.GymSetWithSession
 import eric.bitria.minimalfit.util.nowInstant
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -18,7 +18,7 @@ class DefaultGymRepository(
     private val gymDao: GymDao
 ) : GymRepository {
 
-    override fun getRecentSessions(limit: Int): Flow<List<GymSessionEntity>> =
+    override fun getRecentSessions(limit: Int): Flow<List<Session>> =
         gymDao.getRecentSessions(limit)
         
     override fun getRecentSessionsWithSets(limit: Int): Flow<List<GymSessionWithSets>> =
@@ -35,9 +35,9 @@ class DefaultGymRepository(
         }
 
     override suspend fun startSession(): String {
-        val session = GymSessionEntity(
+        val session = Session(
             startTime = nowInstant(),
-            status = GymSessionStatus.ACTIVE
+            status = SessionStatus.ACTIVE
         )
         gymDao.insertSession(session)
         return session.id
@@ -45,23 +45,23 @@ class DefaultGymRepository(
 
     override suspend fun pauseSession() {
         val active = gymDao.getActiveSession().first() ?: return
-        gymDao.updateSession(active.copy(status = GymSessionStatus.PAUSED))
+        gymDao.updateSession(active.copy(status = SessionStatus.PAUSED))
     }
 
     override suspend fun resumeSession() {
         val active = gymDao.getActiveSession().first() ?: return
-        gymDao.updateSession(active.copy(status = GymSessionStatus.ACTIVE))
+        gymDao.updateSession(active.copy(status = SessionStatus.ACTIVE))
     }
 
     override suspend fun finishSession() {
         val active = gymDao.getActiveSession().first() ?: return
-        gymDao.updateSession(active.copy(status = GymSessionStatus.COMPLETED, endTime = nowInstant()))
+        gymDao.updateSession(active.copy(status = SessionStatus.COMPLETED, endTime = nowInstant()))
     }
 
-    override fun getExercises(): Flow<List<GymExerciseEntity>> =
+    override fun getExercises(): Flow<List<Exercise>> =
         gymDao.getExercises()
 
-    override fun getSetsForExercise(exerciseId: String): Flow<List<GymSetEntity>> {
+    override fun getSetsForExercise(exerciseId: String): Flow<List<Set>> {
         return gymDao.getSetsForExercise(exerciseId)
     }
 
@@ -69,8 +69,8 @@ class DefaultGymRepository(
         return gymDao.getSetsWithSessionForExercise(exerciseId)
     }
 
-    override suspend fun addExercise(name: String): GymExerciseEntity {
-        val exercise = GymExerciseEntity(name = name)
+    override suspend fun addExercise(name: String): Exercise {
+        val exercise = Exercise(name = name)
         gymDao.insertExercise(exercise)
         return exercise
     }
@@ -90,7 +90,7 @@ class DefaultGymRepository(
     ) {
         val sets = gymDao.getSetsForSession(sessionId).first()
         val order = (sets.maxOfOrNull { it.orderInSession } ?: 0) + 1
-        val set = GymSetEntity(
+        val set = Set(
             sessionId = sessionId,
             exerciseId = exerciseId,
             orderInSession = order,
@@ -103,7 +103,7 @@ class DefaultGymRepository(
         gymDao.insertSet(set)
     }
 
-    override suspend fun updateSet(set: GymSetEntity) {
+    override suspend fun updateSet(set: Set) {
         gymDao.updateSet(set)
     }
 
@@ -115,7 +115,7 @@ class DefaultGymRepository(
         gymDao.deleteSessionAndSets(sessionId)
     }
 
-    override suspend fun copyPreviousSet(sessionId: String, exerciseId: String): GymSetEntity? {
+    override suspend fun copyPreviousSet(sessionId: String, exerciseId: String): Set? {
         val sets = gymDao.getSetsForSession(sessionId).first()
         val lastSet = sets.lastOrNull { it.exerciseId == exerciseId } ?: return null
         val order = (sets.maxOfOrNull { it.orderInSession } ?: 0) + 1

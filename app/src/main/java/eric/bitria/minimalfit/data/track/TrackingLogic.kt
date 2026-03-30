@@ -4,7 +4,6 @@ import eric.bitria.minimalfit.data.entity.track.Track
 import eric.bitria.minimalfit.data.entity.track.TrackPoint
 import eric.bitria.minimalfit.data.repository.track.LocationRepository
 import eric.bitria.minimalfit.data.repository.track.TrackRepository
-import eric.bitria.minimalfit.util.currentDateAndTime
 import eric.bitria.minimalfit.util.nowInstant
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -25,6 +24,7 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Instant
 
 /**
  * Shared tracking logic. This will eventually move to commonMain in KMP.
@@ -53,10 +53,14 @@ class TrackingLogic(
     private var timerJob: Job? = null
     private var locationCollectJob: Job? = null
     private var elapsedSeconds = 0L
+    private var startTime: Instant? = null
 
     fun start() {
         if (_recordingState.value == RecordingState.RECORDING) return
         
+        if (startTime == null) {
+            startTime = nowInstant()
+        }
         locationRepository.startTracking()
         _recordingState.value = RecordingState.RECORDING
         startTimer()
@@ -91,6 +95,7 @@ class TrackingLogic(
         _duration.value = Duration.ZERO
         _pace.value = "--:--"
         elapsedSeconds = 0L
+        startTime = null
     }
 
     private fun startTimer() {
@@ -128,15 +133,15 @@ class TrackingLogic(
     }
 
     private fun saveTrack() {
-        val (now, time) = currentDateAndTime()
+        val endTime = nowInstant()
+        val currentStartTime = startTime ?: endTime
         val id = UUID.randomUUID().toString()
         val track = Track(
             id = id,
-            date = now,
-            time = time,
-            name = "Run on $now",
+            startTime = currentStartTime,
+            endTime = endTime,
+            name = "Run",
             distance = _distanceKm.value,
-            duration = _duration.value,
             pace = _pace.value,
             routePoints = _routePoints.value
         )

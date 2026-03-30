@@ -43,6 +43,8 @@ import eric.bitria.minimalfit.ui.theme.Spacing
 import eric.bitria.minimalfit.ui.viewmodels.track.TrackDetailViewModel
 import eric.bitria.minimalfit.util.hourMinute
 import eric.bitria.minimalfit.util.weekdayMonthDay
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 import org.maplibre.compose.camera.rememberCameraState
@@ -65,6 +67,9 @@ fun TrackDetailScreen(
     )
 
     if (track != null) {
+        val startDateTime = track.startTime.toLocalDateTime(TimeZone.currentSystemDefault())
+        val duration = track.endTime - track.startTime
+
         LaunchedEffect(track.routePoints) {
             cameraState.fitRoute(track.routePoints)
         }
@@ -129,7 +134,7 @@ fun TrackDetailScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                val dateTime = "${track.date.weekdayMonthDay()} • ${track.time.hourMinute()}"
+                val dateTime = "${startDateTime.date.weekdayMonthDay()} • ${startDateTime.time.hourMinute()}"
 
                 Text(
                     text = dateTime,
@@ -175,7 +180,7 @@ fun TrackDetailScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f)
                         )
 
-                        ExpressiveStat(label = "Duration", value = track.duration.toString(), unit = "")
+                        ExpressiveStat(label = "Duration", value = duration.toString(), unit = "")
 
                         VerticalDivider(
                             modifier = Modifier.height(Spacing.xxl), // Uses 48.dp

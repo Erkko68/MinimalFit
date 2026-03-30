@@ -2,7 +2,9 @@ package eric.bitria.minimalfit.data.entity.food
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import eric.bitria.minimalfit.util.nowInstant
 import kotlinx.serialization.Serializable
+import kotlin.time.Instant
 import java.util.UUID
 
 /**
@@ -13,5 +15,5 @@ import java.util.UUID
 data class MealLog(
     @PrimaryKey
     val id: String = UUID.randomUUID().toString(),
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Instant = nowInstant()
 )

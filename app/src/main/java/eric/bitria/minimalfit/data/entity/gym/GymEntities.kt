@@ -4,8 +4,7 @@ import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.Relation
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.LocalTime
+import kotlin.time.Instant
 import java.util.UUID
 
 @Entity(tableName = "gym_exercises")
@@ -21,9 +20,8 @@ data class GymExerciseEntity(
 data class GymSessionEntity(
     @PrimaryKey
     val id: String = UUID.randomUUID().toString(),
-    val date: LocalDate,
-    val startTime: LocalTime,
-    val endTime: LocalTime? = null,
+    val startTime: Instant,
+    val endTime: Instant? = null,
     val status: GymSessionStatus = GymSessionStatus.ACTIVE,
     val notes: String = ""
 )

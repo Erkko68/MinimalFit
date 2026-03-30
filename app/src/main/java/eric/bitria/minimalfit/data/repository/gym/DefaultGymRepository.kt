@@ -7,14 +7,12 @@ import eric.bitria.minimalfit.data.entity.gym.GymSessionStatus
 import eric.bitria.minimalfit.data.entity.gym.GymSessionWithSets
 import eric.bitria.minimalfit.data.entity.gym.GymSetEntity
 import eric.bitria.minimalfit.data.entity.gym.GymSetWithSession
+import eric.bitria.minimalfit.util.nowInstant
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.LocalTime
-import java.time.LocalDateTime
 
 class DefaultGymRepository(
     private val gymDao: GymDao
@@ -37,12 +35,8 @@ class DefaultGymRepository(
         }
 
     override suspend fun startSession(): String {
-        val now = LocalDateTime.now()
-        val date = LocalDate(now.year, now.monthValue, now.dayOfMonth)
-        val time = LocalTime(now.hour, now.minute, now.second)
         val session = GymSessionEntity(
-            date = date,
-            startTime = time,
+            startTime = nowInstant(),
             status = GymSessionStatus.ACTIVE
         )
         gymDao.insertSession(session)
@@ -61,9 +55,7 @@ class DefaultGymRepository(
 
     override suspend fun finishSession() {
         val active = gymDao.getActiveSession().first() ?: return
-        val now = LocalDateTime.now()
-        val endTime = LocalTime(now.hour, now.minute, now.second)
-        gymDao.updateSession(active.copy(status = GymSessionStatus.COMPLETED, endTime = endTime))
+        gymDao.updateSession(active.copy(status = GymSessionStatus.COMPLETED, endTime = nowInstant()))
     }
 
     override fun getExercises(): Flow<List<GymExerciseEntity>> =

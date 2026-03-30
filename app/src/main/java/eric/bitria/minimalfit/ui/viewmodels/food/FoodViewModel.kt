@@ -7,10 +7,10 @@ import eric.bitria.minimalfit.data.entity.food.Meal
 import eric.bitria.minimalfit.data.repository.food.DietRepository
 import eric.bitria.minimalfit.data.repository.food.FoodCatalogRepository
 import eric.bitria.minimalfit.data.repository.food.JournalRepository
-import eric.bitria.minimalfit.util.endOfDayEpoch
+import eric.bitria.minimalfit.util.endOfDayInstant
 import eric.bitria.minimalfit.util.last7DaysEndingToday
 import eric.bitria.minimalfit.util.shortWeekdayLabel
-import eric.bitria.minimalfit.util.startOfDayEpoch
+import eric.bitria.minimalfit.util.startOfDayInstant
 import kotlinx.datetime.LocalDate
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -57,8 +57,8 @@ class FoodViewModel(
         val days = last7DaysEndingToday()
         
         val weeklyProgressFlow = combine(days.map { date ->
-            val start = date.startOfDayEpoch()
-            val end = date.endOfDayEpoch()
+            val start = date.startOfDayInstant()
+            val end = date.endOfDayInstant()
             journal.getMealLogsInRange(start, end).flatMapLatest { logs ->
                 if (logs.isEmpty()) flowOf(0)
                 else combine(logs.map { journal.getLogCalories(it.id) }) { calories ->

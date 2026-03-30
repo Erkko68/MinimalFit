@@ -2,7 +2,6 @@ package eric.bitria.minimalfit.ui.viewmodels.gym
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import eric.bitria.minimalfit.data.entity.gym.GymSessionEntity
 import eric.bitria.minimalfit.data.entity.gym.GymSessionWithSets
 import eric.bitria.minimalfit.data.repository.gym.GymRepository
 import kotlinx.coroutines.flow.SharingStarted
@@ -10,9 +9,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import java.time.LocalDateTime
-import java.time.Duration
 import eric.bitria.minimalfit.data.entity.gym.GymExerciseEntity
+import eric.bitria.minimalfit.util.shortMonthDay
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 data class GymSessionSummaryUi(
     val id: String,
@@ -68,7 +68,8 @@ class GymHomeViewModel(
 
     private fun GymSessionWithSets.toSummary(): GymSessionSummaryUi {
         val title = "Workout"
-        val subtitle = "${session.date.dayOfWeek.name.lowercase().replaceFirstChar { it.uppercase() }}, ${session.date.day} ${session.date.month.name.lowercase().replaceFirstChar { it.uppercase() }}"
+        val startDateTime = session.startTime.toLocalDateTime(TimeZone.currentSystemDefault())
+        val subtitle = "${startDateTime.date.dayOfWeek.name.lowercase().replaceFirstChar { it.uppercase() }}, ${startDateTime.date.shortMonthDay()}"
         
         val exercisesCount = sets.map { it.exerciseId }.distinct().size
         val completedSets = sets.filter { it.isCompleted }
@@ -77,11 +78,9 @@ class GymHomeViewModel(
         
         var durationText = "--"
         if (session.endTime != null) {
-            val start = LocalDateTime.of(session.date.year, session.date.monthNumber, session.date.dayOfMonth, session.startTime.hour, session.startTime.minute, session.startTime.second)
-            val end = LocalDateTime.of(session.date.year, session.date.monthNumber, session.date.dayOfMonth, session.endTime.hour, session.endTime.minute, session.endTime.second)
-            val duration = Duration.between(start, end)
-            val totalMinutes = duration.toMinutes()
-            val secs = duration.toSecondsPart()
+            val duration = session.endTime - session.startTime
+            val totalMinutes = duration.inWholeMinutes
+            val secs = duration.inWholeSeconds % 60
             durationText = String.format("%02d:%02d", totalMinutes, secs)
         }
 

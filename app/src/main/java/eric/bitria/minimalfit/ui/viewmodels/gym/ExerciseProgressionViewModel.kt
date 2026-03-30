@@ -11,6 +11,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 data class ExerciseProgressionUiState(
     val exercise: GymExerciseEntity? = null,
@@ -33,13 +35,27 @@ class ExerciseProgressionViewModel(
         val validSets = setsWithSession.filter { it.session != null }
         val completedSets = validSets.filter { it.set.isCompleted || it.set.weight > 0 }
         
-        // Group sets by date directly
+        val timeZone = TimeZone.currentSystemDefault()
+        
+        // Group sets by date for history (descending)
         val grouped = completedSets
-            .sortedByDescending { it.session!!.date }
-            .groupBy { it.session!!.date.toString() }
+            .sortedByDescending { it.session!!.startTime }
+            .groupBy { it.session!!.startTime.toLocalDateTime(timeZone).date.toString() }
+        
+        // Calculate progression data (chronological)
+        val chronologicalGroups = completedSets
+            .groupBy { it.session!!.startTime.toLocalDateTime(timeZone).date }
+            .toSortedMap()
+            
+        val dates = chronologicalGroups.keys.map { it.toString() }
+        val maxWeights = chronologicalGroups.values.map { sets ->
+            sets.maxOfOrNull { it.set.weight } ?: 0f
+        }
         
         ExerciseProgressionUiState(
             exercise = exercise,
+            dates = dates,
+            maxWeights = maxWeights,
             setsHistory = completedSets.map { it.set },
             groupedHistory = grouped
         )

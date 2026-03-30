@@ -6,6 +6,7 @@ import eric.bitria.minimalfit.data.entity.food.Meal
 import eric.bitria.minimalfit.data.entity.food.MealLog
 import eric.bitria.minimalfit.data.repository.food.FoodCatalogRepository
 import eric.bitria.minimalfit.data.repository.food.JournalRepository
+import eric.bitria.minimalfit.util.nowInstant
 import eric.bitria.minimalfit.util.today
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -60,9 +61,8 @@ class DailyLogViewModel(
         showDialog to query
     }.flatMapLatest { (showDialog, query) ->
         val timeZone = TimeZone.currentSystemDefault()
-        val startOfDay = date.atStartOfDayIn(timeZone).toEpochMilliseconds()
-        val endOfDay = date.atTime(23, 59, 59, 999_999_999)
-            .toInstant(timeZone).toEpochMilliseconds()
+        val startOfDay = date.atStartOfDayIn(timeZone)
+        val endOfDay = date.atTime(23, 59, 59, 999_999_999).toInstant(timeZone)
 
         journal.getMealLogsInRange(startOfDay, endOfDay).flatMapLatest { logs ->
             if (logs.isEmpty()) {
@@ -122,9 +122,9 @@ class DailyLogViewModel(
     fun addMeal(mealId: String, amount: Float, portionMode: MealPortionMode = MealPortionMode.WEIGHT) {
         viewModelScope.launch {
             val timestamp = if (date == today()) {
-                System.currentTimeMillis()
+                nowInstant()
             } else {
-                date.atTime(12, 0).toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds()
+                date.atTime(12, 0).toInstant(TimeZone.currentSystemDefault())
             }
 
             val normalizedAmount = when (portionMode) {

@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlin.time.Instant
 
 class DefaultJournalRepository(
     private val mealLogDao: MealLogDao,
@@ -18,7 +19,7 @@ class DefaultJournalRepository(
     private val foodCatalog: FoodCatalogRepository
 ) : JournalRepository {
 
-    override fun getMealLogsInRange(start: Long, end: Long): Flow<List<MealLog>> =
+    override fun getMealLogsInRange(start: Instant, end: Instant): Flow<List<MealLog>> =
         mealLogDao.getMealLogsInRange(start, end)
 
     override suspend fun addMealLog(mealLog: MealLog) {

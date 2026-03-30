@@ -7,18 +7,18 @@ import androidx.room.Query
 import androidx.room.Update
 import eric.bitria.minimalfit.data.entity.track.Track
 import kotlinx.coroutines.flow.Flow
-import kotlinx.datetime.LocalDate
+import kotlin.time.Instant
 
 @Dao
 interface TrackDao {
-    @Query("SELECT * FROM tracks ORDER BY date DESC, time DESC LIMIT :limit")
+    @Query("SELECT * FROM tracks ORDER BY startTime DESC LIMIT :limit")
     fun getTracks(limit: Int): Flow<List<Track>>
 
-    @Query("SELECT * FROM tracks WHERE name LIKE '%' || :query || '%' ORDER BY date DESC, time DESC LIMIT :limit")
+    @Query("SELECT * FROM tracks WHERE name LIKE '%' || :query || '%' ORDER BY startTime DESC LIMIT :limit")
     fun getTracks(query: String, limit: Int): Flow<List<Track>>
 
-    @Query("SELECT * FROM tracks WHERE date BETWEEN :start AND :end ORDER BY date DESC, time DESC")
-    fun getTracks(start: LocalDate, end: LocalDate): Flow<List<Track>>
+    @Query("SELECT * FROM tracks WHERE startTime >= :start AND startTime <= :end ORDER BY startTime DESC")
+    fun getTracks(start: Instant, end: Instant): Flow<List<Track>>
 
     @Query("SELECT * FROM tracks WHERE id = :id")
     fun getTrack(id: String): Flow<Track?>

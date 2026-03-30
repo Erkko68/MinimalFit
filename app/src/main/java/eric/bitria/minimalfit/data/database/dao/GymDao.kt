@@ -28,13 +28,13 @@ interface GymDao {
     suspend fun deleteExercise(exerciseId: String)
 
     // Sessions
-    @Query("SELECT * FROM gym_sessions ORDER BY date DESC, startTime DESC LIMIT :limit")
+    @Query("SELECT * FROM gym_sessions ORDER BY startTime DESC LIMIT :limit")
     fun getRecentSessions(limit: Int): Flow<List<GymSessionEntity>>
 
     @Query("SELECT * FROM gym_sessions WHERE id = :id")
     fun getSession(id: String): Flow<GymSessionEntity?>
 
-    @Query("SELECT * FROM gym_sessions WHERE status IN (:activeStatuses) ORDER BY date DESC, startTime DESC LIMIT 1")
+    @Query("SELECT * FROM gym_sessions WHERE status IN (:activeStatuses) ORDER BY startTime DESC LIMIT 1")
     fun getActiveSession(activeStatuses: List<GymSessionStatus> = listOf(GymSessionStatus.ACTIVE, GymSessionStatus.PAUSED)): Flow<GymSessionEntity?>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -48,7 +48,7 @@ interface GymDao {
     @Query("SELECT * FROM gym_sets WHERE exerciseId = :exerciseId")
     fun getSetsWithSessionForExercise(exerciseId: String): Flow<List<GymSetWithSession>>
 
-    @Query("SELECT gym_sets.* FROM gym_sets INNER JOIN gym_sessions ON gym_sets.sessionId = gym_sessions.id WHERE gym_sets.exerciseId = :exerciseId ORDER BY gym_sessions.date ASC, gym_sessions.startTime ASC")
+    @Query("SELECT gym_sets.* FROM gym_sets INNER JOIN gym_sessions ON gym_sets.sessionId = gym_sessions.id WHERE gym_sets.exerciseId = :exerciseId ORDER BY gym_sessions.startTime ASC")
     fun getSetsForExercise(exerciseId: String): Flow<List<GymSetEntity>>
 
     @Query("SELECT * FROM gym_sets WHERE sessionId = :sessionId ORDER BY orderInSession ASC")
@@ -80,6 +80,6 @@ interface GymDao {
     fun getSessionWithSets(sessionId: String): Flow<GymSessionWithSets?>
 
     @Transaction
-    @Query("SELECT * FROM gym_sessions ORDER BY date DESC, startTime DESC LIMIT :limit")
+    @Query("SELECT * FROM gym_sessions ORDER BY startTime DESC LIMIT :limit")
     fun getRecentSessionsWithSets(limit: Int): Flow<List<GymSessionWithSets>>
 }

@@ -8,11 +8,12 @@ import androidx.room.Update
 import eric.bitria.minimalfit.data.entity.food.MealLog
 import eric.bitria.minimalfit.data.entity.food.relations.MealLogMealCrossRef
 import kotlinx.coroutines.flow.Flow
+import kotlin.time.Instant
 
 @Dao
 interface MealLogDao {
     @Query("SELECT * FROM meal_logs WHERE createdAt BETWEEN :start AND :end ORDER BY createdAt DESC")
-    fun getMealLogsInRange(start: Long, end: Long): Flow<List<MealLog>>
+    fun getMealLogsInRange(start: Instant, end: Instant): Flow<List<MealLog>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertMealLog(mealLog: MealLog)

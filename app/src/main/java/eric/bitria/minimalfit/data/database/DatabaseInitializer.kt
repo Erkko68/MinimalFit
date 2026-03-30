@@ -8,13 +8,10 @@ import eric.bitria.minimalfit.data.entity.food.relations.DietMealCrossRef
 import eric.bitria.minimalfit.data.entity.food.relations.MealIngredientCrossRef
 import eric.bitria.minimalfit.data.entity.track.Track
 import eric.bitria.minimalfit.data.entity.track.TrackPoint
-import eric.bitria.minimalfit.util.today
+import eric.bitria.minimalfit.util.nowInstant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.datetime.DateTimeUnit
 import kotlin.time.Instant
-import kotlinx.datetime.LocalTime
-import kotlinx.datetime.minus
 import kotlin.time.Duration.Companion.minutes
 
 class DatabaseInitializer(private val db: AppDatabase) {
@@ -156,8 +153,9 @@ class DatabaseInitializer(private val db: AppDatabase) {
         diets.forEach { dietDao.insertDiet(it) }
 
         // 4. Initialize Tracks
+        val eveningRunStartTime = Instant.parse("2026-03-09T16:30:00Z")
         val eveningRunPoints = listOf(
-            TrackPoint(41.38879, 2.18992, Instant.parse("2026-03-09T16:30:00Z")),
+            TrackPoint(41.38879, 2.18992, eveningRunStartTime),
             TrackPoint(41.38950, 2.19120, Instant.parse("2026-03-09T16:31:00Z")),
             TrackPoint(41.39040, 2.19280, Instant.parse("2026-03-09T16:32:00Z")),
             TrackPoint(41.39150, 2.19450, Instant.parse("2026-03-09T16:33:00Z")),
@@ -175,8 +173,9 @@ class DatabaseInitializer(private val db: AppDatabase) {
             TrackPoint(41.38879, 2.18992, Instant.parse("2026-03-09T16:45:00Z"))
         )
 
+        val morningWalkStartTime = Instant.parse("2026-03-08T07:00:00Z")
         val morningWalkPoints = listOf(
-            TrackPoint(41.40280, 2.15640, Instant.parse("2026-03-08T07:00:00Z")),
+            TrackPoint(41.40280, 2.15640, morningWalkStartTime),
             TrackPoint(41.40350, 2.15720, Instant.parse("2026-03-08T07:03:00Z")),
             TrackPoint(41.40440, 2.15810, Instant.parse("2026-03-08T07:06:00Z")),
             TrackPoint(41.40530, 2.15900, Instant.parse("2026-03-08T07:09:00Z")),
@@ -193,21 +192,19 @@ class DatabaseInitializer(private val db: AppDatabase) {
         val tracks = listOf(
             Track(
                 id = "1",
-                date = today().minus(1, DateTimeUnit.DAY),
-                time = LocalTime(18, 30),
+                startTime = eveningRunStartTime,
+                endTime = eveningRunStartTime + 30.minutes,
                 name = "Evening Run",
                 distance = 5.2,
-                duration = 30.minutes,
                 pace = "5:46",
                 routePoints = eveningRunPoints
             ),
             Track(
                 id = "2",
-                date = today().minus(2, DateTimeUnit.DAY),
-                time = LocalTime(7, 0),
+                startTime = morningWalkStartTime,
+                endTime = morningWalkStartTime + 45.minutes,
                 name = "Morning Walk",
                 distance = 3.1,
-                duration = 45.minutes,
                 pace = "14:31",
                 routePoints = morningWalkPoints
             )

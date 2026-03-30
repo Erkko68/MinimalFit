@@ -3,6 +3,7 @@ package eric.bitria.minimalfit.ui.viewmodels.gym
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import eric.bitria.minimalfit.data.entity.gym.GymExerciseEntity
+import eric.bitria.minimalfit.data.entity.gym.GymSessionStatus
 import eric.bitria.minimalfit.data.entity.gym.GymSessionWithSets
 import eric.bitria.minimalfit.data.entity.gym.GymSetEntity
 import eric.bitria.minimalfit.data.repository.gym.GymRepository
@@ -14,11 +15,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.time.LocalDateTime
-import java.time.Duration
-import eric.bitria.minimalfit.data.entity.gym.GymSessionStatus
+import kotlin.time.Clock
 
 data class GymExerciseUi(
     val exercise: GymExerciseEntity,
@@ -88,41 +86,23 @@ class GymSessionViewModel(
                 val sessionOpt = uiState.value.session
                 if (sessionOpt != null) {
                     val sessionEntity = sessionOpt.session
-                    if (sessionEntity.status == GymSessionStatus.ACTIVE) {
-                        val start = LocalDateTime.of(
-                            sessionEntity.date.year,
-                            sessionEntity.date.monthNumber,
-                            sessionEntity.date.dayOfMonth,
-                            sessionEntity.startTime.hour,
-                            sessionEntity.startTime.minute,
-                            sessionEntity.startTime.second
-                        )
-                        val now = LocalDateTime.now()
-                        val duration = Duration.between(start, now)
-                        val totalMinutes = duration.toMinutes()
-                        val secs = duration.toSecondsPart()
-                        _timerText.value = String.format("%02d:%02d", totalMinutes, secs)
-                    } else if (sessionEntity.status == GymSessionStatus.COMPLETED && sessionEntity.endTime != null) {
-                        val start = LocalDateTime.of(
-                            sessionEntity.date.year,
-                            sessionEntity.date.monthNumber,
-                            sessionEntity.date.dayOfMonth,
-                            sessionEntity.startTime.hour,
-                            sessionEntity.startTime.minute,
-                            sessionEntity.startTime.second
-                        )
-                        val end = LocalDateTime.of(
-                            sessionEntity.date.year,
-                            sessionEntity.date.monthNumber,
-                            sessionEntity.date.dayOfMonth,
-                            sessionEntity.endTime.hour,
-                            sessionEntity.endTime.minute,
-                            sessionEntity.endTime.second
-                        )
-                        val duration = Duration.between(start, end)
-                        val totalMinutes = duration.toMinutes()
-                        val secs = duration.toSecondsPart()
-                        _timerText.value = String.format("%02d:%02d", totalMinutes, secs)
+                    val duration = when (sessionEntity.status) {
+                        GymSessionStatus.ACTIVE -> {
+                            Clock.System.now() - sessionEntity.startTime
+                        }
+                        GymSessionStatus.COMPLETED -> {
+                            sessionEntity.endTime?.let { it - sessionEntity.startTime }
+                        }
+                        else -> {
+                            null
+                        }
+                    }
+
+                    duration?.let { d ->
+                        val totalSeconds = d.inWholeSeconds
+                        val mins = totalSeconds / 60
+                        val secs = totalSeconds % 60
+                        _timerText.value = String.format("%02d:%02d", mins, secs)
                     }
                 }
                 delay(1000)

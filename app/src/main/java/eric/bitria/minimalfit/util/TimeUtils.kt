@@ -55,10 +55,16 @@ fun currentDateAndTime(timeZone: TimeZone = TimeZone.currentSystemDefault()): Pa
 }
 
 fun LocalDate.startOfDayEpoch(timeZone: TimeZone = TimeZone.currentSystemDefault()): Long =
-    atStartOfDayIn(timeZone).toEpochMilliseconds()
+    startOfDayInstant(timeZone).toEpochMilliseconds()
 
 fun LocalDate.endOfDayEpoch(timeZone: TimeZone = TimeZone.currentSystemDefault()): Long =
-    atTime(23, 59, 59, 999_999_999).toInstant(timeZone).toEpochMilliseconds()
+    endOfDayInstant(timeZone).toEpochMilliseconds()
+
+fun LocalDate.startOfDayInstant(timeZone: TimeZone = TimeZone.currentSystemDefault()): Instant =
+    atStartOfDayIn(timeZone)
+
+fun LocalDate.endOfDayInstant(timeZone: TimeZone = TimeZone.currentSystemDefault()): Instant =
+    atTime(23, 59, 59, 999_999_999).toInstant(timeZone)
 
 fun Long.toLocalDate(timeZone: TimeZone = TimeZone.currentSystemDefault()): LocalDate =
     Instant.fromEpochMilliseconds(this).toLocalDateTime(timeZone).date

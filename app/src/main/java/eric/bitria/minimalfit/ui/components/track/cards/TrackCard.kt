@@ -22,6 +22,8 @@ import eric.bitria.minimalfit.ui.components.track.route.drawTrackRoute
 import eric.bitria.minimalfit.ui.theme.Spacing
 import eric.bitria.minimalfit.util.hourMinute
 import eric.bitria.minimalfit.util.shortMonthDay
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 @Composable
 fun TrackCard(
@@ -33,6 +35,9 @@ fun TrackCard(
     val surfaceColor = MaterialTheme.colorScheme.surfaceContainerHigh
     val spacingM = with(LocalDensity.current) { Spacing.m.toPx() }
     val widerStroke = with(LocalDensity.current) { 8.dp.toPx() }
+
+    val startDateTime = track.startTime.toLocalDateTime(TimeZone.currentSystemDefault())
+    val duration = track.endTime - track.startTime
 
     Card(
         onClick = onClick,
@@ -56,7 +61,7 @@ fun TrackCard(
                 .padding(Spacing.m),
             verticalArrangement = Arrangement.spacedBy(Spacing.xs)
         ) {
-            val dateTime = "${track.date.shortMonthDay()} • ${track.time.hourMinute()}"
+            val dateTime = "${startDateTime.date.shortMonthDay()} • ${startDateTime.time.hourMinute()}"
             Text(
                 text = dateTime,
                 style = MaterialTheme.typography.labelLarge,
@@ -86,7 +91,7 @@ fun TrackCard(
                 )
                 StatItem(
                     label = "Time",
-                    value = track.duration.toString(),
+                    value = duration.toString(),
                     modifier = Modifier.weight(1f)
                 )
                 StatItem(

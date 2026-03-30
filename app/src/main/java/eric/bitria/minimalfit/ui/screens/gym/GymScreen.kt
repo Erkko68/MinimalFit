@@ -1,33 +1,32 @@
 package eric.bitria.minimalfit.ui.screens.gym
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PageSize
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Timer
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.PrimaryTabRow
-import androidx.compose.material3.Tab
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -38,12 +37,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import eric.bitria.minimalfit.navigation.ScreenConfiguration
 import eric.bitria.minimalfit.ui.components.animations.SwipeToDeleteCard
 import eric.bitria.minimalfit.ui.components.food.actions.PrimaryFloatingActionButton
+import eric.bitria.minimalfit.ui.components.gym.cards.ExerciseCard
 import eric.bitria.minimalfit.ui.components.gym.cards.GymSessionCard
+import eric.bitria.minimalfit.ui.components.gym.cards.RoutineCard
 import eric.bitria.minimalfit.ui.theme.Spacing
 import eric.bitria.minimalfit.ui.viewmodels.gym.GymHomeViewModel
 import org.koin.androidx.compose.koinViewModel
@@ -59,8 +61,11 @@ fun GymScreen(
     val exercises by viewModel.exercises.collectAsState()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
-    var selectedTab by remember { mutableStateOf(0) }
-    val tabs = listOf("Workouts", "Exercises")
+    val screenHeight = LocalConfiguration.current.screenHeightDp.dp
+    // Exercise elements similar to FoodScreen diets
+    val exerciseCardSize = screenHeight * 0.13f
+    // Routine elements are bigger
+    val routineCardSize = screenHeight * 0.2f
 
     var exerciseToDelete by remember { mutableStateOf<String?>(null) }
 
@@ -93,7 +98,7 @@ fun GymScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Gym Activities",
+                        text = "Workout",
                         style = MaterialTheme.typography.displaySmall,
                         fontWeight = FontWeight.Black,
                         color = MaterialTheme.colorScheme.onBackground
@@ -103,131 +108,160 @@ fun GymScreen(
             )
         },
         floatingActionButton = {
-            if (selectedTab == 0) {
-                PrimaryFloatingActionButton(
-                    onClick = { onNavigateToSession(null) },
-                    text = "Start Workout"
-                )
-            }
+            PrimaryFloatingActionButton(
+                onClick = { onNavigateToSession(null) },
+                text = "Start Workout"
+            )
         },
         bottomBar = true,
-        quickActions = true
+        quickActions = false
     )
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = Spacing.m),
-        verticalArrangement = Arrangement.spacedBy(Spacing.m)
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(
+            bottom = 120.dp // Space for FAB
+        ),
+        verticalArrangement = Arrangement.spacedBy(Spacing.l)
     ) {
-        PrimaryTabRow(selectedTabIndex = selectedTab, modifier = Modifier.fillMaxWidth().padding(bottom = Spacing.m)) {
-            tabs.forEachIndexed { index, title ->
-                Tab(
-                    selected = selectedTab == index,
-                    onClick = { selectedTab = index },
-                    text = { Text(title) }
+        // 1. ROUTINES SECTION
+        item {
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
+                Text(
+                    text = "Your Routines",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.ExtraBold,
+                    modifier = Modifier.padding(start = Spacing.m, end = Spacing.m, top = Spacing.m)
+                )
+
+                val routinePagerState = rememberPagerState(pageCount = { 3 })
+                HorizontalPager(
+                    state = routinePagerState,
+                    modifier = Modifier.fillMaxWidth(),
+                    pageSize = PageSize.Fixed(routineCardSize),
+                    contentPadding = PaddingValues(horizontal = Spacing.m),
+                    pageSpacing = Spacing.m,
+                    beyondViewportPageCount = 1
+                ) { page ->
+                    RoutineCard(
+                        name = "Routine ${page + 1}",
+                        exercisesCount = 4 + page,
+                        onClick = { /* TODO: Navigate to routine detail */ },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(1.4f)
+                    )
+                }
+            }
+        }
+
+        // 2. EXERCISES SECTION
+        item {
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = Spacing.m),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Your Exercises",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.ExtraBold,
+                    )
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Add Exercise",
+                        modifier = Modifier
+                            .clip(MaterialTheme.shapes.small)
+                            .background(MaterialTheme.colorScheme.secondaryContainer)
+                            .clickable { /* TODO: Show add exercise dialog */ }
+                            .padding(Spacing.xs),
+                        tint = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                }
+
+                if (exercises.isNotEmpty()) {
+                    val exercisePagerState = rememberPagerState(pageCount = { exercises.size })
+                    HorizontalPager(
+                        state = exercisePagerState,
+                        modifier = Modifier.fillMaxWidth(),
+                        pageSize = PageSize.Fixed(exerciseCardSize),
+                        contentPadding = PaddingValues(horizontal = Spacing.m),
+                        pageSpacing = Spacing.m,
+                        beyondViewportPageCount = 1
+                    ) { page ->
+                        val exercise = exercises[page]
+                        ExerciseCard(
+                            exercise = exercise,
+                            onClick = { onNavigateToExerciseProgression(exercise.id) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .aspectRatio(1f)
+                        )
+                    }
+                } else {
+                    Text(
+                        text = "No exercises yet",
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(horizontal = Spacing.m),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+
+        // 3. WORKOUT HISTORY SECTION
+        item {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = Spacing.m),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Spacing.s)
+            ) {
+                Icon(
+                    Icons.Default.History,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(28.dp)
+                )
+                Text(
+                    text = "Workout History",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.ExtraBold,
                 )
             }
         }
 
-        if (selectedTab == 0) {
-            if (sessions.isNotEmpty()) {
-                Text(
-                    text = "Recent workouts",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.padding(top = Spacing.s)
-                )
-
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(bottom = Spacing.xxl),
-                    verticalArrangement = Arrangement.spacedBy(Spacing.m)
+        if (sessions.isNotEmpty()) {
+            items(sessions, key = { it.id }) { session ->
+                SwipeToDeleteCard(
+                    onDismiss = { viewModel.deleteSession(session.id) },
+                    modifier = Modifier
+                        .padding(horizontal = Spacing.m)
+                        .clip(MaterialTheme.shapes.extraLarge)
                 ) {
-                    items(sessions, key = { it.id }) { session ->
-                        SwipeToDeleteCard(
-                            onDismiss = { viewModel.deleteSession(session.id) },
-                            modifier = Modifier
-                                .clip(MaterialTheme.shapes.extraLarge)
-                                .animateItem()
-                        ) {
-                            GymSessionCard(
-                                title = session.title,
-                                duration = session.duration,
-                                subtitle = session.subtitle,
-                                exercisesCount = session.exercisesCount,
-                                setsCount = session.setsCount,
-                                volume = session.volume,
-                                onClick = { onNavigateToSession(session.id) }
-                            )
-                        }
-                    }
+                    GymSessionCard(
+                        title = session.title,
+                        duration = session.duration,
+                        subtitle = session.subtitle,
+                        exercisesCount = session.exercisesCount,
+                        setsCount = session.setsCount,
+                        volume = session.volume,
+                        onClick = { onNavigateToSession(session.id) }
+                    )
                 }
-            } else {
+            }
+        } else {
+            item {
                 Text(
                     text = "No workouts yet. Start your first session!",
                     style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(horizontal = Spacing.m),
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
                 )
-            }
-        } else {
-            var newExerciseName by remember { mutableStateOf("") }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                OutlinedTextField(
-                    value = newExerciseName,
-                    onValueChange = { newExerciseName = it },
-                    label = { Text("New Exercise") },
-                    modifier = Modifier.weight(1f)
-                )
-                Button(
-                    onClick = {
-                        if (newExerciseName.isNotBlank()) {
-                            viewModel.addExercise(newExerciseName)
-                            newExerciseName = ""
-                        }
-                    },
-                    modifier = Modifier.padding(start = Spacing.m)
-                ) {
-                    Text("Add")
-                }
-            }
-
-            Spacer(modifier = Modifier.padding(Spacing.s))
-
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = Spacing.xxl),
-                verticalArrangement = Arrangement.spacedBy(Spacing.m)
-            ) {
-                items(exercises, key = { it.id }) { exercise ->
-                    SwipeToDeleteCard(
-                        onDismiss = { exerciseToDelete = exercise.id },
-                        modifier = Modifier
-                            .clip(MaterialTheme.shapes.extraLarge)
-                            .animateItem()
-                    ) {
-                        Card(
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
-                            ),
-                            shape = MaterialTheme.shapes.extraLarge,
-                            modifier = Modifier.fillMaxWidth().clickable { onNavigateToExerciseProgression(exercise.id) }
-                        ) {
-                            Text(
-                                text = exercise.name,
-                                modifier = Modifier.padding(Spacing.l),
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-                    }
-                }
             }
         }
     }

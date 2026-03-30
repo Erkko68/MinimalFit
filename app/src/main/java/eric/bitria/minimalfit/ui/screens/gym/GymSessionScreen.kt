@@ -58,7 +58,6 @@ fun GymSessionScreen(
 
     var showFinishDialog by remember { mutableStateOf(false) }
     var showExerciseSearchDialog by remember { mutableStateOf(false) }
-    var newExerciseName by remember { mutableStateOf("") }
     val catalogExercises by viewModel.catalogExercises.collectAsState(initial = emptyList())
 
     if (showFinishDialog) {
@@ -129,7 +128,7 @@ fun GymSessionScreen(
         }
     }
 
-    androidx.activity.compose.BackHandler(enabled = uiState.session?.session?.status == SessionStatus.ACTIVE) {
+    androidx.activity.compose.BackHandler(enabled = uiState.session?.status == SessionStatus.ACTIVE) {
         showFinishDialog = true
     }
 
@@ -155,7 +154,7 @@ fun GymSessionScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = {
-                        if (uiState.session?.session?.status == SessionStatus.ACTIVE) {
+                        if (uiState.session?.status == SessionStatus.ACTIVE) {
                             showFinishDialog = true
                         } else {
                             onNavigateBack()
@@ -165,7 +164,7 @@ fun GymSessionScreen(
                     }
                 },
                 actions = {
-                    if (uiState.session?.session?.status == SessionStatus.ACTIVE) {
+                    if (uiState.session?.status == SessionStatus.ACTIVE) {
                         IconButton(onClick = {
                             showFinishDialog = true
                         }) {
@@ -186,7 +185,7 @@ fun GymSessionScreen(
             .padding(Spacing.m),
         verticalArrangement = Arrangement.spacedBy(Spacing.m)
     ) {
-        val isActive = uiState.session?.session?.status == SessionStatus.ACTIVE
+        val isActive = uiState.session?.status == SessionStatus.ACTIVE
 
         // Lista de ejercicios y sets
         LazyColumn(

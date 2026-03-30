@@ -10,7 +10,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import eric.bitria.minimalfit.navigation.ScreenConfiguration
 import eric.bitria.minimalfit.ui.theme.Spacing
 import eric.bitria.minimalfit.ui.viewmodels.gym.ExerciseProgressionViewModel
@@ -36,7 +35,8 @@ fun ExerciseProgressionScreen(
                 }
             )
         },
-        bottomBar = false
+        bottomBar = false,
+        quickActions = false
     )
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -71,12 +71,12 @@ fun ExerciseProgressionScreen(
                                 verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "Set ${item.set.orderInSession}",
+                                    text = "Set ${item.orderInSession}",
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Text(
-                                    text = "${item.set.weight} kg  ×  ${item.set.reps} reps",
+                                    text = "${item.weight} kg  ×  ${item.reps} reps",
                                     style = MaterialTheme.typography.bodyLarge,
                                     fontWeight = FontWeight.Bold
                                 )

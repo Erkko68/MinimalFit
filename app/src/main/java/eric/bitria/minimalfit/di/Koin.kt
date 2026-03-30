@@ -13,8 +13,12 @@ import eric.bitria.minimalfit.data.repository.track.DefaultTrackRepository
 import eric.bitria.minimalfit.data.repository.track.LocationRepository
 import eric.bitria.minimalfit.data.repository.track.TrackRepository
 import eric.bitria.minimalfit.data.repository.track.TrackingLocationRepository
-import eric.bitria.minimalfit.data.repository.gym.DefaultGymRepository
-import eric.bitria.minimalfit.data.repository.gym.GymRepository
+import eric.bitria.minimalfit.data.repository.gym.DefaultExerciseRepository
+import eric.bitria.minimalfit.data.repository.gym.DefaultSetRepository
+import eric.bitria.minimalfit.data.repository.gym.DefaultSessionRepository
+import eric.bitria.minimalfit.data.repository.gym.ExerciseRepository
+import eric.bitria.minimalfit.data.repository.gym.SetRepository
+import eric.bitria.minimalfit.data.repository.gym.SessionRepository
 import eric.bitria.minimalfit.data.sensor.ActivitySensor
 import eric.bitria.minimalfit.data.sensor.AndroidActivitySensor
 import eric.bitria.minimalfit.data.sensor.AndroidLocationSensor
@@ -55,7 +59,9 @@ val dataModule = module {
             androidContext(),
             AppDatabase::class.java,
             "minimalfit.db"
-        ).build()
+        )
+            .addMigrations(AppDatabase.MIGRATION_2_3)
+            .build()
     }
 
     single { get<AppDatabase>().trackDao() }
@@ -95,8 +101,10 @@ val dataModule = module {
 
     singleOf(::DefaultTrackRepository) bind TrackRepository::class
 
-    // Gym Repository
-    single<GymRepository> { DefaultGymRepository(gymDao = get()) }
+    // Gym Repositories
+    single<SessionRepository> { DefaultSessionRepository(gymDao = get()) }
+    single<ExerciseRepository> { DefaultExerciseRepository(gymDao = get()) }
+    single<SetRepository> { DefaultSetRepository(gymDao = get()) }
 
     // Sensors
     single { AndroidLocationSensor(androidContext()) } bind LocationSensor::class
@@ -146,10 +154,19 @@ val viewModels = module {
     // Gym
     viewModelOf(::GymHomeViewModel)
     viewModel { (sessionId: String?) ->
-        GymSessionViewModel(sessionId = sessionId, repository = get())
+        GymSessionViewModel(
+            sessionId = sessionId,
+            sessionRepository = get(),
+            exerciseRepository = get(),
+            setRepository = get()
+        )
     }
     viewModel { (exerciseId: String) ->
-        ExerciseProgressionViewModel(exerciseId = exerciseId, repository = get())
+        ExerciseProgressionViewModel(
+            exerciseId = exerciseId,
+            exerciseRepository = get(),
+            setRepository = get()
+        )
     }
 }
 

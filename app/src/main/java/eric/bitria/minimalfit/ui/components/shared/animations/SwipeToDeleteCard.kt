@@ -1,4 +1,4 @@
-package eric.bitria.minimalfit.ui.components.animations
+package eric.bitria.minimalfit.ui.components.shared.animations
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
@@ -17,7 +17,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
@@ -27,6 +26,7 @@ import eric.bitria.minimalfit.ui.theme.Spacing
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.math.abs
 
 // ─── Delete background ────────────────────────────────────────────────────────
 
@@ -37,7 +37,7 @@ private fun SwipeDeleteBackground(
     modifier: Modifier = Modifier
 ) {
     val threshold = cardWidth * 0.5f
-    val progress = (kotlin.math.abs(offsetX) / threshold.coerceAtLeast(1f)).coerceIn(0f, 1f)
+    val progress = (abs(offsetX) / threshold.coerceAtLeast(1f)).coerceIn(0f, 1f)
     val alignment = if (offsetX > 0) Alignment.CenterStart else Alignment.CenterEnd
 
     // Dynamic background color that intensifies as user drags closer to threshold
@@ -95,7 +95,7 @@ fun SwipeToDeleteCard(
 
     val dragProgress by remember {
         derivedStateOf {
-            (kotlin.math.abs(offsetX.value) / cardWidth.coerceAtLeast(1)).coerceIn(0f, 1f)
+            (abs(offsetX.value) / cardWidth.coerceAtLeast(1)).coerceIn(0f, 1f)
         }
     }
 
@@ -145,8 +145,8 @@ fun SwipeToDeleteCard(
                                 val velocity = velocityTracker.calculateVelocity().x
                                 val threshold = cardWidth * 0.5f
                                 val shouldDismiss =
-                                    kotlin.math.abs(offsetX.value) > threshold ||
-                                    kotlin.math.abs(velocity) > 1200f
+                                    abs(offsetX.value) > threshold ||
+                                    abs(velocity) > 1200f
 
                                 if (shouldDismiss) {
                                     val targetOffset = if (offsetX.value > 0) {

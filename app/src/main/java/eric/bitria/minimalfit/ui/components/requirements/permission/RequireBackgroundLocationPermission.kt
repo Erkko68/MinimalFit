@@ -1,11 +1,9 @@
-package eric.bitria.minimalfit.ui.components.permission
+package eric.bitria.minimalfit.ui.components.requirements.permission
 
 import android.Manifest
 import android.app.Activity
-import android.content.Intent
-import android.net.Uri
+import android.content.pm.PackageManager
 import android.os.Build
-import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
@@ -16,16 +14,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 
 @Composable
-fun RequireActivityRecognitionPermission(
+fun RequireBackgroundLocationPermission(
     onPermissionResult: (Boolean) -> Unit
 ) {
+    // Background location is only required for Android 10 (Q) and above
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
         LaunchedEffect(Unit) {
             onPermissionResult(true)
@@ -33,14 +31,14 @@ fun RequireActivityRecognitionPermission(
         return
     }
 
-    val permission = Manifest.permission.ACTIVITY_RECOGNITION
+    val permission = Manifest.permission.ACCESS_BACKGROUND_LOCATION
     var showRationaleDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val activity = context as? Activity
     val lifecycleOwner = LocalLifecycleOwner.current
 
     fun checkPermission() {
-        val isGranted = ContextCompat.checkSelfPermission(context, permission) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        val isGranted = ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
         if (isGranted) {
             onPermissionResult(true)
             showRationaleDialog = false
@@ -54,7 +52,9 @@ fun RequireActivityRecognitionPermission(
         onResult = { isGranted ->
             if (isGranted) {
                 onPermissionResult(true)
+                showRationaleDialog = false
             } else {
+                // If denied, we show the dialog explaining why it's needed
                 showRationaleDialog = true
             }
         }
@@ -73,35 +73,25 @@ fun RequireActivityRecognitionPermission(
     }
 
     LaunchedEffect(Unit) {
-        if (ContextCompat.checkSelfPermission(context, permission) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED) {
             onPermissionResult(true)
         } else {
-            permissionLauncher.launch(permission)
+            showRationaleDialog = true
         }
     }
 
     if (showRationaleDialog) {
-        val shouldShowRationale = activity?.let {
-            ActivityCompat.shouldShowRequestPermissionRationale(it, permission)
-        } ?: false
-
         PermissionDialog(
-            title = "Activity Recognition Permission Required",
-            text = "This feature requires activity recognition permission to improve tracking. Please grant the permission in settings.",
-            showSettingsButton = !shouldShowRationale,
+            title = "Background Location Required",
+            text = "To track your activity while the screen is off or while using other apps, please select 'Allow all the time' in the location settings.",
+            showSettingsButton = true,
             onDismiss = {
                 showRationaleDialog = false
                 onPermissionResult(false)
             },
             onConfirm = {
                 showRationaleDialog = false
-                if (shouldShowRationale) {
-                    permissionLauncher.launch(permission)
-                } else {
-                    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-                    intent.data = Uri.fromParts("package", context.packageName, null)
-                    context.startActivity(intent)
-                }
+                permissionLauncher.launch(permission)
             }
         )
     }

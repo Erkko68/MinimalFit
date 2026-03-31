@@ -31,7 +31,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import coil.compose.AsyncImage
 import eric.bitria.minimalfit.data.entity.food.Meal
 import eric.bitria.minimalfit.navigation.ScreenConfiguration
-import eric.bitria.minimalfit.ui.components.animations.SwipeToDeleteCard
+import eric.bitria.minimalfit.ui.components.shared.animations.SwipeToDeleteCard
 import eric.bitria.minimalfit.ui.components.food.FlexibleTopBar
 import eric.bitria.minimalfit.ui.components.food.actions.PrimaryFloatingActionButton
 import eric.bitria.minimalfit.ui.components.food.cards.MealCard

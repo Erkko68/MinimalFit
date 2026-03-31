@@ -37,6 +37,7 @@ import eric.bitria.minimalfit.ui.viewmodels.profile.ProfileViewModel
 import eric.bitria.minimalfit.ui.viewmodels.profile.card.CalorieViewModel
 import eric.bitria.minimalfit.ui.viewmodels.profile.card.GymViewModel
 import eric.bitria.minimalfit.ui.viewmodels.profile.card.WaterViewModel
+import eric.bitria.minimalfit.ui.viewmodels.settings.SettingsViewModel
 import eric.bitria.minimalfit.ui.viewmodels.track.TrackDetailViewModel
 import eric.bitria.minimalfit.ui.viewmodels.track.TrackRecordingViewModel
 import eric.bitria.minimalfit.ui.viewmodels.track.TrackViewModel
@@ -144,6 +145,10 @@ val viewModels = module {
         TrackDetailViewModel(trackId = trackId, repository = get())
     }
     viewModelOf(::TrackRecordingViewModel)
+
+    // Setting
+
+    viewModelOf(::SettingsViewModel)
 
     // Profile
 

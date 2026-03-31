@@ -22,11 +22,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import eric.bitria.minimalfit.navigation.ScreenConfiguration
-import eric.bitria.minimalfit.ui.components.permission.RequireActivityRecognitionPermission
-import eric.bitria.minimalfit.ui.components.permission.RequireBackgroundLocationPermission
-import eric.bitria.minimalfit.ui.components.permission.RequireLocationPermission
-import eric.bitria.minimalfit.ui.components.permission.RequireNotificationPermission
-import eric.bitria.minimalfit.ui.components.settings.RequireLocationEnabledSetting
+import eric.bitria.minimalfit.ui.components.requirements.permission.RequireActivityRecognitionPermission
+import eric.bitria.minimalfit.ui.components.requirements.permission.RequireBackgroundLocationPermission
+import eric.bitria.minimalfit.ui.components.requirements.permission.RequireLocationPermission
+import eric.bitria.minimalfit.ui.components.requirements.permission.RequireNotificationPermission
+import eric.bitria.minimalfit.ui.components.requirements.settings.RequireLocationEnabledSetting
 import eric.bitria.minimalfit.ui.components.track.TrackingToolbar
 import eric.bitria.minimalfit.ui.components.track.map.TrackMap
 import eric.bitria.minimalfit.ui.components.track.map.TrackMapCameraAction

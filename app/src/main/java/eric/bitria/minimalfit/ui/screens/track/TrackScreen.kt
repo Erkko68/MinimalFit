@@ -22,7 +22,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import eric.bitria.minimalfit.navigation.ScreenConfiguration
-import eric.bitria.minimalfit.ui.components.animations.SwipeToDeleteCard
+import eric.bitria.minimalfit.ui.components.shared.animations.SwipeToDeleteCard
 import eric.bitria.minimalfit.ui.components.food.actions.PrimaryFloatingActionButton
 import eric.bitria.minimalfit.ui.components.track.cards.EmptyTrackPlaceholder
 import eric.bitria.minimalfit.ui.components.track.cards.TrackCard

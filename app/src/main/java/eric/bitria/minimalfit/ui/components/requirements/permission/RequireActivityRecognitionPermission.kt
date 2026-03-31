@@ -1,8 +1,9 @@
-package eric.bitria.minimalfit.ui.components.permission
+package eric.bitria.minimalfit.ui.components.requirements.permission
 
 import android.Manifest
 import android.app.Activity
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
@@ -23,25 +24,24 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 
 @Composable
-fun RequireNotificationPermission(
+fun RequireActivityRecognitionPermission(
     onPermissionResult: (Boolean) -> Unit
 ) {
-    // Notification permission is only required for Android 13 (Tiramisu) and above
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
         LaunchedEffect(Unit) {
             onPermissionResult(true)
         }
         return
     }
 
-    val permission = Manifest.permission.POST_NOTIFICATIONS
+    val permission = Manifest.permission.ACTIVITY_RECOGNITION
     var showRationaleDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val activity = context as? Activity
     val lifecycleOwner = LocalLifecycleOwner.current
 
     fun checkPermission() {
-        val isGranted = ContextCompat.checkSelfPermission(context, permission) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        val isGranted = ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
         if (isGranted) {
             onPermissionResult(true)
             showRationaleDialog = false
@@ -55,7 +55,6 @@ fun RequireNotificationPermission(
         onResult = { isGranted ->
             if (isGranted) {
                 onPermissionResult(true)
-                showRationaleDialog = false
             } else {
                 showRationaleDialog = true
             }
@@ -75,7 +74,7 @@ fun RequireNotificationPermission(
     }
 
     LaunchedEffect(Unit) {
-        if (ContextCompat.checkSelfPermission(context, permission) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED) {
             onPermissionResult(true)
         } else {
             permissionLauncher.launch(permission)
@@ -88,8 +87,8 @@ fun RequireNotificationPermission(
         } ?: false
 
         PermissionDialog(
-            title = "Notification Permission Required",
-            text = "To show you the tracking progress in the background, we need permission to show notifications.",
+            title = "Activity Recognition Permission Required",
+            text = "This feature requires activity recognition permission to improve tracking. Please grant the permission in settings.",
             showSettingsButton = !shouldShowRationale,
             onDismiss = {
                 showRationaleDialog = false

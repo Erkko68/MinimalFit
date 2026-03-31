@@ -1,4 +1,4 @@
-package eric.bitria.minimalfit.ui.components.permission
+package eric.bitria.minimalfit.ui.components.requirements.permission
 
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button

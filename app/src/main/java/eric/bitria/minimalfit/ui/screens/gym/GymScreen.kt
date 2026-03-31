@@ -41,7 +41,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import eric.bitria.minimalfit.navigation.ScreenConfiguration
-import eric.bitria.minimalfit.ui.components.animations.SwipeToDeleteCard
+import eric.bitria.minimalfit.ui.components.shared.animations.SwipeToDeleteCard
 import eric.bitria.minimalfit.ui.components.food.actions.PrimaryFloatingActionButton
 import eric.bitria.minimalfit.ui.components.gym.cards.ExerciseCard
 import eric.bitria.minimalfit.ui.components.gym.cards.GymSessionCard

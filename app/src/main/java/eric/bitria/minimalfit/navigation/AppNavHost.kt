@@ -15,7 +15,7 @@ import eric.bitria.minimalfit.ui.screens.gym.GymScreen
 import eric.bitria.minimalfit.ui.screens.gym.GymSessionScreen
 import eric.bitria.minimalfit.ui.screens.gym.ExerciseProgressionScreen
 import eric.bitria.minimalfit.ui.screens.profile.ProfileScreen
-import eric.bitria.minimalfit.ui.screens.profile.SettingsScreen
+import eric.bitria.minimalfit.ui.screens.settings.SettingsScreen
 import eric.bitria.minimalfit.ui.screens.track.TrackDetailScreen
 import eric.bitria.minimalfit.ui.screens.track.TrackRecordingScreen
 import eric.bitria.minimalfit.ui.screens.track.TrackScreen

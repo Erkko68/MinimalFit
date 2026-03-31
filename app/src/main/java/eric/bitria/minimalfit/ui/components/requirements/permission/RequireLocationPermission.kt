@@ -1,9 +1,11 @@
-package eric.bitria.minimalfit.ui.components.permission
+package eric.bitria.minimalfit.ui.components.requirements.permission
 
 import android.Manifest
 import android.app.Activity
+import android.content.Intent
 import android.content.pm.PackageManager
-import android.os.Build
+import android.net.Uri
+import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
@@ -14,24 +16,17 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 
 @Composable
-fun RequireBackgroundLocationPermission(
+fun RequireLocationPermission(
     onPermissionResult: (Boolean) -> Unit
 ) {
-    // Background location is only required for Android 10 (Q) and above
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-        LaunchedEffect(Unit) {
-            onPermissionResult(true)
-        }
-        return
-    }
-
-    val permission = Manifest.permission.ACCESS_BACKGROUND_LOCATION
+    val permission = Manifest.permission.ACCESS_FINE_LOCATION
     var showRationaleDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val activity = context as? Activity
@@ -54,7 +49,6 @@ fun RequireBackgroundLocationPermission(
                 onPermissionResult(true)
                 showRationaleDialog = false
             } else {
-                // If denied, we show the dialog explaining why it's needed
                 showRationaleDialog = true
             }
         }
@@ -76,22 +70,32 @@ fun RequireBackgroundLocationPermission(
         if (ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED) {
             onPermissionResult(true)
         } else {
-            showRationaleDialog = true
+            permissionLauncher.launch(permission)
         }
     }
 
     if (showRationaleDialog) {
+        val shouldShowRationale = activity?.let {
+            ActivityCompat.shouldShowRequestPermissionRationale(it, permission)
+        } ?: false
+
         PermissionDialog(
-            title = "Background Location Required",
-            text = "To track your activity while the screen is off or while using other apps, please select 'Allow all the time' in the location settings.",
-            showSettingsButton = true,
+            title = "Location Permission Required",
+            text = "This feature requires location permission to track your activity. Please grant the permission in settings.",
+            showSettingsButton = !shouldShowRationale,
             onDismiss = {
                 showRationaleDialog = false
                 onPermissionResult(false)
             },
             onConfirm = {
                 showRationaleDialog = false
-                permissionLauncher.launch(permission)
+                if (shouldShowRationale) {
+                    permissionLauncher.launch(permission)
+                } else {
+                    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                    intent.data = Uri.fromParts("package", context.packageName, null)
+                    context.startActivity(intent)
+                }
             }
         )
     }

@@ -1,9 +1,11 @@
-package eric.bitria.minimalfit.ui.components.permission
+package eric.bitria.minimalfit.ui.components.requirements.permission
 
 import android.Manifest
 import android.app.Activity
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -22,17 +24,25 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 
 @Composable
-fun RequireLocationPermission(
+fun RequireNotificationPermission(
     onPermissionResult: (Boolean) -> Unit
 ) {
-    val permission = Manifest.permission.ACCESS_FINE_LOCATION
+    // Notification permission is only required for Android 13 (Tiramisu) and above
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+        LaunchedEffect(Unit) {
+            onPermissionResult(true)
+        }
+        return
+    }
+
+    val permission = Manifest.permission.POST_NOTIFICATIONS
     var showRationaleDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val activity = context as? Activity
     val lifecycleOwner = LocalLifecycleOwner.current
 
     fun checkPermission() {
-        val isGranted = ContextCompat.checkSelfPermission(context, permission) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        val isGranted = ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
         if (isGranted) {
             onPermissionResult(true)
             showRationaleDialog = false
@@ -66,7 +76,7 @@ fun RequireLocationPermission(
     }
 
     LaunchedEffect(Unit) {
-        if (ContextCompat.checkSelfPermission(context, permission) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED) {
             onPermissionResult(true)
         } else {
             permissionLauncher.launch(permission)
@@ -79,8 +89,8 @@ fun RequireLocationPermission(
         } ?: false
 
         PermissionDialog(
-            title = "Location Permission Required",
-            text = "This feature requires location permission to track your activity. Please grant the permission in settings.",
+            title = "Notification Permission Required",
+            text = "To show you the tracking progress in the background, we need permission to show notifications.",
             showSettingsButton = !shouldShowRationale,
             onDismiss = {
                 showRationaleDialog = false

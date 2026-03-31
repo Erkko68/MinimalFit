@@ -1,4 +1,4 @@
-package eric.bitria.minimalfit.ui.components.settings
+package eric.bitria.minimalfit.ui.components.requirements.settings
 
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -18,7 +18,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import eric.bitria.minimalfit.ui.components.permission.PermissionDialog
+import eric.bitria.minimalfit.ui.components.requirements.permission.PermissionDialog
 
 @Composable
 fun RequireLocationEnabledSetting(

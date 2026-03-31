@@ -41,6 +41,9 @@ fun RequireBackgroundLocationPermission(
         val isGranted = ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
         if (isGranted) {
             onPermissionResult(true)
+            showRationaleDialog = false
+        } else {
+            showRationaleDialog = true
         }
     }
 
@@ -49,6 +52,7 @@ fun RequireBackgroundLocationPermission(
         onResult = { isGranted ->
             if (isGranted) {
                 onPermissionResult(true)
+                showRationaleDialog = false
             } else {
                 // If denied, we show the dialog explaining why it's needed
                 showRationaleDialog = true
@@ -69,8 +73,11 @@ fun RequireBackgroundLocationPermission(
     }
 
     LaunchedEffect(Unit) {
-        checkPermission()
-        showRationaleDialog = true 
+        if (ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED) {
+            onPermissionResult(true)
+        } else {
+            showRationaleDialog = true
+        }
     }
 
     if (showRationaleDialog) {

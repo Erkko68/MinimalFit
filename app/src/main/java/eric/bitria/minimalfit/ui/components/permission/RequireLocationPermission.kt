@@ -35,6 +35,9 @@ fun RequireLocationPermission(
         val isGranted = ContextCompat.checkSelfPermission(context, permission) == android.content.pm.PackageManager.PERMISSION_GRANTED
         if (isGranted) {
             onPermissionResult(true)
+            showRationaleDialog = false
+        } else {
+            showRationaleDialog = true
         }
     }
 
@@ -43,6 +46,7 @@ fun RequireLocationPermission(
         onResult = { isGranted ->
             if (isGranted) {
                 onPermissionResult(true)
+                showRationaleDialog = false
             } else {
                 showRationaleDialog = true
             }
@@ -62,8 +66,11 @@ fun RequireLocationPermission(
     }
 
     LaunchedEffect(Unit) {
-        checkPermission()
-        permissionLauncher.launch(permission)
+        if (ContextCompat.checkSelfPermission(context, permission) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            onPermissionResult(true)
+        } else {
+            permissionLauncher.launch(permission)
+        }
     }
 
     if (showRationaleDialog) {

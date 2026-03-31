@@ -27,7 +27,9 @@ fun RequireActivityRecognitionPermission(
     onPermissionResult: (Boolean) -> Unit
 ) {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-        onPermissionResult(true)
+        LaunchedEffect(Unit) {
+            onPermissionResult(true)
+        }
         return
     }
 
@@ -41,6 +43,9 @@ fun RequireActivityRecognitionPermission(
         val isGranted = ContextCompat.checkSelfPermission(context, permission) == android.content.pm.PackageManager.PERMISSION_GRANTED
         if (isGranted) {
             onPermissionResult(true)
+            showRationaleDialog = false
+        } else {
+            showRationaleDialog = true
         }
     }
 
@@ -68,8 +73,11 @@ fun RequireActivityRecognitionPermission(
     }
 
     LaunchedEffect(Unit) {
-        checkPermission()
-        permissionLauncher.launch(permission)
+        if (ContextCompat.checkSelfPermission(context, permission) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            onPermissionResult(true)
+        } else {
+            permissionLauncher.launch(permission)
+        }
     }
 
     if (showRationaleDialog) {

@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import eric.bitria.minimalfit.data.entity.gym.SessionStatus
 import eric.bitria.minimalfit.navigation.ScreenConfiguration
 import eric.bitria.minimalfit.ui.components.food.dialogs.SearchableItemDialog
+import eric.bitria.minimalfit.ui.components.requirements.permission.RequireNotificationPermission
 import eric.bitria.minimalfit.ui.theme.Spacing
 import eric.bitria.minimalfit.ui.viewmodels.gym.GymSessionViewModel
 import org.koin.androidx.compose.koinViewModel
@@ -58,13 +59,18 @@ fun GymSessionScreen(
 
     var showFinishDialog by remember { mutableStateOf(false) }
     var showExerciseSearchDialog by remember { mutableStateOf(false) }
+    var notificationPermissionGranted by remember { mutableStateOf(false) }
     val catalogExercises by viewModel.catalogExercises.collectAsState(initial = emptyList())
+
+    if (!notificationPermissionGranted) {
+        RequireNotificationPermission(onPermissionResult = { notificationPermissionGranted = it })
+    }
 
     if (showFinishDialog) {
         androidx.compose.material3.AlertDialog(
             onDismissRequest = { showFinishDialog = false },
             title = { Text(text = "Workout in progress") },
-            text = { Text("Do you want to finish the workout, or keep it running in the background?") },
+            text = { Text("Do you want to finish the workout, or keep it running in the background with a pop-up notification when you leave the app?") },
             confirmButton = {
                 androidx.compose.material3.TextButton(
                     onClick = {

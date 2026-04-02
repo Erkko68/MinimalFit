@@ -6,24 +6,25 @@ import eric.bitria.minimalfit.data.entity.gym.Exercise
 import eric.bitria.minimalfit.data.entity.gym.Session
 import eric.bitria.minimalfit.data.entity.gym.SessionStatus
 import eric.bitria.minimalfit.data.entity.gym.Set
+import eric.bitria.minimalfit.data.gym.GymSessionManager
 import eric.bitria.minimalfit.data.repository.gym.ExerciseRepository
 import eric.bitria.minimalfit.data.repository.gym.SessionRepository
 import eric.bitria.minimalfit.data.repository.gym.SetRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.Locale
 import kotlin.time.Clock
+import kotlin.time.Duration
 
 data class GymExerciseUi(
     val exercise: Exercise,
@@ -41,7 +42,8 @@ class GymSessionViewModel(
     private val sessionId: String?,
     private val sessionRepository: SessionRepository,
     private val exerciseRepository: ExerciseRepository,
-    private val setRepository: SetRepository
+    private val setRepository: SetRepository,
+    private val gymSessionManager: GymSessionManager
 ) : ViewModel() {
 
     private val refreshTrigger = MutableStateFlow(0)
@@ -50,7 +52,7 @@ class GymSessionViewModel(
 
     private val currentSessionFlow: Flow<Session?> =
         if (sessionId != null) sessionRepository.getSession(sessionId)
-        else sessionRepository.getActiveSession()
+        else gymSessionManager.activeSession
 
     private val currentSetsFlow: Flow<List<Set>> =
         currentSessionFlow.flatMapLatest { session ->
@@ -93,45 +95,37 @@ class GymSessionViewModel(
     )
 
     init {
-        viewModelScope.launch {
-            if (sessionId == null) {
-                val currentActive = sessionRepository.getActiveSession().first()
-                if (currentActive == null) {
-                    sessionRepository.startSession()
-                    refreshTrigger.value++
-                }
-            }
-            
-            while (true) {
-                val sessionOpt = uiState.value.session
-                if (sessionOpt != null) {
-                    val duration = when (sessionOpt.status) {
-                        SessionStatus.ACTIVE -> {
-                            Clock.System.now() - sessionOpt.startTime
-                        }
-                        SessionStatus.COMPLETED -> {
-                            sessionOpt.endTime?.let { it - sessionOpt.startTime }
-                        }
-                        else -> {
-                            null
-                        }
-                    }
+        if (sessionId == null) {
+            gymSessionManager.start()
+        }
 
-                    duration?.let { d ->
-                        val totalSeconds = d.inWholeSeconds
-                        val mins = totalSeconds / 60
-                        val secs = totalSeconds % 60
-                        _timerText.value = String.format(Locale.US, "%02d:%02d", mins, secs)
+        viewModelScope.launch {
+            combine(currentSessionFlow, gymSessionManager.elapsed) { session, activeElapsed ->
+                val duration = when {
+                    session == null -> Duration.ZERO
+                    session.status == SessionStatus.ACTIVE -> {
+                        if (sessionId == null) activeElapsed else Clock.System.now() - session.startTime
                     }
+                    session.status == SessionStatus.COMPLETED -> {
+                        session.endTime?.let { it - session.startTime } ?: Duration.ZERO
+                    }
+                    else -> Clock.System.now() - session.startTime
                 }
-                delay(1000)
+                duration
+            }.map { duration ->
+                val totalSeconds = duration.inWholeSeconds
+                val mins = totalSeconds / 60
+                val secs = totalSeconds % 60
+                String.format(Locale.US, "%02d:%02d", mins, secs)
+            }.collect { text ->
+                _timerText.value = text
             }
         }
     }
 
     fun startNewSession() {
         viewModelScope.launch {
-            sessionRepository.startSession()
+            gymSessionManager.start()
             refreshTrigger.value++
         }
     }
@@ -183,7 +177,7 @@ class GymSessionViewModel(
 
     fun finishSession() {
         viewModelScope.launch {
-            sessionRepository.finishSession()
+            gymSessionManager.finish()
             refreshTrigger.value++
         }
     }

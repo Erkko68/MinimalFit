@@ -9,14 +9,15 @@ import android.os.IBinder
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import eric.bitria.minimalfit.service.GymSessionService
 import eric.bitria.minimalfit.service.LocationService
 import eric.bitria.minimalfit.ui.theme.MinimalFitTheme
-import org.koin.android.ext.koin.androidContext
-import org.koin.core.context.startKoin
 
 class MainActivity : ComponentActivity() {
     private var locationService: LocationService? = null
+    private var gymSessionService: GymSessionService? = null
     private var isBound = false
+    private var isGymBound = false
 
     // ── Service Connection ───────────────────────────────────────────────────
     private val serviceConnection = object : ServiceConnection {
@@ -29,6 +30,19 @@ class MainActivity : ComponentActivity() {
         override fun onServiceDisconnected(name: ComponentName?) {
             locationService = null
             isBound = false
+        }
+    }
+
+    private val gymServiceConnection = object : ServiceConnection {
+        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+            val binder = service as GymSessionService.LocalBinder
+            gymSessionService = binder.getService()
+            isGymBound = true
+        }
+
+        override fun onServiceDisconnected(name: ComponentName?) {
+            gymSessionService = null
+            isGymBound = false
         }
     }
 
@@ -50,6 +64,9 @@ class MainActivity : ComponentActivity() {
         Intent(this, LocationService::class.java).also { intent ->
             bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
         }
+        Intent(this, GymSessionService::class.java).also { intent ->
+            bindService(intent, gymServiceConnection, Context.BIND_AUTO_CREATE)
+        }
     }
 
     override fun onStop() {
@@ -58,6 +75,10 @@ class MainActivity : ComponentActivity() {
         if (isBound) {
             unbindService(serviceConnection)
             isBound = false
+        }
+        if (isGymBound) {
+            unbindService(gymServiceConnection)
+            isGymBound = false
         }
     }
 }

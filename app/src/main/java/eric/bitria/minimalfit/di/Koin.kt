@@ -19,6 +19,9 @@ import eric.bitria.minimalfit.data.repository.gym.DefaultSessionRepository
 import eric.bitria.minimalfit.data.repository.gym.ExerciseRepository
 import eric.bitria.minimalfit.data.repository.gym.SetRepository
 import eric.bitria.minimalfit.data.repository.gym.SessionRepository
+import eric.bitria.minimalfit.data.gym.AndroidGymSessionManager
+import eric.bitria.minimalfit.data.gym.GymSessionManager
+import eric.bitria.minimalfit.data.gym.GymTrackingLogic
 import eric.bitria.minimalfit.data.sensor.ActivitySensor
 import eric.bitria.minimalfit.data.sensor.AndroidActivitySensor
 import eric.bitria.minimalfit.data.sensor.AndroidLocationSensor
@@ -108,6 +111,8 @@ val dataModule = module {
     single<SessionRepository> { DefaultSessionRepository(sessionDao = get(), setDao = get()) }
     single<ExerciseRepository> { DefaultExerciseRepository(exerciseDao = get()) }
     single<SetRepository> { DefaultSetRepository(setDao = get()) }
+    singleOf(::GymTrackingLogic)
+    single<GymSessionManager> { AndroidGymSessionManager(androidContext(), get()) }
 
     // Sensors
     single { AndroidLocationSensor(androidContext()) } bind LocationSensor::class
@@ -165,7 +170,8 @@ val viewModels = module {
             sessionId = sessionId,
             sessionRepository = get(),
             exerciseRepository = get(),
-            setRepository = get()
+            setRepository = get(),
+            gymSessionManager = get()
         )
     }
     viewModel { (exerciseId: String) ->

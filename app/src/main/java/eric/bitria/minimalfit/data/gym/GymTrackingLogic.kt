@@ -2,7 +2,9 @@ package eric.bitria.minimalfit.data.gym
 
 import eric.bitria.minimalfit.data.entity.gym.Session
 import eric.bitria.minimalfit.data.entity.gym.SessionStatus
+import eric.bitria.minimalfit.data.repository.gym.ExerciseRepository
 import eric.bitria.minimalfit.data.repository.gym.SessionRepository
+import eric.bitria.minimalfit.data.repository.gym.SetRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -15,9 +17,12 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlin.time.Clock
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 
 class GymTrackingLogic(
-    private val sessionRepository: SessionRepository
+    private val sessionRepository: SessionRepository,
+    private val setRepository: SetRepository,
+    private val exerciseRepository: ExerciseRepository
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
@@ -27,7 +32,15 @@ class GymTrackingLogic(
     private val _elapsed = MutableStateFlow(Duration.ZERO)
     val elapsed: StateFlow<Duration> = _elapsed.asStateFlow()
 
+    private val _restRemaining = MutableStateFlow(Duration.ZERO)
+    val restRemaining: StateFlow<Duration> = _restRemaining.asStateFlow()
+
+    private val _isRestRunning = MutableStateFlow(false)
+    val isRestRunning: StateFlow<Boolean> = _isRestRunning.asStateFlow()
+
     private var tickerJob: Job? = null
+    private var restJob: Job? = null
+    private var restEndEpochMillis: Long? = null
 
     init {
         scope.launch {
@@ -61,6 +74,38 @@ class GymTrackingLogic(
         scope.launch {
             sessionRepository.finishSession()
             _elapsed.value = Duration.ZERO
+            stopRestInternal()
+        }
+    }
+
+    fun startRestForExercise(exerciseId: String) {
+        scope.launch {
+            val exercise = exerciseRepository.getExerciseById(exerciseId)
+            val seconds = (exercise?.restSeconds ?: 120).coerceAtLeast(0)
+            startRestCountdown(seconds)
+        }
+    }
+
+    fun addRestSeconds(seconds: Int) {
+        if (seconds <= 0) return
+        val currentEnd = restEndEpochMillis ?: return
+        restEndEpochMillis = currentEnd + (seconds * 1000L)
+        syncRestTick()
+    }
+
+    fun finishLatestSetAndStartRest() {
+        scope.launch {
+            val sessionId = _activeSession.value?.id ?: return@launch
+            val completedSet = setRepository.completeLatestIncompleteSet(sessionId) ?: return@launch
+            val exercise = exerciseRepository.getExerciseById(completedSet.exerciseId)
+            val seconds = (exercise?.restSeconds ?: 120).coerceAtLeast(0)
+            startRestCountdown(seconds)
+        }
+    }
+
+    fun updateExerciseRest(exerciseId: String, restSeconds: Int) {
+        scope.launch {
+            exerciseRepository.updateExerciseRest(exerciseId, restSeconds)
         }
     }
 
@@ -69,6 +114,7 @@ class GymTrackingLogic(
 
         if (session == null) {
             _elapsed.value = Duration.ZERO
+            stopRestInternal()
             return
         }
 
@@ -83,6 +129,38 @@ class GymTrackingLogic(
                 delay(1000)
             }
         }
+    }
+
+    private fun startRestCountdown(seconds: Int) {
+        stopRestInternal()
+        if (seconds <= 0) return
+
+        _isRestRunning.value = true
+        restEndEpochMillis = System.currentTimeMillis() + seconds * 1000L
+        restJob = scope.launch {
+            while (true) {
+                syncRestTick()
+                if (!_isRestRunning.value) break
+                delay(250)
+            }
+        }
+    }
+
+    private fun syncRestTick() {
+        val end = restEndEpochMillis ?: return
+        val leftMillis = (end - System.currentTimeMillis()).coerceAtLeast(0L)
+        _restRemaining.value = leftMillis.milliseconds
+        if (leftMillis == 0L) {
+            stopRestInternal()
+        }
+    }
+
+    private fun stopRestInternal() {
+        restJob?.cancel()
+        restJob = null
+        restEndEpochMillis = null
+        _restRemaining.value = Duration.ZERO
+        _isRestRunning.value = false
     }
 }
 

@@ -29,6 +29,13 @@ class GymSessionService : Service() {
         const val ACTION_PAUSE = "ACTION_PAUSE"
         const val ACTION_RESUME = "ACTION_RESUME"
         const val ACTION_FINISH = "ACTION_FINISH"
+        const val ACTION_START_REST = "ACTION_START_REST"
+        const val ACTION_ADD_REST = "ACTION_ADD_REST"
+        const val ACTION_FINISH_SET = "ACTION_FINISH_SET"
+        const val ACTION_UPDATE_EXERCISE_REST = "ACTION_UPDATE_EXERCISE_REST"
+
+        const val EXTRA_EXERCISE_ID = "extra_exercise_id"
+        const val EXTRA_SECONDS = "extra_seconds"
 
         private const val CHANNEL_ID = "gym_session_channel"
         private const val NOTIFICATION_ID = 2
@@ -64,6 +71,11 @@ class GymSessionService : Service() {
                     if (isForegroundService) updateNotification()
                 }
             }
+            launch {
+                trackingLogic.restRemaining.collect {
+                    if (isForegroundService) updateNotification()
+                }
+            }
         }
     }
 
@@ -73,6 +85,22 @@ class GymSessionService : Service() {
             ACTION_PAUSE -> trackingLogic.pause()
             ACTION_RESUME -> trackingLogic.resume()
             ACTION_FINISH -> finishSession()
+            ACTION_START_REST -> {
+                val exerciseId = intent.getStringExtra(EXTRA_EXERCISE_ID)
+                if (!exerciseId.isNullOrBlank()) trackingLogic.startRestForExercise(exerciseId)
+            }
+            ACTION_ADD_REST -> {
+                val seconds = intent.getIntExtra(EXTRA_SECONDS, 30)
+                trackingLogic.addRestSeconds(seconds)
+            }
+            ACTION_FINISH_SET -> trackingLogic.finishLatestSetAndStartRest()
+            ACTION_UPDATE_EXERCISE_REST -> {
+                val exerciseId = intent.getStringExtra(EXTRA_EXERCISE_ID)
+                val seconds = intent.getIntExtra(EXTRA_SECONDS, 120)
+                if (!exerciseId.isNullOrBlank()) {
+                    trackingLogic.updateExerciseRest(exerciseId, seconds)
+                }
+            }
         }
         return START_STICKY
     }
@@ -162,24 +190,50 @@ class GymSessionService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val finishIntent = PendingIntent.getService(
+        val finishWorkoutIntent = PendingIntent.getService(
             this,
             1,
             Intent(this, GymSessionService::class.java).apply { action = ACTION_FINISH },
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val elapsedText = formatDuration(trackingLogic.elapsed.value)
+        val finishSetIntent = PendingIntent.getService(
+            this,
+            2,
+            Intent(this, GymSessionService::class.java).apply { action = ACTION_FINISH_SET },
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
 
-        return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Workout in progress")
-            .setContentText("Time: $elapsedText")
+        val addRestIntent = PendingIntent.getService(
+            this,
+            3,
+            Intent(this, GymSessionService::class.java).apply {
+                action = ACTION_ADD_REST
+                putExtra(EXTRA_SECONDS, 30)
+            },
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val elapsedText = formatDuration(trackingLogic.elapsed.value)
+        val restRunning = trackingLogic.isRestRunning.value
+        val restText = formatDuration(trackingLogic.restRemaining.value)
+
+        val builder = NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle(if (restRunning) "Rest timer" else "Workout in progress")
+            .setContentText(if (restRunning) "Rest: $restText | Workout: $elapsedText" else "Time: $elapsedText")
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentIntent(openIntent)
             .setOnlyAlertOnce(true)
             .setOngoing(true)
-            .addAction(0, "Finish", finishIntent)
-            .build()
+
+        if (restRunning) {
+            builder.addAction(0, "+30s", addRestIntent)
+        }
+
+        builder.addAction(0, "Finish Set", finishSetIntent)
+        builder.addAction(0, "Finish Workout", finishWorkoutIntent)
+
+        return builder.build()
     }
 
     private fun formatDuration(duration: Duration): String {

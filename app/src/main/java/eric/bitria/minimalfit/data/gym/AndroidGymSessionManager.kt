@@ -12,6 +12,8 @@ class AndroidGymSessionManager(
 
     override val activeSession = gymTrackingLogic.activeSession
     override val elapsed = gymTrackingLogic.elapsed
+    override val restRemaining = gymTrackingLogic.restRemaining
+    override val isRestRunning = gymTrackingLogic.isRestRunning
 
     override fun start() {
         sendCommand(GymSessionService.ACTION_START)
@@ -27,6 +29,35 @@ class AndroidGymSessionManager(
 
     override fun finish() {
         sendCommand(GymSessionService.ACTION_FINISH)
+    }
+
+    override fun startRestForExercise(exerciseId: String) {
+        val intent = Intent(context, GymSessionService::class.java).apply {
+            action = GymSessionService.ACTION_START_REST
+            putExtra(GymSessionService.EXTRA_EXERCISE_ID, exerciseId)
+        }
+        ContextCompat.startForegroundService(context, intent)
+    }
+
+    override fun addRestSeconds(seconds: Int) {
+        val intent = Intent(context, GymSessionService::class.java).apply {
+            action = GymSessionService.ACTION_ADD_REST
+            putExtra(GymSessionService.EXTRA_SECONDS, seconds)
+        }
+        ContextCompat.startForegroundService(context, intent)
+    }
+
+    override fun finishLatestSetAndStartRest() {
+        sendCommand(GymSessionService.ACTION_FINISH_SET)
+    }
+
+    override fun updateExerciseRest(exerciseId: String, restSeconds: Int) {
+        val intent = Intent(context, GymSessionService::class.java).apply {
+            action = GymSessionService.ACTION_UPDATE_EXERCISE_REST
+            putExtra(GymSessionService.EXTRA_EXERCISE_ID, exerciseId)
+            putExtra(GymSessionService.EXTRA_SECONDS, restSeconds)
+        }
+        ContextCompat.startForegroundService(context, intent)
     }
 
     private fun sendCommand(action: String) {

@@ -11,5 +11,6 @@ data class Exercise(
     val name: String,
     val isBodyweight: Boolean = false,
     val muscleGroup: String? = null,
+    val restSeconds: Int = 120,
 )
 

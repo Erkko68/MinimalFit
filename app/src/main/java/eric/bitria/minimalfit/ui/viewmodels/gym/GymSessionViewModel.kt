@@ -34,7 +34,9 @@ data class GymExerciseUi(
 data class GymSessionUiState(
     val isLoading: Boolean = true,
     val session: Session? = null,
-    val exercises: List<GymExerciseUi> = emptyList()
+    val exercises: List<GymExerciseUi> = emptyList(),
+    val restTimerText: String = "00:00",
+    val isRestRunning: Boolean = false
 )
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -46,7 +48,6 @@ class GymSessionViewModel(
     private val gymSessionManager: GymSessionManager
 ) : ViewModel() {
 
-    private val refreshTrigger = MutableStateFlow(0)
     private val _timerText = MutableStateFlow("00:00")
     val timerText: StateFlow<String> = _timerText.asStateFlow()
 
@@ -71,8 +72,9 @@ class GymSessionViewModel(
         currentSessionFlow,
         exerciseRepository.getExercises(),
         currentSetsFlow,
-        refreshTrigger
-    ) { session, exercises, sessionSets, _ ->
+        gymSessionManager.restRemaining,
+        gymSessionManager.isRestRunning
+    ) { session, exercises, sessionSets, restRemaining, isRestRunning ->
         if (session == null) {
             GymSessionUiState(isLoading = false, session = null)
         } else {
@@ -85,7 +87,9 @@ class GymSessionViewModel(
             GymSessionUiState(
                 isLoading = false,
                 session = session,
-                exercises = grouped
+                exercises = grouped,
+                restTimerText = formatDuration(restRemaining),
+                isRestRunning = isRestRunning
             )
         }
     }.stateIn(
@@ -126,7 +130,6 @@ class GymSessionViewModel(
     fun startNewSession() {
         viewModelScope.launch {
             gymSessionManager.start()
-            refreshTrigger.value++
         }
     }
 
@@ -149,7 +152,6 @@ class GymSessionViewModel(
                 isWarmup = false,
                 notes = ""
             )
-            refreshTrigger.value++
         }
     }
 
@@ -157,28 +159,48 @@ class GymSessionViewModel(
         viewModelScope.launch {
             val session = uiState.value.session ?: return@launch
             setRepository.copyPreviousSet(session.id, exerciseId)
-            refreshTrigger.value++
         }
     }
 
     fun updateSet(set: Set) {
         viewModelScope.launch {
             setRepository.updateSet(set)
-            refreshTrigger.value++
+            if (set.isCompleted) {
+                gymSessionManager.startRestForExercise(set.exerciseId)
+            }
         }
+    }
+
+    fun updateExerciseRest(exerciseId: String, restSeconds: Int) {
+        viewModelScope.launch {
+            gymSessionManager.updateExerciseRest(exerciseId, restSeconds)
+        }
+    }
+
+    fun addRestSeconds(seconds: Int = 30) {
+        gymSessionManager.addRestSeconds(seconds)
     }
 
     fun deleteSet(setId: String) {
         viewModelScope.launch {
             setRepository.deleteSet(setId)
-            refreshTrigger.value++
         }
     }
 
     fun finishSession() {
         viewModelScope.launch {
             gymSessionManager.finish()
-            refreshTrigger.value++
         }
+    }
+
+    fun finishLatestSetAndStartRest() {
+        gymSessionManager.finishLatestSetAndStartRest()
+    }
+
+    private fun formatDuration(duration: Duration): String {
+        val totalSeconds = duration.inWholeSeconds
+        val minutes = totalSeconds / 60
+        val seconds = totalSeconds % 60
+        return String.format(Locale.US, "%02d:%02d", minutes, seconds)
     }
 }

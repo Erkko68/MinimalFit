@@ -21,6 +21,11 @@ class DefaultSetRepository(
     override fun getSessionForSet(setId: String): Flow<Session?> =
         setDao.getSessionForSet(setId)
 
+    override suspend fun getSetById(setId: String): Set? {
+        val session = getSessionForSet(setId).first() ?: return null
+        return setDao.getSetsForSession(session.id).first().firstOrNull { it.id == setId }
+    }
+
     override suspend fun addSet(
         sessionId: String,
         exerciseId: String,
@@ -47,6 +52,18 @@ class DefaultSetRepository(
 
     override suspend fun updateSet(set: Set) {
         setDao.updateSet(set)
+    }
+
+    override suspend fun completeLatestIncompleteSet(sessionId: String): Set? {
+        val sets = setDao.getSetsForSession(sessionId).first()
+        val latest = sets
+            .filter { !it.isCompleted }
+            .maxByOrNull { it.orderInSession }
+            ?: return null
+
+        val updated = latest.copy(isCompleted = true)
+        setDao.updateSet(updated)
+        return updated
     }
 
     override suspend fun deleteSet(setId: String) {

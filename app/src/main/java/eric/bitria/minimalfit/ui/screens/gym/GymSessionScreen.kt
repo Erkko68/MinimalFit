@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -193,6 +194,38 @@ fun GymSessionScreen(
     ) {
         val isActive = uiState.session?.status == SessionStatus.ACTIVE
 
+        if (uiState.isRestRunning) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.extraLarge,
+                colors = androidx.compose.material3.CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                )
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(Spacing.m),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "Rest: ${uiState.restTimerText}",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
+                        Button(onClick = { viewModel.addRestSeconds(30) }) {
+                            Text("+30s")
+                        }
+                        Button(onClick = { viewModel.finishLatestSetAndStartRest() }) {
+                            Text("Finish Set")
+                        }
+                    }
+                }
+            }
+        }
+
         // Lista de ejercicios y sets
         LazyColumn(
             modifier = Modifier
@@ -217,6 +250,35 @@ fun GymSessionScreen(
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
+
+                        var restText by remember(item.exercise.id, item.exercise.restSeconds) {
+                            mutableStateOf(item.exercise.restSeconds.toString())
+                        }
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.s)
+                        ) {
+                            Text(
+                                text = "Rest (sec)",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            OutlinedTextField(
+                                value = restText,
+                                onValueChange = {
+                                    restText = it
+                                    val restSeconds = it.toIntOrNull() ?: 0
+                                    viewModel.updateExerciseRest(item.exercise.id, restSeconds)
+                                },
+                                singleLine = true,
+                                enabled = isActive,
+                                modifier = Modifier
+                                    .width(120.dp)
+                                    .height(56.dp)
+                            )
+                        }
 
                         item.sets.forEachIndexed { index, set ->
                             var weightText by remember(set.id) { mutableStateOf(if (set.weight > 0) set.weight.toString() else "") }

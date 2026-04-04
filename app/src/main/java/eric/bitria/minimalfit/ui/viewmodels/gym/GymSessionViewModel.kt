@@ -79,12 +79,17 @@ class GymSessionViewModel(
         if (session == null) {
             GymSessionUiState(isLoading = false, session = null)
         } else {
-            val grouped = exercises.map { ex ->
-                GymExerciseUi(
-                    exercise = ex,
-                    sets = sessionSets.filter { it.exerciseId == ex.id }
-                )
-            }.filter { it.sets.isNotEmpty() }
+            val exercisesById = exercises.associateBy { it.id }
+            val grouped = sessionSets
+                .groupBy { it.exerciseId }
+                .mapNotNull { (exerciseId, sets) ->
+                    val exercise = exercisesById[exerciseId] ?: return@mapNotNull null
+                    val sortedSets = sets.sortedBy { it.orderInSession }
+                    GymExerciseUi(exercise = exercise, sets = sortedSets)
+                }
+                .sortedBy { item ->
+                    item.sets.minOfOrNull { it.orderInSession } ?: Int.MAX_VALUE
+                }
             GymSessionUiState(
                 isLoading = false,
                 session = session,

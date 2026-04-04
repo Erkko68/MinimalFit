@@ -86,6 +86,7 @@ private fun SwipeDeleteBackground(
 @Composable
 fun SwipeToDeleteCard(
     onDismiss: () -> Unit,
+    onDeleteRequested: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
@@ -149,20 +150,33 @@ fun SwipeToDeleteCard(
                                     abs(velocity) > 1200f
 
                                 if (shouldDismiss) {
-                                    val targetOffset = if (offsetX.value > 0) {
-                                        cardWidth.toFloat() * 2
-                                    } else {
-                                        -cardWidth.toFloat() * 2
-                                    }
-                                    isDismissed = true
-                                    launch {
-                                        offsetX.animateTo(
-                                            targetValue = targetOffset,
-                                            animationSpec = spring(
-                                                dampingRatio = Spring.DampingRatioNoBouncy,
-                                                stiffness = Spring.StiffnessMedium
+                                    if (onDeleteRequested != null) {
+                                        onDeleteRequested()
+                                        launch {
+                                            offsetX.animateTo(
+                                                targetValue = 0f,
+                                                animationSpec = spring(
+                                                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                                                    stiffness = Spring.StiffnessMedium
+                                                )
                                             )
-                                        )
+                                        }
+                                    } else {
+                                        val targetOffset = if (offsetX.value > 0) {
+                                            cardWidth.toFloat() * 2
+                                        } else {
+                                            -cardWidth.toFloat() * 2
+                                        }
+                                        isDismissed = true
+                                        launch {
+                                            offsetX.animateTo(
+                                                targetValue = targetOffset,
+                                                animationSpec = spring(
+                                                    dampingRatio = Spring.DampingRatioNoBouncy,
+                                                    stiffness = Spring.StiffnessMedium
+                                                )
+                                            )
+                                        }
                                     }
                                 } else {
                                     launch {

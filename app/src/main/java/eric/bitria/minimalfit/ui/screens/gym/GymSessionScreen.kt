@@ -63,6 +63,8 @@ fun GymSessionScreen(
 
     var showFinishDialog by remember { mutableStateOf(false) }
     var showExerciseSearchDialog by remember { mutableStateOf(false) }
+    var setToDeleteId by remember { mutableStateOf<String?>(null) }
+    var exerciseToDeleteId by remember { mutableStateOf<String?>(null) }
     var notificationPermissionGranted by remember { mutableStateOf(false) }
     val catalogExercises by viewModel.catalogExercises.collectAsState(initial = emptyList())
 
@@ -136,6 +138,48 @@ fun GymSessionScreen(
                 )
             }
         }
+    }
+
+    if (setToDeleteId != null) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { setToDeleteId = null },
+            title = { Text("Delete set") },
+            text = { Text("Do you want to delete this set from the current workout?") },
+            confirmButton = {
+                androidx.compose.material3.TextButton(
+                    onClick = {
+                        viewModel.deleteSet(setToDeleteId!!)
+                        setToDeleteId = null
+                    }
+                ) { Text("Delete") }
+            },
+            dismissButton = {
+                androidx.compose.material3.TextButton(onClick = { setToDeleteId = null }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    if (exerciseToDeleteId != null) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { exerciseToDeleteId = null },
+            title = { Text("Delete exercise") },
+            text = { Text("Do you want to delete this exercise and all its sets from this session?") },
+            confirmButton = {
+                androidx.compose.material3.TextButton(
+                    onClick = {
+                        viewModel.deleteExerciseFromCurrentSession(exerciseToDeleteId!!)
+                        exerciseToDeleteId = null
+                    }
+                ) { Text("Delete") }
+            },
+            dismissButton = {
+                androidx.compose.material3.TextButton(onClick = { exerciseToDeleteId = null }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 
     androidx.activity.compose.BackHandler(enabled = uiState.session?.status == SessionStatus.ACTIVE) {
@@ -425,7 +469,10 @@ fun GymSessionScreen(
                                 }
 
                                 if (isActive) {
-                                    SwipeToDeleteCard(onDismiss = { viewModel.deleteSet(set.id) }) {
+                                    SwipeToDeleteCard(
+                                        onDismiss = {},
+                                        onDeleteRequested = { setToDeleteId = set.id }
+                                    ) {
                                         setRow()
                                     }
                                 } else {
@@ -448,7 +495,10 @@ fun GymSessionScreen(
                 }
 
                 if (isActive) {
-                    SwipeToDeleteCard(onDismiss = { viewModel.deleteExerciseFromCurrentSession(item.exercise.id) }) {
+                    SwipeToDeleteCard(
+                        onDismiss = {},
+                        onDeleteRequested = { exerciseToDeleteId = item.exercise.id }
+                    ) {
                         exerciseContent()
                     }
                 } else {

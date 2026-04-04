@@ -94,7 +94,11 @@ class GymTrackingLogic(
 
     fun addRestSeconds(seconds: Int) {
         if (seconds <= 0) return
-        val currentEnd = restEndEpochMillis ?: return
+        val currentEnd = restEndEpochMillis
+        if (currentEnd == null) {
+            startRestCountdown(seconds)
+            return
+        }
         restEndEpochMillis = currentEnd + (seconds * 1000L)
         syncRestTick()
     }

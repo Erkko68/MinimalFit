@@ -57,12 +57,12 @@ class DefaultSetRepository(
 
     override suspend fun completeLatestIncompleteSet(sessionId: String): Set? {
         val sets = setDao.getSetsForSession(sessionId).first()
-        val latest = sets
+        val next = sets
             .filter { !it.isCompleted }
-            .maxByOrNull { it.orderInSession }
+            .minByOrNull { it.orderInSession }
             ?: return null
 
-        val updated = latest.copy(isCompleted = true)
+        val updated = next.copy(isCompleted = true)
         setDao.updateSet(updated)
         return updated
     }

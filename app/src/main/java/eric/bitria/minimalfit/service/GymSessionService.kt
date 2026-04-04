@@ -40,6 +40,10 @@ class GymSessionService : Service() {
 
         private const val CHANNEL_ID = "gym_session_channel"
         private const val NOTIFICATION_ID = 2
+        private const val REQUEST_FINISH_WORKOUT = 1
+        private const val REQUEST_STOP_REST = 2
+        private const val REQUEST_ADD_REST = 3
+        private const val REQUEST_COMPLETE_SET = 4
     }
 
     private val trackingLogic: GymTrackingLogic by inject()
@@ -199,34 +203,32 @@ class GymSessionService : Service() {
 
         val finishWorkoutIntent = PendingIntent.getService(
             this,
-            1,
+            REQUEST_FINISH_WORKOUT,
             Intent(this, GymSessionService::class.java).apply { action = ACTION_FINISH },
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-        val pauseResumeIntent = PendingIntent.getService(
-            this,
-            4,
-            Intent(this, GymSessionService::class.java).apply {
-                action = if (trackingLogic.activeSession.value?.status == SessionStatus.PAUSED) ACTION_RESUME else ACTION_PAUSE
-            },
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
         val stopRestIntent = PendingIntent.getService(
             this,
-            2,
+            REQUEST_STOP_REST,
             Intent(this, GymSessionService::class.java).apply { action = ACTION_STOP_REST },
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
         val addRestIntent = PendingIntent.getService(
             this,
-            3,
+            REQUEST_ADD_REST,
             Intent(this, GymSessionService::class.java).apply {
                 action = ACTION_ADD_REST
                 putExtra(EXTRA_SECONDS, 30)
             },
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val completeSetIntent = PendingIntent.getService(
+            this,
+            REQUEST_COMPLETE_SET,
+            Intent(this, GymSessionService::class.java).apply { action = ACTION_FINISH_SET },
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
@@ -250,20 +252,8 @@ class GymSessionService : Service() {
             builder.addAction(0, "+30s", addRestIntent)
             builder.addAction(0, "Stop Rest", stopRestIntent)
         } else if (canCompleteSet) {
-            val completeSetIntent = PendingIntent.getService(
-                this,
-                2,
-                Intent(this, GymSessionService::class.java).apply { action = ACTION_FINISH_SET },
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
             builder.addAction(0, "Complete Set", completeSetIntent)
         }
-
-        builder.addAction(
-            0,
-            if (activeSession?.status == SessionStatus.PAUSED) "Resume" else "Pause",
-            pauseResumeIntent
-        )
         builder.addAction(0, "Finish Workout", finishWorkoutIntent)
 
         return builder.build()

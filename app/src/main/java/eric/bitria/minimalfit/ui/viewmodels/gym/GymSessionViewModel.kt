@@ -204,6 +204,15 @@ class GymSessionViewModel(
         }
     }
 
+    fun deleteExerciseFromCurrentSession(exerciseId: String) {
+        viewModelScope.launch {
+            val target = uiState.value.exercises.firstOrNull { it.exercise.id == exerciseId } ?: return@launch
+            target.sets.forEach { set ->
+                setRepository.deleteSet(set.id)
+            }
+        }
+    }
+
     fun finishSession() {
         viewModelScope.launch {
             gymSessionManager.finish()

@@ -86,6 +86,11 @@ class GymSessionService : Service() {
                     if (isForegroundService) updateNotification()
                 }
             }
+            launch {
+                trackingLogic.nextIncompleteSetInfo.collect {
+                    if (isForegroundService) updateNotification()
+                }
+            }
         }
     }
 
@@ -236,13 +241,21 @@ class GymSessionService : Service() {
         val elapsedText = formatDuration(trackingLogic.elapsed.value)
         val restRunning = trackingLogic.isRestRunning.value
         val restText = formatDuration(trackingLogic.restRemaining.value)
+        val nextExerciseInfo = trackingLogic.nextIncompleteSetInfo.value
         val canCompleteSet = !restRunning &&
             activeSession?.status == SessionStatus.ACTIVE &&
             trackingLogic.hasIncompleteSet.value
 
+        val contentText = if (restRunning) {
+            "Rest: $restText | Workout: $elapsedText"
+        } else {
+            val nextText = nextExerciseInfo?.let { " | Next: $it" } ?: ""
+            "Time: $elapsedText$nextText"
+        }
+
         val builder = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle(if (restRunning) "Rest timer" else "Workout in progress")
-            .setContentText(if (restRunning) "Rest: $restText | Workout: $elapsedText" else "Time: $elapsedText")
+            .setContentText(contentText)
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentIntent(openIntent)
             .setOnlyAlertOnce(true)

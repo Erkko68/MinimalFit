@@ -42,6 +42,9 @@ class GymTrackingLogic(
     private val _hasIncompleteSet = MutableStateFlow(false)
     val hasIncompleteSet: StateFlow<Boolean> = _hasIncompleteSet.asStateFlow()
 
+    private val _nextIncompleteSetInfo = MutableStateFlow<String?>(null)
+    val nextIncompleteSetInfo: StateFlow<String?> = _nextIncompleteSetInfo.asStateFlow()
+
     private var tickerJob: Job? = null
     private var restJob: Job? = null
     private var setObserverJob: Job? = null
@@ -150,13 +153,39 @@ class GymTrackingLogic(
 
         if (session == null || session.status == SessionStatus.COMPLETED) {
             _hasIncompleteSet.value = false
+            _nextIncompleteSetInfo.value = null
             return
         }
 
         setObserverJob = scope.launch {
             setRepository.getSetsForSession(session.id)
                 .collect { sets ->
-                    _hasIncompleteSet.value = sets.any { !it.isCompleted }
+                    val nextSet = sets
+                        .filter { !it.isCompleted }
+                        .minByOrNull { it.orderInSession }
+
+                    _hasIncompleteSet.value = nextSet != null
+
+                    if (nextSet == null) {
+                        _nextIncompleteSetInfo.value = null
+                    } else {
+                        val setNumber = sets
+                            .filter { it.exerciseId == nextSet.exerciseId }
+                            .sortedBy { it.orderInSession }
+                            .indexOfFirst { it.id == nextSet.id }
+                            .let { if (it >= 0) it + 1 else 1 }
+
+                        val exerciseName = exerciseRepository
+                            .getExerciseById(nextSet.exerciseId)
+                            ?.name
+                            ?.takeIf { it.isNotBlank() }
+
+                        _nextIncompleteSetInfo.value = if (exerciseName != null) {
+                            "$exerciseName - Set $setNumber"
+                        } else {
+                            "Set $setNumber"
+                        }
+                    }
                 }
         }
     }

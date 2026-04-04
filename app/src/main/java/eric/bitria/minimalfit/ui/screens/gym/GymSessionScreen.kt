@@ -44,6 +44,7 @@ import eric.bitria.minimalfit.data.entity.gym.SessionStatus
 import eric.bitria.minimalfit.navigation.ScreenConfiguration
 import eric.bitria.minimalfit.ui.components.food.dialogs.SearchableItemDialog
 import eric.bitria.minimalfit.ui.components.requirements.permission.RequireNotificationPermission
+import eric.bitria.minimalfit.ui.components.shared.animations.SwipeToDeleteCard
 import eric.bitria.minimalfit.ui.theme.Spacing
 import eric.bitria.minimalfit.ui.viewmodels.gym.GymSessionViewModel
 import org.koin.androidx.compose.koinViewModel
@@ -309,133 +310,149 @@ fun GymSessionScreen(
             }
 
             items(uiState.exercises, key = { it.exercise.id }) { item ->
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = MaterialTheme.shapes.extraLarge,
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
-                    )
-                ) {
-                    Column(
-                        modifier = Modifier.padding(Spacing.m),
-                        verticalArrangement = Arrangement.spacedBy(Spacing.s)
-                    ) {
-                        Text(
-                            text = item.exercise.name,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
+                val exerciseContent: @Composable () -> Unit = {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.extraLarge,
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
                         )
-
-                        var restText by remember(item.exercise.id, item.exercise.restSeconds) {
-                            mutableStateOf(item.exercise.restSeconds.toString())
-                        }
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(Spacing.s)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(Spacing.m),
+                            verticalArrangement = Arrangement.spacedBy(Spacing.s)
                         ) {
                             Text(
-                                text = "Rest (sec)",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                text = item.exercise.name,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
                             )
-                            OutlinedTextField(
-                                value = restText,
-                                onValueChange = {
-                                    restText = it.filter { ch -> ch.isDigit() }
-                                },
-                                singleLine = true,
-                                enabled = isActive,
-                                modifier = Modifier
-                                    .width(120.dp)
-                                    .height(56.dp)
-                            )
-                            Button(
-                                onClick = {
-                                    val restSeconds = (restText.toIntOrNull() ?: item.exercise.restSeconds)
-                                        .coerceIn(0, 900)
-                                    restText = restSeconds.toString()
-                                    viewModel.updateExerciseRest(item.exercise.id, restSeconds)
-                                },
-                                enabled = isActive
-                            ) {
-                                Text("Save")
-                            }
-                        }
 
-                        item.sets.forEachIndexed { index, set ->
-                            var weightText by remember(set.id) { mutableStateOf(if (set.weight > 0) set.weight.toString() else "") }
-                            var repsText by remember(set.id) { mutableStateOf(if (set.reps > 0) set.reps.toString() else "") }
+                            var restText by remember(item.exercise.id, item.exercise.restSeconds) {
+                                mutableStateOf(item.exercise.restSeconds.toString())
+                            }
 
                             Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = Spacing.xs),
+                                modifier = Modifier.fillMaxWidth(),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(Spacing.s)
                             ) {
                                 Text(
-                                    text = "${index + 1}",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.width(24.dp)
-                                )
-
-                                OutlinedTextField(
-                                    value = weightText,
-                                    onValueChange = {
-                                        weightText = it
-                                        val weight = it.toFloatOrNull() ?: 0f
-                                        viewModel.updateSet(set.copy(weight = weight))
-                                    },
-                                    label = { Text("kg") },
-                                    enabled = isActive,
-                                    modifier = Modifier.weight(1f)
+                                    text = "Rest (sec)",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 OutlinedTextField(
-                                    value = repsText,
-                                    onValueChange = {
-                                        repsText = it
-                                        val reps = it.toIntOrNull() ?: 0
-                                        viewModel.updateSet(set.copy(reps = reps))
-                                    },
-                                    label = { Text("reps") },
+                                    value = restText,
+                                    onValueChange = { restText = it.filter { ch -> ch.isDigit() } },
+                                    singleLine = true,
                                     enabled = isActive,
-                                    modifier = Modifier.weight(1f)
+                                    modifier = Modifier
+                                        .width(120.dp)
+                                        .height(56.dp)
                                 )
-                                
-                                val isCompleted = set.isCompleted
-                                IconButton(
-                                    onClick = { 
-                                        if (isActive) viewModel.toggleSetCompleted(set)
+                                Button(
+                                    onClick = {
+                                        val restSeconds = (restText.toIntOrNull() ?: item.exercise.restSeconds)
+                                            .coerceIn(0, 900)
+                                        restText = restSeconds.toString()
+                                        viewModel.updateExerciseRest(item.exercise.id, restSeconds)
                                     },
-                                    modifier = Modifier.background(
-                                        color = if (isCompleted) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
-                                        shape = MaterialTheme.shapes.small
-                                    )
+                                    enabled = isActive
                                 ) {
-                                    Icon(
-                                        Icons.Filled.Check, 
-                                        contentDescription = "Complete set",
-                                        tint = if (isCompleted) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
+                                    Text("Save")
                                 }
                             }
-                        }
 
-                        if (isActive) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.End
-                            ) {
-                                Button(onClick = { viewModel.addSet(item.exercise.id) }) {
-                                    Text("+ Set")
+                            item.sets.forEachIndexed { index, set ->
+                                var weightText by remember(set.id) { mutableStateOf(if (set.weight > 0) set.weight.toString() else "") }
+                                var repsText by remember(set.id) { mutableStateOf(if (set.reps > 0) set.reps.toString() else "") }
+
+                                val setRow: @Composable () -> Unit = {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = Spacing.xs),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(Spacing.s)
+                                    ) {
+                                        Text(
+                                            text = "${index + 1}",
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.width(24.dp)
+                                        )
+
+                                        OutlinedTextField(
+                                            value = weightText,
+                                            onValueChange = {
+                                                weightText = it
+                                                val weight = it.toFloatOrNull() ?: 0f
+                                                viewModel.updateSet(set.copy(weight = weight))
+                                            },
+                                            label = { Text("kg") },
+                                            enabled = isActive,
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                        OutlinedTextField(
+                                            value = repsText,
+                                            onValueChange = {
+                                                repsText = it
+                                                val reps = it.toIntOrNull() ?: 0
+                                                viewModel.updateSet(set.copy(reps = reps))
+                                            },
+                                            label = { Text("reps") },
+                                            enabled = isActive,
+                                            modifier = Modifier.weight(1f)
+                                        )
+
+                                        val isCompleted = set.isCompleted
+                                        IconButton(
+                                            onClick = { if (isActive) viewModel.toggleSetCompleted(set) },
+                                            modifier = Modifier.background(
+                                                color = if (isCompleted) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
+                                                shape = MaterialTheme.shapes.small
+                                            )
+                                        ) {
+                                            Icon(
+                                                Icons.Filled.Check,
+                                                contentDescription = "Complete set",
+                                                tint = if (isCompleted) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    }
+                                }
+
+                                if (isActive) {
+                                    SwipeToDeleteCard(onDismiss = { viewModel.deleteSet(set.id) }) {
+                                        setRow()
+                                    }
+                                } else {
+                                    setRow()
+                                }
+                            }
+
+                            if (isActive) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.End
+                                ) {
+                                    Button(onClick = { viewModel.addSet(item.exercise.id) }) {
+                                        Text("+ Set")
+                                    }
                                 }
                             }
                         }
                     }
+                }
+
+                if (isActive) {
+                    SwipeToDeleteCard(onDismiss = { viewModel.deleteExerciseFromCurrentSession(item.exercise.id) }) {
+                        exerciseContent()
+                    }
+                } else {
+                    exerciseContent()
                 }
             }
 

@@ -194,6 +194,10 @@ class GymSessionViewModel(
         gymSessionManager.addRestSeconds(seconds)
     }
 
+    fun stopRest() {
+        gymSessionManager.stopRest()
+    }
+
     fun deleteSet(setId: String) {
         viewModelScope.launch {
             setRepository.deleteSet(setId)

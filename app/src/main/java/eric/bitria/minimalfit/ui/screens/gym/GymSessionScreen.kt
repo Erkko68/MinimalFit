@@ -2,6 +2,7 @@ package eric.bitria.minimalfit.ui.screens.gym
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,6 +22,7 @@ import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -202,12 +204,45 @@ fun GymSessionScreen(
         verticalArrangement = Arrangement.spacedBy(Spacing.m)
     ) {
         val isActive = uiState.session?.status == SessionStatus.ACTIVE
+        val totalSets = uiState.exercises.sumOf { it.sets.size }
+        val completedSets = uiState.exercises.sumOf { exercise -> exercise.sets.count { it.isCompleted } }
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.extraLarge,
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = Spacing.m, vertical = Spacing.s),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = if (isActive) "Active" else "Paused",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    text = "Exercises: ${uiState.exercises.size}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = "Sets: $completedSets/$totalSets",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
 
         if (uiState.isRestRunning) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = MaterialTheme.shapes.extraLarge,
-                colors = androidx.compose.material3.CardDefaults.cardColors(
+                colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer
                 )
             ) {
@@ -227,8 +262,8 @@ fun GymSessionScreen(
                         Button(onClick = { viewModel.addRestSeconds(30) }) {
                             Text("+30s")
                         }
-                        Button(onClick = { viewModel.finishLatestSetAndStartRest() }) {
-                            Text("Finish Set")
+                        Button(onClick = { viewModel.stopRest() }) {
+                            Text("Stop Rest")
                         }
                     }
                 }
@@ -240,13 +275,53 @@ fun GymSessionScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .weight(1f),
+            contentPadding = PaddingValues(bottom = Spacing.m),
             verticalArrangement = Arrangement.spacedBy(Spacing.m)
         ) {
+            item {
+                Text(
+                    text = "Exercises",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.ExtraBold
+                )
+            }
+
+            if (uiState.exercises.isEmpty()) {
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.extraLarge,
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(Spacing.m),
+                            verticalArrangement = Arrangement.spacedBy(Spacing.s)
+                        ) {
+                            Text(
+                                text = "No exercises yet",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "Add an exercise to start logging your first set and unlock one-tap complete set actions from the notification.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            if (isActive) {
+                                Button(onClick = { showExerciseSearchDialog = true }) {
+                                    Text("Add Exercise")
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             items(uiState.exercises, key = { it.exercise.id }) { item ->
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = MaterialTheme.shapes.extraLarge,
-                    colors = androidx.compose.material3.CardDefaults.cardColors(
+                    colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
                     )
                 ) {
@@ -277,9 +352,7 @@ fun GymSessionScreen(
                             OutlinedTextField(
                                 value = restText,
                                 onValueChange = {
-                                    restText = it
-                                    val restSeconds = it.toIntOrNull() ?: 0
-                                    viewModel.updateExerciseRest(item.exercise.id, restSeconds)
+                                    restText = it.filter { ch -> ch.isDigit() }
                                 },
                                 singleLine = true,
                                 enabled = isActive,
@@ -287,6 +360,17 @@ fun GymSessionScreen(
                                     .width(120.dp)
                                     .height(56.dp)
                             )
+                            Button(
+                                onClick = {
+                                    val restSeconds = (restText.toIntOrNull() ?: item.exercise.restSeconds)
+                                        .coerceIn(0, 900)
+                                    restText = restSeconds.toString()
+                                    viewModel.updateExerciseRest(item.exercise.id, restSeconds)
+                                },
+                                enabled = isActive
+                            ) {
+                                Text("Save")
+                            }
                         }
 
                         item.sets.forEachIndexed { index, set ->

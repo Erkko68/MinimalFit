@@ -16,6 +16,7 @@ interface GymSessionManager {
     fun finish()
     fun startRestForExercise(exerciseId: String)
     fun addRestSeconds(seconds: Int)
+    fun stopRest()
     fun finishLatestSetAndStartRest()
     fun updateExerciseRest(exerciseId: String, restSeconds: Int)
 }

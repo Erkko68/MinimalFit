@@ -2,7 +2,6 @@ package eric.bitria.minimalfit.data.gym
 
 import android.content.Context
 import android.content.Intent
-import androidx.core.content.ContextCompat
 import eric.bitria.minimalfit.service.GymSessionService
 
 class AndroidGymSessionManager(
@@ -36,7 +35,7 @@ class AndroidGymSessionManager(
             action = GymSessionService.ACTION_START_REST
             putExtra(GymSessionService.EXTRA_EXERCISE_ID, exerciseId)
         }
-        ContextCompat.startForegroundService(context, intent)
+        context.startService(intent)
     }
 
     override fun addRestSeconds(seconds: Int) {
@@ -44,7 +43,11 @@ class AndroidGymSessionManager(
             action = GymSessionService.ACTION_ADD_REST
             putExtra(GymSessionService.EXTRA_SECONDS, seconds)
         }
-        ContextCompat.startForegroundService(context, intent)
+        context.startService(intent)
+    }
+
+    override fun stopRest() {
+        sendCommand(GymSessionService.ACTION_STOP_REST)
     }
 
     override fun finishLatestSetAndStartRest() {
@@ -57,14 +60,14 @@ class AndroidGymSessionManager(
             putExtra(GymSessionService.EXTRA_EXERCISE_ID, exerciseId)
             putExtra(GymSessionService.EXTRA_SECONDS, restSeconds)
         }
-        ContextCompat.startForegroundService(context, intent)
+        context.startService(intent)
     }
 
     private fun sendCommand(action: String) {
         val intent = Intent(context, GymSessionService::class.java).apply {
             this.action = action
         }
-        ContextCompat.startForegroundService(context, intent)
+        context.startService(intent)
     }
 }
 

@@ -39,8 +39,12 @@ class GymTrackingLogic(
     private val _isRestRunning = MutableStateFlow(false)
     val isRestRunning: StateFlow<Boolean> = _isRestRunning.asStateFlow()
 
+    private val _hasIncompleteSet = MutableStateFlow(false)
+    val hasIncompleteSet: StateFlow<Boolean> = _hasIncompleteSet.asStateFlow()
+
     private var tickerJob: Job? = null
     private var restJob: Job? = null
+    private var setObserverJob: Job? = null
     private var restEndEpochMillis: Long? = null
 
     init {
@@ -48,6 +52,7 @@ class GymTrackingLogic(
             sessionRepository.getActiveSession().collect { session ->
                 _activeSession.value = session
                 syncTicker(session)
+                syncIncompleteSetObserver(session)
             }
         }
     }
@@ -94,6 +99,10 @@ class GymTrackingLogic(
         syncRestTick()
     }
 
+    fun stopRest() {
+        stopRestInternal()
+    }
+
     fun finishLatestSetAndStartRest() {
         scope.launch {
             val sessionId = _activeSession.value?.id ?: return@launch
@@ -129,6 +138,22 @@ class GymTrackingLogic(
                 _elapsed.value = calculateElapsed(session)
                 delay(1000)
             }
+        }
+    }
+
+    private fun syncIncompleteSetObserver(session: Session?) {
+        setObserverJob?.cancel()
+
+        if (session == null || session.status == SessionStatus.COMPLETED) {
+            _hasIncompleteSet.value = false
+            return
+        }
+
+        setObserverJob = scope.launch {
+            setRepository.getSetsForSession(session.id)
+                .collect { sets ->
+                    _hasIncompleteSet.value = sets.any { !it.isCompleted }
+                }
         }
     }
 

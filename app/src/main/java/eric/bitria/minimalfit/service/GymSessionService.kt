@@ -31,6 +31,7 @@ class GymSessionService : Service() {
         const val ACTION_FINISH = "ACTION_FINISH"
         const val ACTION_START_REST = "ACTION_START_REST"
         const val ACTION_ADD_REST = "ACTION_ADD_REST"
+        const val ACTION_STOP_REST = "ACTION_STOP_REST"
         const val ACTION_FINISH_SET = "ACTION_FINISH_SET"
         const val ACTION_UPDATE_EXERCISE_REST = "ACTION_UPDATE_EXERCISE_REST"
 
@@ -76,6 +77,11 @@ class GymSessionService : Service() {
                     if (isForegroundService) updateNotification()
                 }
             }
+            launch {
+                trackingLogic.hasIncompleteSet.collect {
+                    if (isForegroundService) updateNotification()
+                }
+            }
         }
     }
 
@@ -93,6 +99,7 @@ class GymSessionService : Service() {
                 val seconds = intent.getIntExtra(EXTRA_SECONDS, 30)
                 trackingLogic.addRestSeconds(seconds)
             }
+            ACTION_STOP_REST -> trackingLogic.stopRest()
             ACTION_FINISH_SET -> trackingLogic.finishLatestSetAndStartRest()
             ACTION_UPDATE_EXERCISE_REST -> {
                 val exerciseId = intent.getStringExtra(EXTRA_EXERCISE_ID)
@@ -206,10 +213,10 @@ class GymSessionService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val finishSetIntent = PendingIntent.getService(
+        val stopRestIntent = PendingIntent.getService(
             this,
             2,
-            Intent(this, GymSessionService::class.java).apply { action = ACTION_FINISH_SET },
+            Intent(this, GymSessionService::class.java).apply { action = ACTION_STOP_REST },
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
@@ -223,9 +230,13 @@ class GymSessionService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
+        val activeSession = trackingLogic.activeSession.value
         val elapsedText = formatDuration(trackingLogic.elapsed.value)
         val restRunning = trackingLogic.isRestRunning.value
         val restText = formatDuration(trackingLogic.restRemaining.value)
+        val canCompleteSet = !restRunning &&
+            activeSession?.status == SessionStatus.ACTIVE &&
+            trackingLogic.hasIncompleteSet.value
 
         val builder = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle(if (restRunning) "Rest timer" else "Workout in progress")
@@ -237,14 +248,22 @@ class GymSessionService : Service() {
 
         if (restRunning) {
             builder.addAction(0, "+30s", addRestIntent)
+            builder.addAction(0, "Stop Rest", stopRestIntent)
+        } else if (canCompleteSet) {
+            val completeSetIntent = PendingIntent.getService(
+                this,
+                2,
+                Intent(this, GymSessionService::class.java).apply { action = ACTION_FINISH_SET },
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            builder.addAction(0, "Complete Set", completeSetIntent)
         }
 
         builder.addAction(
             0,
-            if (trackingLogic.activeSession.value?.status == SessionStatus.PAUSED) "Resume" else "Pause",
+            if (activeSession?.status == SessionStatus.PAUSED) "Resume" else "Pause",
             pauseResumeIntent
         )
-        builder.addAction(0, "Finish Set", finishSetIntent)
         builder.addAction(0, "Finish Workout", finishWorkoutIntent)
 
         return builder.build()

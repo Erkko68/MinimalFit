@@ -13,6 +13,8 @@ data class Session(
     val startTime: Instant,
     val endTime: Instant? = null,
     val status: SessionStatus = SessionStatus.ACTIVE,
+    val pausedAt: Instant? = null,
+    val pausedDurationSeconds: Long = 0L,
     val notes: String = ""
 )
 

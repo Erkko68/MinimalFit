@@ -33,17 +33,46 @@ class DefaultSessionRepository(
 
     override suspend fun pauseSession() {
         val active = sessionDao.getActiveSession().first() ?: return
-        sessionDao.updateSession(active.copy(status = SessionStatus.PAUSED))
+        if (active.status != SessionStatus.ACTIVE) return
+        sessionDao.updateSession(
+            active.copy(
+                status = SessionStatus.PAUSED,
+                pausedAt = nowInstant()
+            )
+        )
     }
 
     override suspend fun resumeSession() {
         val active = sessionDao.getActiveSession().first() ?: return
-        sessionDao.updateSession(active.copy(status = SessionStatus.ACTIVE))
+        if (active.status != SessionStatus.PAUSED) return
+
+        val pausedAt = active.pausedAt ?: nowInstant()
+        val pauseDeltaSeconds = (nowInstant() - pausedAt).inWholeSeconds.coerceAtLeast(0)
+        sessionDao.updateSession(
+            active.copy(
+                status = SessionStatus.ACTIVE,
+                pausedAt = null,
+                pausedDurationSeconds = active.pausedDurationSeconds + pauseDeltaSeconds
+            )
+        )
     }
 
     override suspend fun finishSession() {
         val active = sessionDao.getActiveSession().first() ?: return
-        sessionDao.updateSession(active.copy(status = SessionStatus.COMPLETED, endTime = nowInstant()))
+        val now = nowInstant()
+        val extraPaused = if (active.status == SessionStatus.PAUSED && active.pausedAt != null) {
+            (now - active.pausedAt).inWholeSeconds.coerceAtLeast(0)
+        } else {
+            0L
+        }
+        sessionDao.updateSession(
+            active.copy(
+                status = SessionStatus.COMPLETED,
+                endTime = now,
+                pausedAt = null,
+                pausedDurationSeconds = active.pausedDurationSeconds + extraPaused
+            )
+        )
     }
 
     override suspend fun deleteSession(sessionId: String) {

@@ -48,6 +48,9 @@ interface SetDao {
     )
     fun getSetsForSession(sessionId: String): Flow<List<Set>>
 
+    @Query("SELECT * FROM sets WHERE id = :setId LIMIT 1")
+    suspend fun getSetById(setId: String): Set?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSet(set: Set)
 

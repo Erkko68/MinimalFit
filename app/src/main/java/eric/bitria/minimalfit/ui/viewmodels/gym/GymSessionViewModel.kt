@@ -25,6 +25,7 @@ import kotlinx.coroutines.launch
 import java.util.Locale
 import kotlin.time.Clock
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 data class GymExerciseUi(
     val exercise: Exercise,
@@ -108,12 +109,12 @@ class GymSessionViewModel(
                 val duration = when {
                     session == null -> Duration.ZERO
                     session.status == SessionStatus.ACTIVE -> {
-                        if (sessionId == null) activeElapsed else Clock.System.now() - session.startTime
+                        if (sessionId == null) activeElapsed else calculateSessionElapsed(session)
                     }
                     session.status == SessionStatus.COMPLETED -> {
-                        session.endTime?.let { it - session.startTime } ?: Duration.ZERO
+                        calculateSessionElapsed(session)
                     }
-                    else -> Clock.System.now() - session.startTime
+                    else -> calculateSessionElapsed(session)
                 }
                 duration
             }.map { duration ->
@@ -164,11 +165,23 @@ class GymSessionViewModel(
 
     fun updateSet(set: Set) {
         viewModelScope.launch {
-            setRepository.updateSet(set)
-            if (set.isCompleted) {
+            val completedNow = setRepository.updateSet(set)
+            if (completedNow) {
                 gymSessionManager.startRestForExercise(set.exerciseId)
             }
         }
+    }
+
+    fun pauseSession() {
+        gymSessionManager.pause()
+    }
+
+    fun resumeSession() {
+        gymSessionManager.resume()
+    }
+
+    fun toggleSetCompleted(set: Set) {
+        updateSet(set.copy(isCompleted = !set.isCompleted))
     }
 
     fun updateExerciseRest(exerciseId: String, restSeconds: Int) {
@@ -202,5 +215,15 @@ class GymSessionViewModel(
         val minutes = totalSeconds / 60
         val seconds = totalSeconds % 60
         return String.format(Locale.US, "%02d:%02d", minutes, seconds)
+    }
+
+    private fun calculateSessionElapsed(session: Session): Duration {
+        val endReference = when {
+            session.status == SessionStatus.PAUSED && session.pausedAt != null -> session.pausedAt
+            session.status == SessionStatus.COMPLETED && session.endTime != null -> session.endTime
+            else -> Clock.System.now()
+        }
+        val raw = endReference - session.startTime
+        return (raw - session.pausedDurationSeconds.seconds).coerceAtLeast(Duration.ZERO)
     }
 }

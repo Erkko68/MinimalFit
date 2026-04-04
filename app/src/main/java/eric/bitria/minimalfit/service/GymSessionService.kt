@@ -197,6 +197,15 @@ class GymSessionService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
+        val pauseResumeIntent = PendingIntent.getService(
+            this,
+            4,
+            Intent(this, GymSessionService::class.java).apply {
+                action = if (trackingLogic.activeSession.value?.status == SessionStatus.PAUSED) ACTION_RESUME else ACTION_PAUSE
+            },
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
         val finishSetIntent = PendingIntent.getService(
             this,
             2,
@@ -230,6 +239,11 @@ class GymSessionService : Service() {
             builder.addAction(0, "+30s", addRestIntent)
         }
 
+        builder.addAction(
+            0,
+            if (trackingLogic.activeSession.value?.status == SessionStatus.PAUSED) "Resume" else "Pause",
+            pauseResumeIntent
+        )
         builder.addAction(0, "Finish Set", finishSetIntent)
         builder.addAction(0, "Finish Workout", finishWorkoutIntent)
 

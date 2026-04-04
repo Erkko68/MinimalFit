@@ -18,6 +18,7 @@ import kotlinx.coroutines.launch
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 class GymTrackingLogic(
     private val sessionRepository: SessionRepository,
@@ -119,16 +120,27 @@ class GymTrackingLogic(
         }
 
         if (session.status != SessionStatus.ACTIVE) {
-            _elapsed.value = Clock.System.now() - session.startTime
+            _elapsed.value = calculateElapsed(session)
             return
         }
 
         tickerJob = scope.launch {
             while (true) {
-                _elapsed.value = Clock.System.now() - session.startTime
+                _elapsed.value = calculateElapsed(session)
                 delay(1000)
             }
         }
+    }
+
+    private fun calculateElapsed(session: Session): Duration {
+        val endReference = when {
+            session.status == SessionStatus.PAUSED && session.pausedAt != null -> session.pausedAt
+            session.status == SessionStatus.COMPLETED && session.endTime != null -> session.endTime
+            else -> Clock.System.now()
+        }
+
+        val raw = endReference - session.startTime
+        return (raw - session.pausedDurationSeconds.seconds).coerceAtLeast(Duration.ZERO)
     }
 
     private fun startRestCountdown(seconds: Int) {

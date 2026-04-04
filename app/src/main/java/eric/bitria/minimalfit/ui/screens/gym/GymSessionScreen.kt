@@ -17,6 +17,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -172,10 +174,17 @@ fun GymSessionScreen(
                 },
                 actions = {
                     if (uiState.session?.status == SessionStatus.ACTIVE) {
+                        IconButton(onClick = viewModel::pauseSession) {
+                            Icon(Icons.Filled.Pause, contentDescription = "Pause workout")
+                        }
                         IconButton(onClick = {
                             showFinishDialog = true
                         }) {
                             Icon(Icons.Filled.Check, contentDescription = "Finish workout")
+                        }
+                    } else if (uiState.session?.status == SessionStatus.PAUSED) {
+                        IconButton(onClick = viewModel::resumeSession) {
+                            Icon(Icons.Filled.PlayArrow, contentDescription = "Resume workout")
                         }
                     }
                 },
@@ -325,9 +334,7 @@ fun GymSessionScreen(
                                 val isCompleted = set.isCompleted
                                 IconButton(
                                     onClick = { 
-                                        if (isActive) {
-                                            viewModel.updateSet(set.copy(isCompleted = !isCompleted))
-                                        }
+                                        if (isActive) viewModel.toggleSetCompleted(set)
                                     },
                                     modifier = Modifier.background(
                                         color = if (isCompleted) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
@@ -359,24 +366,42 @@ fun GymSessionScreen(
         }
 
         if (isActive) {
-            // Botón de terminar sesión, alineado al bottom con insets
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .navigationBarsPadding(),
-                horizontalArrangement = Arrangement.End
+                    .navigationBarsPadding()
+                    .padding(bottom = Spacing.m),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.s)
             ) {
-                Button(onClick = { showFinishDialog = true }) {
-                    Icon(Icons.Filled.Check, contentDescription = null)
-                    Text("Finish workout", modifier = Modifier.padding(start = 8.dp))
-                }
-
                 Button(
                     onClick = { showExerciseSearchDialog = true },
-                    modifier = Modifier.fillMaxWidth().padding(bottom = Spacing.xl)
+                    modifier = Modifier.weight(1f)
                 ) {
                     Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.padding(end = 8.dp))
                     Text("Add Exercise")
+                }
+
+                Button(onClick = viewModel::pauseSession) {
+                    Icon(Icons.Filled.Pause, contentDescription = null)
+                    Text("Pause", modifier = Modifier.padding(start = 8.dp))
+                }
+
+                Button(onClick = { showFinishDialog = true }) {
+                    Icon(Icons.Filled.Check, contentDescription = null)
+                    Text("Finish", modifier = Modifier.padding(start = 8.dp))
+                }
+            }
+        } else if (uiState.session?.status == SessionStatus.PAUSED) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .navigationBarsPadding()
+                    .padding(bottom = Spacing.m),
+                horizontalArrangement = Arrangement.End
+            ) {
+                Button(onClick = viewModel::resumeSession) {
+                    Icon(Icons.Filled.PlayArrow, contentDescription = null)
+                    Text("Resume", modifier = Modifier.padding(start = 8.dp))
                 }
             }
         }

@@ -22,8 +22,7 @@ class DefaultSetRepository(
         setDao.getSessionForSet(setId)
 
     override suspend fun getSetById(setId: String): Set? {
-        val session = getSessionForSet(setId).first() ?: return null
-        return setDao.getSetsForSession(session.id).first().firstOrNull { it.id == setId }
+        return setDao.getSetById(setId)
     }
 
     override suspend fun addSet(
@@ -50,8 +49,10 @@ class DefaultSetRepository(
         setDao.insertSetSessionCrossRef(SetSessionCrossRef(setId = set.id, sessionId = sessionId))
     }
 
-    override suspend fun updateSet(set: Set) {
+    override suspend fun updateSet(set: Set): Boolean {
+        val previous = setDao.getSetById(set.id)
         setDao.updateSet(set)
+        return previous?.isCompleted == false && set.isCompleted
     }
 
     override suspend fun completeLatestIncompleteSet(sessionId: String): Set? {

@@ -41,7 +41,7 @@ import eric.bitria.minimalfit.data.entity.track.Track
         Set::class,
         SetSessionCrossRef::class
     ],
-    version = 4
+    version = 5
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
@@ -122,6 +122,13 @@ abstract class AppDatabase : RoomDatabase() {
                 db.execSQL(
                     "ALTER TABLE exercises ADD COLUMN restSeconds INTEGER NOT NULL DEFAULT 120"
                 )
+            }
+        }
+
+        val MIGRATION_4_5: Migration = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE sessions ADD COLUMN pausedAt INTEGER")
+                db.execSQL("ALTER TABLE sessions ADD COLUMN pausedDurationSeconds INTEGER NOT NULL DEFAULT 0")
             }
         }
     }

@@ -20,7 +20,7 @@ interface SetRepository {
         notes: String = ""
     )
 
-    suspend fun updateSet(set: Set)
+    suspend fun updateSet(set: Set): Boolean
     suspend fun completeLatestIncompleteSet(sessionId: String): Set?
     suspend fun deleteSet(setId: String)
     suspend fun copyPreviousSet(sessionId: String, exerciseId: String): Set?

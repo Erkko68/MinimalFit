@@ -4,42 +4,38 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
-import android.app.Service
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Binder
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
+import androidx.lifecycle.LifecycleService
+import androidx.lifecycle.lifecycleScope
 import eric.bitria.minimalfit.MainActivity
 import eric.bitria.minimalfit.R
 import eric.bitria.minimalfit.data.track.RecordingState
 import eric.bitria.minimalfit.data.track.TrackingLogic
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import kotlin.time.Duration
 
-class LocationService : Service() {
+class LocationService : LifecycleService() {
 
     companion object {
         const val ACTION_START = "ACTION_START"
         const val ACTION_PAUSE = "ACTION_PAUSE"
         const val ACTION_RESUME = "ACTION_RESUME"
         const val ACTION_STOP = "ACTION_STOP"
-        
+
         private const val CHANNEL_ID = "location_channel"
         private const val NOTIFICATION_ID = 1
     }
 
     private val trackingLogic: TrackingLogic by inject()
-    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
     private val binder = LocalBinder()
     private var isBound = false
-    private var isForegroundService = false
+    private var serviceRunningInForeground = false
 
     inner class LocalBinder : Binder() {
         fun getService(): LocationService = this@LocationService
@@ -49,58 +45,65 @@ class LocationService : Service() {
         super.onCreate()
         createNotificationChannel()
 
-        // Sync notification with TrackingLogic state
-        serviceScope.launch {
+        // Sync notification with TrackingLogic state using lifecycleScope (Slide 9)
+        lifecycleScope.launch {
             launch {
                 trackingLogic.recordingState.collect { state ->
-                    if (isForegroundService) updateNotification()
-                    if (state == RecordingState.IDLE && isForegroundService) {
+                    if (serviceRunningInForeground) updateNotification()
+                    if (state == RecordingState.IDLE && serviceRunningInForeground) {
                         stopTracking()
                     }
                 }
             }
             launch {
-                trackingLogic.duration.collect { if (isForegroundService) updateNotification() }
+                trackingLogic.duration.collect { if (serviceRunningInForeground) updateNotification() }
             }
             launch {
-                trackingLogic.distanceKm.collect { if (isForegroundService) updateNotification() }
+                trackingLogic.distanceKm.collect { if (serviceRunningInForeground) updateNotification() }
             }
         }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        super.onStartCommand(intent, flags, startId)
         when (intent?.action) {
             ACTION_START -> startTracking()
             ACTION_PAUSE -> trackingLogic.pause()
             ACTION_RESUME -> trackingLogic.start()
             ACTION_STOP -> stopTracking()
         }
-        return START_STICKY
+        return START_NOT_STICKY // Recommended by Slide 13
     }
 
-    override fun onBind(intent: Intent?): IBinder {
+    override fun onBind(intent: Intent): IBinder {
+        super.onBind(intent)
         isBound = true
+        // Demote when the activity comes into foreground (Slide 4)
+        demoteToBackground()
         return binder
     }
 
-    override fun onRebind(intent: Intent?) {
-        isBound = true
+    override fun onRebind(intent: Intent) {
         super.onRebind(intent)
+        isBound = true
+        // Demote when the activity returns to foreground (Slide 4)
+        demoteToBackground()
     }
 
-    override fun onUnbind(intent: Intent?): Boolean {
+    override fun onUnbind(intent: Intent): Boolean {
+        super.onUnbind(intent)
         isBound = false
+        // Promote when the activity leaves foreground (Slide 6)
+        if (trackingLogic.recordingState.value != RecordingState.IDLE) {
+            promoteToForeground()
+        }
         return true
     }
 
-    override fun onDestroy() {
-        serviceScope.cancel()
-        super.onDestroy()
-    }
+    // ==========================================
 
     private fun startTracking() {
         trackingLogic.start()
-        promoteToForeground()
     }
 
     private fun stopTracking() {
@@ -110,8 +113,8 @@ class LocationService : Service() {
     }
 
     private fun promoteToForeground() {
-        if (isForegroundService) return
-        isForegroundService = true
+        if (serviceRunningInForeground) return
+        serviceRunningInForeground = true
 
         val notification = buildNotification()
 
@@ -123,9 +126,9 @@ class LocationService : Service() {
     }
 
     private fun demoteToBackground() {
-        if (!isForegroundService) return
-        isForegroundService = false
-        stopForeground(STOP_FOREGROUND_REMOVE)
+        if (!serviceRunningInForeground) return
+        serviceRunningInForeground = false
+        stopForeground(STOP_FOREGROUND_REMOVE) // Slide 4
     }
 
     private fun updateNotification() {
@@ -179,7 +182,7 @@ class LocationService : Service() {
 
         val distance = trackingLogic.distanceKm.value
         val duration = trackingLogic.duration.value
-        
+
         val contentText = "Distance: %.2f km | Time: %s".format(
             distance,
             formatDuration(duration)

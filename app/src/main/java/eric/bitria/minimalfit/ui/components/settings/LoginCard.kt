@@ -36,6 +36,7 @@ import eric.bitria.minimalfit.ui.viewmodels.settings.UserProfile
 fun LoginCard(
     isLoggedIn: Boolean,
     userProfile: UserProfile?,
+    isConnected: Boolean,
     onLoginClick: () -> Unit,
     onLogoutClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -50,7 +51,9 @@ fun LoginCard(
             contentColor = colorScheme.onSurface
         )
     ) {
-        if (isLoggedIn && userProfile != null) {
+        if (!isConnected) {
+            NoInternetContent()
+        } else if (isLoggedIn && userProfile != null) {
             LoggedInContent(
                 userProfile = userProfile,
                 onLogoutClick = onLogoutClick
@@ -59,6 +62,55 @@ fun LoginCard(
             LoggedOutContent(
                 onLoginClick = onLoginClick
             )
+        }
+    }
+}
+
+@Composable
+private fun NoInternetContent() {
+    val colorScheme = MaterialTheme.colorScheme
+
+    Column(
+        modifier = Modifier.padding(Spacing.m),
+        horizontalAlignment = Alignment.Start
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Spacing.m)
+        ) {
+            Box(
+                modifier = Modifier
+                    .weight(0.2f)
+                    .aspectRatio(1f)
+                    .clip(MaterialTheme.shapes.large)
+                    .background(colorScheme.errorContainer.copy(alpha = 0.4f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.AccountCircle,
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    tint = colorScheme.error
+                )
+            }
+
+            Column(
+                modifier = Modifier.weight(0.8f),
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "No Internet Connection",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = colorScheme.error
+                )
+                Text(
+                    text = "Check your connection to sync or log in.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colorScheme.onSurfaceVariant
+                )
+            }
         }
     }
 }

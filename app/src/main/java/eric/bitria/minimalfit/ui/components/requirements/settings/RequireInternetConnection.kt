@@ -3,81 +3,84 @@ package eric.bitria.minimalfit.ui.components.requirements.settings
 import android.content.Context
 import android.content.Intent
 import android.net.ConnectivityManager
+import android.net.Network
 import android.net.NetworkCapabilities
+import android.net.NetworkRequest
 import android.provider.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import eric.bitria.minimalfit.ui.components.requirements.permission.PermissionDialog
 
+/**
+ * Monitors internet connectivity in real-time and manages a "No Internet" dialog.
+ * 
+ * @param showDialogOnLost Whether to show a dialog when connection is lost.
+ * @return The current connection status as a [Boolean].
+ */
 @Composable
-fun RequireInternetConnection(
-    onConnectionResult: (Boolean) -> Unit
-) {
-    var showNoInternetDialog by remember { mutableStateOf(false) }
+fun rememberInternetConnection(
+    showDialogOnLost: Boolean = true
+): Boolean {
     val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
+    var isConnected by remember { mutableStateOf(checkInitialConnection(context)) }
+    var showNoInternetDialog by remember { mutableStateOf(false) }
 
-    fun isInternetAvailable(context: Context): Boolean {
+    DisposableEffect(context) {
         val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        val network = connectivityManager.activeNetwork ?: return false
-        val activeNetwork = connectivityManager.getNetworkCapabilities(network) ?: return false
-        return when {
-            activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> true
-            activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> true
-            activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> true
-            else -> false
-        }
-    }
+        
+        val callback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) {
+                isConnected = true
+                showNoInternetDialog = false
+            }
 
-    fun checkInternet() {
-        if (isInternetAvailable(context)) {
-            onConnectionResult(true)
-            showNoInternetDialog = false
-        } else {
-            showNoInternetDialog = true
-        }
-    }
+            override fun onLost(network: Network) {
+                isConnected = false
+                if (showDialogOnLost) showNoInternetDialog = true
+            }
 
-    DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                checkInternet()
+            override fun onCapabilitiesChanged(network: Network, capabilities: NetworkCapabilities) {
+                val hasInternet = capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                isConnected = hasInternet
+                if (hasInternet) showNoInternetDialog = false
             }
         }
-        lifecycleOwner.lifecycle.addObserver(observer)
+
+        val request = NetworkRequest.Builder()
+            .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+            .build()
+
+        connectivityManager.registerNetworkCallback(request, callback)
+
         onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
+            connectivityManager.unregisterNetworkCallback(callback)
         }
     }
 
-    LaunchedEffect(Unit) {
-        checkInternet()
-    }
-
-    if (showNoInternetDialog) {
+    if (showNoInternetDialog && !isConnected) {
         PermissionDialog(
             title = "No Internet Connection",
-            text = "This feature requires an active internet connection (Wi-Fi or Cellular Data). Please enable your connection to continue.",
+            text = "This feature requires an active internet connection. Please enable Wi-Fi or Cellular Data to continue.",
             showSettingsButton = true,
-            onDismiss = {
-                showNoInternetDialog = false
-                onConnectionResult(false)
-            },
+            onDismiss = { showNoInternetDialog = false },
             onConfirm = {
                 showNoInternetDialog = false
-                // Open system wireless settings
-                val intent = Intent(Settings.ACTION_WIRELESS_SETTINGS)
-                context.startActivity(intent)
+                context.startActivity(Intent(Settings.ACTION_WIRELESS_SETTINGS))
             }
         )
     }
+
+    return isConnected
+}
+
+private fun checkInitialConnection(context: Context): Boolean {
+    val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    val network = connectivityManager.activeNetwork ?: return false
+    val activeNetwork = connectivityManager.getNetworkCapabilities(network) ?: return false
+    return activeNetwork.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
 }

@@ -14,14 +14,11 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.lifecycle.viewmodel.compose.viewModel
 import eric.bitria.minimalfit.navigation.ScreenConfiguration
-import eric.bitria.minimalfit.ui.components.requirements.settings.RequireInternetConnection
+import eric.bitria.minimalfit.ui.components.requirements.settings.rememberInternetConnection
 import eric.bitria.minimalfit.ui.components.settings.LoginCard
 import eric.bitria.minimalfit.ui.theme.Spacing
 import eric.bitria.minimalfit.ui.viewmodels.settings.SettingsViewModel
@@ -33,16 +30,7 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    var pendingInternetAction by remember { mutableStateOf<(() -> Unit)?>(null) }
-
-    if (pendingInternetAction != null) {
-        RequireInternetConnection { connected ->
-            if (connected) {
-                pendingInternetAction?.invoke()
-            }
-            pendingInternetAction = null
-        }
-    }
+    val isConnected = rememberInternetConnection(showDialogOnLost = false)
 
     ScreenConfiguration(
         topBar = {
@@ -76,8 +64,9 @@ fun SettingsScreen(
         LoginCard(
             isLoggedIn = uiState.isLoggedIn,
             userProfile = uiState.userProfile,
-            onLoginClick = { pendingInternetAction = { viewModel.login() } },
-            onLogoutClick = { pendingInternetAction = { viewModel.logout() } }
+            isConnected = isConnected,
+            onLoginClick = { viewModel.login() },
+            onLogoutClick = { viewModel.logout() }
         )
     }
 }

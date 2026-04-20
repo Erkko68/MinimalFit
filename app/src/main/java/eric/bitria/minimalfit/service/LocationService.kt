@@ -80,21 +80,16 @@ class LocationService : Service() {
 
     override fun onBind(intent: Intent?): IBinder {
         isBound = true
-        demoteToBackground()
         return binder
     }
 
     override fun onRebind(intent: Intent?) {
         isBound = true
-        demoteToBackground()
         super.onRebind(intent)
     }
 
     override fun onUnbind(intent: Intent?): Boolean {
         isBound = false
-        if (trackingLogic.recordingState.value != RecordingState.IDLE) {
-            promoteToForeground()
-        }
         return true
     }
 
@@ -105,7 +100,7 @@ class LocationService : Service() {
 
     private fun startTracking() {
         trackingLogic.start()
-        if (!isBound) promoteToForeground()
+        promoteToForeground()
     }
 
     private fun stopTracking() {

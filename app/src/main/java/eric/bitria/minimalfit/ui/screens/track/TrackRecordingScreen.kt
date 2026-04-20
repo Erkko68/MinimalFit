@@ -23,7 +23,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import eric.bitria.minimalfit.navigation.ScreenConfiguration
 import eric.bitria.minimalfit.ui.components.requirements.permission.RequireActivityRecognitionPermission
-import eric.bitria.minimalfit.ui.components.requirements.permission.RequireBackgroundLocationPermission
 import eric.bitria.minimalfit.ui.components.requirements.permission.RequireLocationPermission
 import eric.bitria.minimalfit.ui.components.requirements.permission.RequireNotificationPermission
 import eric.bitria.minimalfit.ui.components.requirements.settings.RequireLocationEnabledSetting
@@ -55,7 +54,6 @@ fun TrackRecordingScreen(
     )
 
     var locationPermissionGranted by remember { mutableStateOf(false) }
-    var backgroundLocationPermissionGranted by remember { mutableStateOf(false) }
     var activityPermissionGranted by remember { mutableStateOf(false) }
     var notificationPermissionGranted by remember { mutableStateOf(false) }
     var gpsSettingEnabled by remember { mutableStateOf(false) }
@@ -64,13 +62,6 @@ fun TrackRecordingScreen(
     if (!locationPermissionGranted) {
         RequireLocationPermission(onPermissionResult = { isGranted ->
             if (isGranted) locationPermissionGranted = true else {
-                onNavigateBack()
-                viewModel.stop()
-            }
-        })
-    } else if (!backgroundLocationPermissionGranted) {
-        RequireBackgroundLocationPermission(onPermissionResult = { isGranted ->
-            if (isGranted) backgroundLocationPermissionGranted = true else {
                 onNavigateBack()
                 viewModel.stop()
             }

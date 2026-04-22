@@ -20,16 +20,6 @@ class SettingsViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
-    fun login() {
-        _uiState.value = SettingsUiState(
-            isLoggedIn = true,
-            userProfile = UserProfile(
-                name = "Paco",
-                email = "paco@example.com"
-            )
-        )
-    }
-
     fun logout() {
         _uiState.value = SettingsUiState(
             isLoggedIn = false,

@@ -14,6 +14,8 @@ import eric.bitria.minimalfit.ui.screens.food.MealDetailScreen
 import eric.bitria.minimalfit.ui.screens.gym.GymScreen
 import eric.bitria.minimalfit.ui.screens.gym.GymSessionScreen
 import eric.bitria.minimalfit.ui.screens.gym.ExerciseProgressionScreen
+import eric.bitria.minimalfit.ui.screens.login.LoginScreen
+import eric.bitria.minimalfit.ui.screens.login.RegisterScreen
 import eric.bitria.minimalfit.ui.screens.profile.ProfileScreen
 import eric.bitria.minimalfit.ui.screens.settings.SettingsScreen
 import eric.bitria.minimalfit.ui.screens.track.TrackDetailScreen
@@ -40,6 +42,39 @@ fun AppNavHost(
         }
         composable<Route.Settings> {
             SettingsScreen(
+                onBackClick = {
+                    navController.popBackStack()
+                },
+                onLoginClick = {
+                    navController.navigate(Route.Login)
+                }
+            )
+        }
+        composable<Route.Login> {
+            LoginScreen(
+                onNavigateToRegister = {
+                    navController.navigate(Route.Register)
+                },
+                onLoginSuccess = {
+                    navController.navigate(Route.Profile) {
+                        popUpTo(Route.Login) { inclusive = true }
+                    }
+                },
+                onBackClick = {
+                    navController.popBackStack()
+                }
+            )
+        }
+        composable<Route.Register> {
+            RegisterScreen(
+                onNavigateToLogin = {
+                    navController.popBackStack()
+                },
+                onRegisterSuccess = {
+                    navController.navigate(Route.Profile) {
+                        popUpTo(Route.Login) { inclusive = true }
+                    }
+                },
                 onBackClick = {
                     navController.popBackStack()
                 }

@@ -27,6 +27,7 @@ import eric.bitria.minimalfit.ui.viewmodels.settings.SettingsViewModel
 @Composable
 fun SettingsScreen(
     onBackClick: () -> Unit = {},
+    onLoginClick: () -> Unit = {},
     viewModel: SettingsViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -65,7 +66,7 @@ fun SettingsScreen(
             isLoggedIn = uiState.isLoggedIn,
             userProfile = uiState.userProfile,
             isConnected = isConnected,
-            onLoginClick = { viewModel.login() },
+            onLoginClick = onLoginClick,
             onLogoutClick = { viewModel.logout() }
         )
     }

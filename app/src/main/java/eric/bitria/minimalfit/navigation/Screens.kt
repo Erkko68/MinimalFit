@@ -5,6 +5,8 @@ import kotlinx.serialization.Serializable
 sealed class Route {
     @Serializable data object Profile : Route()
     @Serializable data object Settings : Route()
+    @Serializable data object Login : Route()
+    @Serializable data object Register : Route()
     @Serializable data object Food : Route()
     @Serializable data object OutdoorActivities : Route()
     @Serializable data object IndoorActivities : Route()

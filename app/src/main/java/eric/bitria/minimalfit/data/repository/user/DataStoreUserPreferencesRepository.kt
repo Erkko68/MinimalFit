@@ -1,4 +1,4 @@
-package eric.bitria.minimalfit.data.local
+package eric.bitria.minimalfit.data.repository.user
 
 import android.content.Context
 import androidx.datastore.core.DataStore
@@ -13,17 +13,17 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import java.io.IOException
 
-val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "user_preferences")
+private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "user_preferences")
 
-class UserPreferencesRepository(private val context: Context) {
+class DataStoreUserPreferencesRepository(private val context: Context) : UserPreferencesRepository {
 
     private object PreferencesKeys {
         val ONBOARDING_COMPLETED = booleanPreferencesKey("onboarding_completed")
         val USER_NAME = stringPreferencesKey("user_name")
-        val THEME_MODE = stringPreferencesKey("theme_mode") // "light", "dark", "system"
+        val THEME_MODE = stringPreferencesKey("theme_mode")
     }
 
-    val onboardingCompleted: Flow<Boolean> = context.dataStore.data
+    override val onboardingCompleted: Flow<Boolean> = context.dataStore.data
         .catch { exception ->
             if (exception is IOException) emit(emptyPreferences()) else throw exception
         }
@@ -31,18 +31,27 @@ class UserPreferencesRepository(private val context: Context) {
             preferences[PreferencesKeys.ONBOARDING_COMPLETED] ?: false
         }
 
-    suspend fun setOnboardingCompleted(completed: Boolean) {
+    override val userName: Flow<String?> = context.dataStore.data
+        .map { preferences -> preferences[PreferencesKeys.USER_NAME] }
+
+    override val themeMode: Flow<String> = context.dataStore.data
+        .map { preferences -> preferences[PreferencesKeys.THEME_MODE] ?: "system" }
+
+    override suspend fun setOnboardingCompleted(completed: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.ONBOARDING_COMPLETED] = completed
         }
     }
 
-    val userName: Flow<String?> = context.dataStore.data
-        .map { preferences -> preferences[PreferencesKeys.USER_NAME] }
-
-    suspend fun updateUserName(name: String) {
+    override suspend fun updateUserName(name: String) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.USER_NAME] = name
+        }
+    }
+
+    override suspend fun updateThemeMode(mode: String) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.THEME_MODE] = mode
         }
     }
 }

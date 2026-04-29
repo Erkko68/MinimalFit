@@ -21,6 +21,7 @@ class DataStoreUserPreferencesRepository(private val context: Context) : UserPre
         val ONBOARDING_COMPLETED = booleanPreferencesKey("onboarding_completed")
         val USER_NAME = stringPreferencesKey("user_name")
         val THEME_MODE = stringPreferencesKey("theme_mode")
+        val AUTO_SYNC_ENABLED = booleanPreferencesKey("auto_sync_enabled")
     }
 
     override val onboardingCompleted: Flow<Boolean> = context.dataStore.data
@@ -37,6 +38,9 @@ class DataStoreUserPreferencesRepository(private val context: Context) : UserPre
     override val themeMode: Flow<String> = context.dataStore.data
         .map { preferences -> preferences[PreferencesKeys.THEME_MODE] ?: "system" }
 
+    override val isAutoSyncEnabled: Flow<Boolean> = context.dataStore.data
+        .map { preferences -> preferences[PreferencesKeys.AUTO_SYNC_ENABLED] ?: false }
+
     override suspend fun setOnboardingCompleted(completed: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.ONBOARDING_COMPLETED] = completed
@@ -52,6 +56,12 @@ class DataStoreUserPreferencesRepository(private val context: Context) : UserPre
     override suspend fun updateThemeMode(mode: String) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.THEME_MODE] = mode
+        }
+    }
+
+    override suspend fun setAutoSyncEnabled(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.AUTO_SYNC_ENABLED] = enabled
         }
     }
 }

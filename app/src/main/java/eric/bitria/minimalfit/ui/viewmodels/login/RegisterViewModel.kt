@@ -30,6 +30,9 @@ class RegisterViewModel(
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
+    private val _verificationSent = MutableStateFlow(false)
+    val verificationSent: StateFlow<Boolean> = _verificationSent.asStateFlow()
+
     private val emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[a-z]{2,}$".toRegex()
 
     val isRegisterEnabled: StateFlow<Boolean> = combine(
@@ -59,11 +62,20 @@ class RegisterViewModel(
             _error.value = null
             viewModelScope.launch {
                 val result = authRepository.register(_email.value, _password.value)
-                _isLoading.value = false
+                result.onSuccess {
+                    // Send verification email automatically
+                    authRepository.sendEmailVerification()
+                    _verificationSent.value = true
+                }
                 result.onFailure { error ->
                     _error.value = error.message ?: "Registration failed"
                 }
+                _isLoading.value = false
             }
         }
+    }
+
+    fun clearError() {
+        _error.value = null
     }
 }

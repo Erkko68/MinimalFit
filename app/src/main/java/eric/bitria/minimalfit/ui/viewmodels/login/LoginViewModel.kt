@@ -27,6 +27,9 @@ class LoginViewModel(
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
+    private val _message = MutableStateFlow<String?>(null)
+    val message: StateFlow<String?> = _message.asStateFlow()
+
     private val emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[a-z]{2,}$".toRegex()
 
     val isLoginEnabled: StateFlow<Boolean> = combine(_email, _password, _isLoading) { email, password, loading ->
@@ -65,5 +68,30 @@ class LoginViewModel(
                 _error.value = error.message ?: "Google sign-in failed"
             }
         }
+    }
+
+    fun onForgotPasswordClick() {
+        if (_email.value.matches(emailRegex)) {
+            _isLoading.value = true
+            _error.value = null
+            _message.value = null
+            viewModelScope.launch {
+                val result = authRepository.sendPasswordResetEmail(_email.value)
+                _isLoading.value = false
+                result.onSuccess {
+                    _message.value = "Password reset email sent!"
+                }
+                result.onFailure { error ->
+                    _error.value = error.message ?: "Failed to send reset email"
+                }
+            }
+        } else {
+            _error.value = "Please enter a valid email address first"
+        }
+    }
+
+    fun clearMessages() {
+        _error.value = null
+        _message.value = null
     }
 }

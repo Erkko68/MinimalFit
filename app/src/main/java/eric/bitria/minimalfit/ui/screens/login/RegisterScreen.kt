@@ -59,13 +59,8 @@ fun RegisterScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val isRegisterEnabled by viewModel.isRegisterEnabled.collectAsState()
     val error by viewModel.error.collectAsState()
+    val verificationSent by viewModel.verificationSent.collectAsState()
     val context = LocalContext.current
-
-    LaunchedEffect(error) {
-        error?.let {
-            Toast.makeText(context, it, Toast.LENGTH_LONG).show()
-        }
-    }
 
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
@@ -163,6 +158,17 @@ fun RegisterScreen(
             singleLine = true,
             shape = MaterialTheme.shapes.large
         )
+
+        if (error != null || verificationSent) {
+            Spacer(modifier = Modifier.height(Spacing.m))
+            Text(
+                text = if (verificationSent) "Verification email sent! Please check your inbox." else error ?: "",
+                color = if (verificationSent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
 
         Spacer(modifier = Modifier.height(Spacing.l))
 

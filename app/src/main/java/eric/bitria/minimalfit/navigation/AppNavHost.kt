@@ -34,9 +34,9 @@ fun AppNavHost(
 ) {
     LaunchedEffect(Unit) {
         authRepository.currentUser.collect { user ->
+            val currentRoute = navController.currentBackStackEntry?.destination?.route
             if (user != null) {
                 // If user becomes authenticated while on Login/Register, move to Profile
-                val currentRoute = navController.currentDestination?.route
                 if (currentRoute?.contains("Login") == true || currentRoute?.contains("Register") == true) {
                     navController.navigate(Route.Profile) {
                         popUpTo(Route.Login) { inclusive = true }

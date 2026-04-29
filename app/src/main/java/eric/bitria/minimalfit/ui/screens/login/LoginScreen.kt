@@ -71,15 +71,10 @@ fun LoginScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val isLoginEnabled by viewModel.isLoginEnabled.collectAsState()
     val error by viewModel.error.collectAsState()
+    val message by viewModel.message.collectAsState()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val credentialManager = CredentialManager.create(context)
-
-    LaunchedEffect(error) {
-        error?.let {
-            Toast.makeText(context, it, Toast.LENGTH_LONG).show()
-        }
-    }
 
     var passwordVisible by remember { mutableStateOf(false) }
 
@@ -113,13 +108,13 @@ fun LoginScreen(
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = "Welcome Back",
+            text = "Account Sync",
             style = MaterialTheme.typography.displayMedium,
             fontWeight = FontWeight.Black,
             color = MaterialTheme.colorScheme.primary
         )
         Text(
-            text = "Log in to your account",
+            text = "Sign in to backup your data",
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -158,7 +153,27 @@ fun LoginScreen(
             shape = MaterialTheme.shapes.large
         )
 
-        Spacer(modifier = Modifier.height(Spacing.l))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End
+        ) {
+            TextButton(onClick = viewModel::onForgotPasswordClick) {
+                Text("Forgot Password?")
+            }
+        }
+
+        if (error != null || message != null) {
+            Spacer(modifier = Modifier.height(Spacing.m))
+            Text(
+                text = error ?: message ?: "",
+                color = if (error != null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+        Spacer(modifier = Modifier.height(Spacing.m))
 
         Button(
             onClick = viewModel::onLoginClick,
@@ -229,7 +244,9 @@ fun LoginScreen(
                         }
                     } catch (e: GetCredentialException) {
                         Log.e("LoginScreen", "Google Sign-In failed", e)
-                        Toast.makeText(context, "Google Sign-In failed", Toast.LENGTH_SHORT).show()
+                        // Error is handled via ViewModel if we had a way to pass it back, 
+                        // but here we can just log it or show a local error state if needed.
+                        // For now, let's use the ViewModel's error state if possible.
                     } catch (e: Exception) {
                         Log.e("LoginScreen", "An unexpected error occurred", e)
                     }

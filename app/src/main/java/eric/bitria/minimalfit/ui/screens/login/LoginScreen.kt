@@ -28,6 +28,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -35,7 +36,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.credentials.CredentialManager
+import androidx.credentials.GetCredentialRequest
+import androidx.credentials.exceptions.GetCredentialException
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.ui.text.font.FontWeight
+import eric.bitria.minimalfit.R
+import kotlinx.coroutines.launch
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -57,6 +70,16 @@ fun LoginScreen(
     val password by viewModel.password.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val isLoginEnabled by viewModel.isLoginEnabled.collectAsState()
+    val error by viewModel.error.collectAsState()
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val credentialManager = CredentialManager.create(context)
+
+    LaunchedEffect(error) {
+        error?.let {
+            Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+        }
+    }
 
     var passwordVisible by remember { mutableStateOf(false) }
 
@@ -184,7 +207,34 @@ fun LoginScreen(
         Spacer(modifier = Modifier.height(Spacing.l))
 
         OutlinedButton(
-            onClick = viewModel::onGoogleLoginClick,
+            onClick = {
+                val googleIdOption = GetGoogleIdOption.Builder()
+                    .setFilterByAuthorizedAccounts(false)
+                    .setServerClientId(context.getString(R.string.default_web_client_id))
+                    .build()
+
+                val request = GetCredentialRequest.Builder()
+                    .addCredentialOption(googleIdOption)
+                    .build()
+
+                scope.launch {
+                    try {
+                        val result = credentialManager.getCredential(
+                            context = context,
+                            request = request
+                        )
+                        val credential = result.credential
+                        if (credential is GoogleIdTokenCredential) {
+                            viewModel.onGoogleLoginSuccess(credential.idToken)
+                        }
+                    } catch (e: GetCredentialException) {
+                        Log.e("LoginScreen", "Google Sign-In failed", e)
+                        Toast.makeText(context, "Google Sign-In failed", Toast.LENGTH_SHORT).show()
+                    } catch (e: Exception) {
+                        Log.e("LoginScreen", "An unexpected error occurred", e)
+                    }
+                }
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),

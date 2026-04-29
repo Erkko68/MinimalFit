@@ -2,11 +2,13 @@ package eric.bitria.minimalfit.navigation
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
+import eric.bitria.minimalfit.data.remote.auth.AuthRepository
 import eric.bitria.minimalfit.ui.screens.food.DailyLogScreen
 import eric.bitria.minimalfit.ui.screens.food.DietDetailScreen
 import eric.bitria.minimalfit.ui.screens.food.FoodScreen
@@ -23,11 +25,27 @@ import eric.bitria.minimalfit.ui.screens.track.TrackRecordingScreen
 import eric.bitria.minimalfit.ui.screens.track.TrackScreen
 import eric.bitria.minimalfit.util.today
 import kotlinx.datetime.LocalDate
+import org.koin.compose.koinInject
 
 @Composable
 fun AppNavHost(
-    navController: NavHostController
+    navController: NavHostController,
+    authRepository: AuthRepository = koinInject()
 ) {
+    LaunchedEffect(Unit) {
+        authRepository.currentUser.collect { user ->
+            if (user != null) {
+                // If user becomes authenticated while on Login/Register, move to Profile
+                val currentRoute = navController.currentDestination?.route
+                if (currentRoute?.contains("Login") == true || currentRoute?.contains("Register") == true) {
+                    navController.navigate(Route.Profile) {
+                        popUpTo(Route.Login) { inclusive = true }
+                    }
+                }
+            }
+        }
+    }
+
     NavHost(
         navController = navController,
         startDestination = Route.Profile,

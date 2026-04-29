@@ -19,6 +19,10 @@ import eric.bitria.minimalfit.data.repository.gym.DefaultSessionRepository
 import eric.bitria.minimalfit.data.repository.gym.ExerciseRepository
 import eric.bitria.minimalfit.data.repository.gym.SetRepository
 import eric.bitria.minimalfit.data.repository.gym.SessionRepository
+import eric.bitria.minimalfit.data.local.UserPreferencesRepository
+import eric.bitria.minimalfit.data.remote.auth.AuthRepository
+import eric.bitria.minimalfit.data.remote.auth.FirebaseAuthRepository
+import com.google.firebase.auth.FirebaseAuth
 import eric.bitria.minimalfit.data.gym.AndroidGymSessionManager
 import eric.bitria.minimalfit.data.gym.GymSessionManager
 import eric.bitria.minimalfit.data.gym.GymTrackingLogic
@@ -134,6 +138,13 @@ val dataModule = module {
 
     // Tracking Manager (Platform implementation)
     single<TrackingManager> { AndroidTrackingManager(androidContext(), get()) }
+
+    // Auth
+    single { FirebaseAuth.getInstance() }
+    single<AuthRepository> { FirebaseAuthRepository(get()) }
+
+    // DataStore
+    single { UserPreferencesRepository(androidContext()) }
 }
 
 val viewModels = module {

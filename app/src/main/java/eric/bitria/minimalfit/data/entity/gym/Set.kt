@@ -1,20 +1,28 @@
 package eric.bitria.minimalfit.data.entity.gym
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
+import eric.bitria.minimalfit.util.nowInstant
+import kotlinx.serialization.Serializable
+import kotlin.time.Instant
 import java.util.UUID
 
-@Entity(tableName = "sets")
+@Serializable
+@Entity(
+    tableName = "sets",
+    indices = [
+        Index(value = ["sessionId"]),
+        Index(value = ["exerciseId"])
+    ]
+)
 data class Set(
     @PrimaryKey
     val id: String = UUID.randomUUID().toString(),
+    val sessionId: String,
     val exerciseId: String,
-    val orderInSession: Int,
     val weight: Float,
     val reps: Int,
-    val rpe: Float? = null,
-    val isCompleted: Boolean = false,
-    val isWarmup: Boolean = false,
-    val notes: String = ""
+    val notes: String = "",
+    val createdAt: Instant = nowInstant()
 )
-

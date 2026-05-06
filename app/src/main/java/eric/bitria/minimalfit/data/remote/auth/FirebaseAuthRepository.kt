@@ -64,7 +64,9 @@ class FirebaseAuthRepository(
 
     override suspend fun sendEmailVerification(): Result<Unit> {
         return try {
-            firebaseAuth.currentUser?.sendEmailVerification()?.await()
+            val user = firebaseAuth.currentUser
+            user?.reload()?.await()
+            user?.sendEmailVerification()?.await()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

@@ -8,25 +8,22 @@ class DefaultExerciseRepository(
     private val exerciseDao: ExerciseDao
 ) : ExerciseRepository {
 
-    override fun getExercises(): Flow<List<Exercise>> =
-        exerciseDao.getExercises()
+    override fun getExercises(query: String, limit: Int): Flow<List<Exercise>> =
+        if (query.isBlank()) exerciseDao.getExercises(query,limit)
+        else exerciseDao.getExercises(query, limit)
 
-    override suspend fun getExerciseById(exerciseId: String): Exercise? =
-        exerciseDao.getExerciseById(exerciseId)
+    override fun getExercise(id: String): Flow<Exercise?> =
+        exerciseDao.getExercise(id)
 
-    override suspend fun addExercise(name: String): Exercise {
-        val exercise = Exercise(name = name)
+    override suspend fun addExercise(exercise: Exercise) {
         exerciseDao.insertExercise(exercise)
-        return exercise
     }
 
-    override suspend fun updateExerciseRest(exerciseId: String, restSeconds: Int) {
-        val exercise = exerciseDao.getExerciseById(exerciseId) ?: return
-        exerciseDao.updateExercise(exercise.copy(restSeconds = restSeconds.coerceAtLeast(0)))
+    override suspend fun updateExercise(exercise: Exercise) {
+        exerciseDao.updateExercise(exercise)
     }
 
-    override suspend fun deleteExercise(exerciseId: String) {
-        exerciseDao.deleteExercise(exerciseId)
+    override suspend fun deleteExercise(id: String) {
+        exerciseDao.deleteExercise(id)
     }
 }
-

@@ -10,8 +10,8 @@ import kotlinx.coroutines.flow.Flow
 interface FoodCatalogRepository {
 
     // --- MEALS ---
-    /** Returns all available meals. Supports optional search. */
-    fun getMeals(query: String = ""): Flow<List<Meal>>
+    /** Returns available meals matching the query or all if query is empty. */
+    fun getMeals(query: String = "", limit: Int = 20): Flow<List<Meal>>
 
     /** Returns a specific meal by ID. */
     fun getMeal(id: String): Flow<Meal?>
@@ -38,11 +38,13 @@ interface FoodCatalogRepository {
     suspend fun removeIngredientFromMeal(mealId: String, ingredientId: String)
 
     // --- INGREDIENTS ---
-    /** Returns all available ingredients. Supports optional search. */
-    fun getIngredients(query: String = ""): Flow<List<Ingredient>>
+    /** Returns available ingredients matching the query or all if query is empty. */
+    fun getIngredients(query: String = "", limit: Int = 20): Flow<List<Ingredient>>
 
     /** Returns a specific ingredient by ID. */
     fun getIngredient(id: String): Flow<Ingredient?>
 
     suspend fun addIngredient(ingredient: Ingredient)
+    suspend fun updateIngredient(ingredient: Ingredient)
+    suspend fun deleteIngredient(id: String)
 }

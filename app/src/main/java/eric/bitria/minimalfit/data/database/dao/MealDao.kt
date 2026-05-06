@@ -11,11 +11,8 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface MealDao {
-    @Query("SELECT * FROM meals")
-    fun getAllMeals(): Flow<List<Meal>>
-
-    @Query("SELECT * FROM meals WHERE name LIKE '%' || :query || '%'")
-    fun searchMeals(query: String): Flow<List<Meal>>
+    @Query("SELECT * FROM meals WHERE name LIKE '%' || :query || '%' LIMIT :limit")
+    fun getMeals(query: String = "", limit: Int = -1): Flow<List<Meal>>
 
     @Query("SELECT * FROM meals WHERE id = :id")
     fun getMeal(id: String): Flow<Meal?>

@@ -13,5 +13,7 @@ data class Ingredient(
     val name: String,
     val baseCalories: Int, // per 100g/100ml or per piece
     val measurementUnit: MeasurementUnit = MeasurementUnit.GRAMS,
-    val imageUrl: String? = null
+    val imageUrl: String? = null,
+    val isGlobal: Boolean = false,
+    val creatorId: String? = null
 )

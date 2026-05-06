@@ -13,7 +13,6 @@ import androidx.lifecycle.lifecycleScope
 import eric.bitria.minimalfit.MainActivity
 import eric.bitria.minimalfit.R
 import eric.bitria.minimalfit.data.entity.gym.Session
-import eric.bitria.minimalfit.data.entity.gym.SessionStatus
 import eric.bitria.minimalfit.data.gym.GymTrackingLogic
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch

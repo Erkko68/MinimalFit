@@ -12,7 +12,7 @@ data class Track(
     @PrimaryKey
     val id: String = UUID.randomUUID().toString(),
     val startTime: Instant,
-    val endTime: Instant,
+    val durationSeconds: Long = 0L,
     val name: String,
     val distance: Double, // in km
     val pace: String, // e.g., "5:30 min/km"

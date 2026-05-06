@@ -3,6 +3,9 @@ package eric.bitria.minimalfit.ui.viewmodels.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import eric.bitria.minimalfit.data.remote.auth.AuthRepository
+import eric.bitria.minimalfit.data.remote.sync.SyncRepository
+import eric.bitria.minimalfit.data.repository.food.FoodCatalogRepository
+import eric.bitria.minimalfit.data.repository.gym.ExerciseRepository
 import eric.bitria.minimalfit.data.repository.user.UserPreferencesRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -10,6 +13,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -31,7 +35,10 @@ data class SettingsUiState(
 
 class SettingsViewModel(
     private val authRepository: AuthRepository,
-    private val userPreferencesRepository: UserPreferencesRepository
+    private val userPreferencesRepository: UserPreferencesRepository,
+    private val syncRepository: SyncRepository,
+    private val foodCatalogRepository: FoodCatalogRepository,
+    private val exerciseRepository: ExerciseRepository
 ) : ViewModel() {
 
     private val _isSyncing = MutableStateFlow(false)
@@ -97,11 +104,29 @@ class SettingsViewModel(
 
     fun uploadData() {
         val currentState = uiState.value
-        if (currentState.isLoggedIn && currentState.userProfile?.isEmailVerified == true) {
+        val user = authRepository.currentUser.value
+        if (user != null && user.isEmailVerified) {
             viewModelScope.launch {
                 _isSyncing.value = true
-                // TODO: Implement actual Firestore upload logic here
-                delay(2000) // Simulate upload
+                
+                // 1. Sync Global Data (Get latest from Firestore)
+                syncRepository.getGlobalIngredients().onSuccess { globals ->
+                    globals.forEach { foodCatalogRepository.addIngredient(it) }
+                }
+                syncRepository.getGlobalExercises().onSuccess { globals ->
+                    globals.forEach { exerciseRepository.addExercise(it) }
+                }
+
+                // 2. Backup User Data (Upload local to Firestore)
+                val localIngredients = foodCatalogRepository.getIngredients().first()
+                syncRepository.uploadUserIngredients(user.uid, localIngredients)
+
+                val localMeals = foodCatalogRepository.getMeals().first()
+                syncRepository.uploadUserMeals(user.uid, localMeals)
+
+                val localExercises = exerciseRepository.getExercises().first()
+                syncRepository.uploadUserExercises(user.uid, localExercises)
+
                 _isSyncing.value = false
             }
         }

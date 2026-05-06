@@ -10,11 +10,8 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface IngredientDao {
-    @Query("SELECT * FROM ingredients")
-    fun getAllIngredients(): Flow<List<Ingredient>>
-
-    @Query("SELECT * FROM ingredients WHERE name LIKE '%' || :query || '%'")
-    fun searchIngredients(query: String): Flow<List<Ingredient>>
+    @Query("SELECT * FROM ingredients WHERE name LIKE '%' || :query || '%' LIMIT :limit")
+    fun getIngredients(query: String = "", limit: Int = -1): Flow<List<Ingredient>>
 
     @Query("SELECT * FROM ingredients WHERE id = :id")
     fun getIngredient(id: String): Flow<Ingredient?>

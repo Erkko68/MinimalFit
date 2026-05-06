@@ -23,6 +23,8 @@ import eric.bitria.minimalfit.data.repository.user.DataStoreUserPreferencesRepos
 import eric.bitria.minimalfit.data.repository.user.UserPreferencesRepository
 import eric.bitria.minimalfit.data.remote.auth.AuthRepository
 import eric.bitria.minimalfit.data.remote.auth.FirebaseAuthRepository
+import eric.bitria.minimalfit.data.remote.sync.FirestoreSyncRepository
+import eric.bitria.minimalfit.data.remote.sync.SyncRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import eric.bitria.minimalfit.data.gym.AndroidGymSessionManager
@@ -147,6 +149,7 @@ val dataModule = module {
 
     // Firestore
     single { FirebaseFirestore.getInstance() }
+    single<SyncRepository> { FirestoreSyncRepository(get()) }
 
     // DataStore
     single<UserPreferencesRepository> { DataStoreUserPreferencesRepository(androidContext()) }

@@ -4,25 +4,26 @@ import eric.bitria.minimalfit.data.entity.gym.Session
 import eric.bitria.minimalfit.data.entity.gym.Set
 import kotlinx.coroutines.flow.Flow
 
+/**
+ * Repository for accessing exercise sets.
+ */
 interface SetRepository {
+
+    /** Returns all sets for a specific exercise across all sessions. */
     fun getSetsForExercise(exerciseId: String): Flow<List<Set>>
+
+    /** Returns all sets for a specific session. */
     fun getSetsForSession(sessionId: String): Flow<List<Set>>
-    fun getSessionForSet(setId: String): Flow<Session?>
-    suspend fun getSetById(setId: String): Set?
 
-    suspend fun addSet(
-        sessionId: String,
-        exerciseId: String,
-        weight: Float,
-        reps: Int,
-        rpe: Float? = null,
-        isWarmup: Boolean = false,
-        notes: String = ""
-    )
+    /** Returns a specific set by ID. */
+    fun getSet(id: String): Flow<Set?>
 
-    suspend fun updateSet(set: Set): Boolean
-    suspend fun completeLatestIncompleteSet(sessionId: String): Set?
-    suspend fun deleteSet(setId: String)
-    suspend fun copyPreviousSet(sessionId: String, exerciseId: String): Set?
+    /** Adds a new set to a session. */
+    suspend fun addSet(set: Set, sessionId: String)
+
+    /** Updates an existing set. */
+    suspend fun updateSet(set: Set)
+
+    /** Deletes a set by ID. */
+    suspend fun deleteSet(id: String)
 }
-

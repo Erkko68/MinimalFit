@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import eric.bitria.minimalfit.data.entity.gym.Exercise
 import eric.bitria.minimalfit.data.entity.gym.Session
-import eric.bitria.minimalfit.data.entity.gym.SessionStatus
 import eric.bitria.minimalfit.data.entity.gym.Set
 import eric.bitria.minimalfit.data.gym.GymSessionManager
 import eric.bitria.minimalfit.data.repository.gym.ExerciseRepository

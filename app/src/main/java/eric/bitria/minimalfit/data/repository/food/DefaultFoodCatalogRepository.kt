@@ -21,8 +21,8 @@ class DefaultFoodCatalogRepository(
     private val ingredientDao: IngredientDao
 ) : FoodCatalogRepository {
 
-    override fun getMeals(query: String): Flow<List<Meal>> =
-        mealDao.searchMeals(query)
+    override fun getMeals(query: String, limit: Int): Flow<List<Meal>> =
+        mealDao.getMeals(query, limit)
 
     override fun getMeal(id: String): Flow<Meal?> =
         mealDao.getMeal(id)
@@ -86,12 +86,18 @@ class DefaultFoodCatalogRepository(
         mealDao.deleteIngredientFromMeal(mealId, ingredientId)
     }
 
-    override fun getIngredients(query: String): Flow<List<Ingredient>> =
-        ingredientDao.searchIngredients(query)
+    override fun getIngredients(query: String, limit: Int): Flow<List<Ingredient>> =
+        ingredientDao.getIngredients(query, limit)
 
     override fun getIngredient(id: String): Flow<Ingredient?> =
         ingredientDao.getIngredient(id)
 
     override suspend fun addIngredient(ingredient: Ingredient) =
         ingredientDao.insertIngredient(ingredient)
+
+    override suspend fun updateIngredient(ingredient: Ingredient) =
+        ingredientDao.updateIngredient(ingredient)
+
+    override suspend fun deleteIngredient(id: String) =
+        ingredientDao.deleteIngredient(id)
 }

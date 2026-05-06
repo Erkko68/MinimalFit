@@ -3,12 +3,23 @@ package eric.bitria.minimalfit.data.repository.gym
 import eric.bitria.minimalfit.data.entity.gym.Exercise
 import kotlinx.coroutines.flow.Flow
 
+/**
+ * Repository for accessing gym exercises.
+ */
 interface ExerciseRepository {
-    fun getExercises(): Flow<List<Exercise>>
-    suspend fun getExerciseById(exerciseId: String): Exercise?
 
-    suspend fun addExercise(name: String): Exercise
-    suspend fun updateExerciseRest(exerciseId: String, restSeconds: Int)
-    suspend fun deleteExercise(exerciseId: String)
+    /** Returns exercises matching the query or all if query is empty. */
+    fun getExercises(query: String = "", limit: Int = 20): Flow<List<Exercise>>
+
+    /** Returns a specific exercise by ID. */
+    fun getExercise(id: String): Flow<Exercise?>
+
+    /** Adds a new exercise. */
+    suspend fun addExercise(exercise: Exercise)
+
+    /** Updates an existing exercise. */
+    suspend fun updateExercise(exercise: Exercise)
+
+    /** Deletes an exercise by ID. */
+    suspend fun deleteExercise(id: String)
 }
-

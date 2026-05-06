@@ -40,7 +40,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import eric.bitria.minimalfit.data.entity.gym.SessionStatus
 import eric.bitria.minimalfit.navigation.ScreenConfiguration
 import eric.bitria.minimalfit.ui.components.food.dialogs.SearchableItemDialog
 import eric.bitria.minimalfit.ui.components.requirements.permission.RequireNotificationPermission

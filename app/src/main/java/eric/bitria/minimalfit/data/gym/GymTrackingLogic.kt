@@ -1,7 +1,6 @@
 package eric.bitria.minimalfit.data.gym
 
 import eric.bitria.minimalfit.data.entity.gym.Session
-import eric.bitria.minimalfit.data.entity.gym.SessionStatus
 import eric.bitria.minimalfit.data.repository.gym.ExerciseRepository
 import eric.bitria.minimalfit.data.repository.gym.SessionRepository
 import eric.bitria.minimalfit.data.repository.gym.SetRepository

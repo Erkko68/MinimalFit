@@ -11,11 +11,11 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface ExerciseDao {
 
-    @Query("SELECT * FROM exercises ORDER BY name ASC")
-    fun getExercises(): Flow<List<Exercise>>
+    @Query("SELECT * FROM exercises WHERE name LIKE '%' || :query || '%' LIMIT :limit")
+    fun getExercises(query: String = "", limit: Int = -1): Flow<List<Exercise>>
 
-    @Query("SELECT * FROM exercises WHERE id = :exerciseId LIMIT 1")
-    suspend fun getExerciseById(exerciseId: String): Exercise?
+    @Query("SELECT * FROM exercises WHERE id = :id")
+    fun getExercise(id: String): Flow<Exercise?>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertExercise(exercise: Exercise)
@@ -23,7 +23,6 @@ interface ExerciseDao {
     @Update
     suspend fun updateExercise(exercise: Exercise)
 
-    @Query("DELETE FROM exercises WHERE id = :exerciseId")
-    suspend fun deleteExercise(exerciseId: String)
+    @Query("DELETE FROM exercises WHERE id = :id")
+    suspend fun deleteExercise(id: String)
 }
-

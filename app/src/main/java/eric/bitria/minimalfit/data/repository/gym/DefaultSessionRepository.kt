@@ -3,80 +3,57 @@ package eric.bitria.minimalfit.data.repository.gym
 import eric.bitria.minimalfit.data.database.dao.SessionDao
 import eric.bitria.minimalfit.data.database.dao.SetDao
 import eric.bitria.minimalfit.data.entity.gym.Session
-import eric.bitria.minimalfit.data.entity.gym.SessionStatus
 import eric.bitria.minimalfit.util.nowInstant
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
+import kotlin.time.Instant
 
 class DefaultSessionRepository(
     private val sessionDao: SessionDao,
     private val setDao: SetDao
 ) : SessionRepository {
 
-    override fun getRecentSessions(limit: Int): Flow<List<Session>> =
-        sessionDao.getRecentSessions(limit)
+    override fun getSessions(query: String, limit: Int): Flow<List<Session>> =
+        sessionDao.getSessions(query, limit)
 
-    override fun getSession(sessionId: String): Flow<Session?> =
-        sessionDao.getSession(sessionId)
+    override fun getSessions(start: Instant, end: Instant): Flow<List<Session>> =
+        sessionDao.getSessions(start, end)
+
+    override fun getSession(id: String): Flow<Session?> =
+        sessionDao.getSession(id)
 
     override fun getActiveSession(): Flow<Session?> =
         sessionDao.getActiveSession()
 
+    override suspend fun addSession(session: Session) {
+        sessionDao.insertSession(session)
+    }
+
+    override suspend fun updateSession(session: Session) {
+        sessionDao.updateSession(session)
+    }
+
+    override suspend fun deleteSession(id: String) {
+        setDao.deleteSetsForSession(id)
+        sessionDao.deleteSession(id)
+    }
+
     override suspend fun startSession(): String {
         val session = Session(
             startTime = nowInstant(),
-            status = SessionStatus.ACTIVE
+            isCompleted = false
         )
         sessionDao.insertSession(session)
         return session.id
     }
 
-    override suspend fun pauseSession() {
-        val active = sessionDao.getActiveSession().first() ?: return
-        if (active.status != SessionStatus.ACTIVE) return
+    override suspend fun finishSession(id: String, durationSeconds: Long) {
+        val session = sessionDao.getSession(id).firstOrNull() ?: return
         sessionDao.updateSession(
-            active.copy(
-                status = SessionStatus.PAUSED,
-                pausedAt = nowInstant()
+            session.copy(
+                isCompleted = true,
+                durationSeconds = durationSeconds
             )
         )
-    }
-
-    override suspend fun resumeSession() {
-        val active = sessionDao.getActiveSession().first() ?: return
-        if (active.status != SessionStatus.PAUSED) return
-
-        val pausedAt = active.pausedAt ?: nowInstant()
-        val pauseDeltaSeconds = (nowInstant() - pausedAt).inWholeSeconds.coerceAtLeast(0)
-        sessionDao.updateSession(
-            active.copy(
-                status = SessionStatus.ACTIVE,
-                pausedAt = null,
-                pausedDurationSeconds = active.pausedDurationSeconds + pauseDeltaSeconds
-            )
-        )
-    }
-
-    override suspend fun finishSession() {
-        val active = sessionDao.getActiveSession().first() ?: return
-        val now = nowInstant()
-        val extraPaused = if (active.status == SessionStatus.PAUSED && active.pausedAt != null) {
-            (now - active.pausedAt).inWholeSeconds.coerceAtLeast(0)
-        } else {
-            0L
-        }
-        sessionDao.updateSession(
-            active.copy(
-                status = SessionStatus.COMPLETED,
-                endTime = now,
-                pausedAt = null,
-                pausedDurationSeconds = active.pausedDurationSeconds + extraPaused
-            )
-        )
-    }
-
-    override suspend fun deleteSession(sessionId: String) {
-        setDao.deleteSessionAndSets(sessionId)
     }
 }
-

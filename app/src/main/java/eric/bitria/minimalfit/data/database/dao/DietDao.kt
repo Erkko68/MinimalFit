@@ -11,11 +11,13 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface DietDao {
-    @Query("SELECT * FROM diets")
-    fun getAllDiets(): Flow<List<Diet>>
-
-    @Query("SELECT * FROM diets WHERE name LIKE '%' || :query || '%'")
-    fun searchDiets(query: String): Flow<List<Diet>>
+    @Query("""
+        SELECT * FROM diets 
+        WHERE (name LIKE '%' || :query || '%')
+        ORDER BY name ASC
+        LIMIT :limit
+    """)
+    fun getDiets(query: String = "", limit: Int = -1): Flow<List<Diet>>
 
     @Query("SELECT * FROM diets WHERE id = :id")
     fun getDiet(id: String): Flow<Diet?>

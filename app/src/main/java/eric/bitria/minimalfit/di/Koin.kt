@@ -43,12 +43,12 @@ import eric.bitria.minimalfit.ui.viewmodels.food.FoodViewModel
 import eric.bitria.minimalfit.ui.viewmodels.food.MealDetailViewModel
 import eric.bitria.minimalfit.ui.viewmodels.login.LoginViewModel
 import eric.bitria.minimalfit.ui.viewmodels.login.RegisterViewModel
-import eric.bitria.minimalfit.ui.viewmodels.gym.GymHomeViewModel
-import eric.bitria.minimalfit.ui.viewmodels.gym.GymSessionViewModel
+import eric.bitria.minimalfit.ui.viewmodels.gym.GymViewModel
+import eric.bitria.minimalfit.ui.viewmodels.gym.SessionViewModel
 import eric.bitria.minimalfit.ui.viewmodels.gym.ExerciseProgressionViewModel
 import eric.bitria.minimalfit.ui.viewmodels.profile.ProfileViewModel
 import eric.bitria.minimalfit.ui.viewmodels.profile.card.CalorieViewModel
-import eric.bitria.minimalfit.ui.viewmodels.profile.card.GymViewModel
+import eric.bitria.minimalfit.ui.viewmodels.profile.card.CardGymViewModel
 import eric.bitria.minimalfit.ui.viewmodels.profile.card.WaterViewModel
 import eric.bitria.minimalfit.ui.viewmodels.settings.SettingsViewModel
 import eric.bitria.minimalfit.ui.viewmodels.track.TrackDetailViewModel
@@ -74,7 +74,6 @@ val dataModule = module {
             AppDatabase::class.java,
             "minimalfit.db"
         )
-            .addMigrations(AppDatabase.MIGRATION_2_3, AppDatabase.MIGRATION_3_4, AppDatabase.MIGRATION_4_5)
             .build()
     }
 
@@ -180,7 +179,7 @@ val viewModels = module {
 
     viewModelOf(::ProfileViewModel)
     viewModelOf(::WaterViewModel)
-    viewModelOf(::GymViewModel)
+    viewModelOf(::CardGymViewModel)
     viewModelOf(::CalorieViewModel)
     viewModelOf(::TrackViewModel)
 
@@ -189,16 +188,8 @@ val viewModels = module {
     viewModelOf(::RegisterViewModel)
 
     // Gym
-    viewModelOf(::GymHomeViewModel)
-    viewModel { (sessionId: String?) ->
-        GymSessionViewModel(
-            sessionId = sessionId,
-            sessionRepository = get(),
-            exerciseRepository = get(),
-            setRepository = get(),
-            gymSessionManager = get()
-        )
-    }
+    viewModelOf(::GymViewModel)
+    viewModelOf(::SessionViewModel)
     viewModel { (exerciseId: String) ->
         ExerciseProgressionViewModel(
             exerciseId = exerciseId,

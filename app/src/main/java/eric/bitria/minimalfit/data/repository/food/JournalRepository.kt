@@ -10,8 +10,14 @@ import kotlin.time.Instant
  */
 interface JournalRepository {
 
-    /** Returns the logs within a specific time range. */
-    fun getMealLogsInRange(start: Instant, end: Instant): Flow<List<MealLog>>
+    /** 
+     * Returns the logs matching the optional filters.
+     */
+    fun getMealLogs(
+        start: Instant? = null,
+        end: Instant? = null,
+        limit: Int = -1
+    ): Flow<List<MealLog>>
 
     suspend fun addMealLog(mealLog: MealLog)
     suspend fun removeMealLog(id: String)

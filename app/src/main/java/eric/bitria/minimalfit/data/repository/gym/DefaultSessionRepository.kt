@@ -13,17 +13,15 @@ class DefaultSessionRepository(
     private val setDao: SetDao
 ) : SessionRepository {
 
-    override fun getSessions(query: String, limit: Int): Flow<List<Session>> =
-        sessionDao.getSessions(query, limit)
-
-    override fun getSessions(start: Instant, end: Instant): Flow<List<Session>> =
-        sessionDao.getSessions(start, end)
+    override fun getSessions(
+        query: String,
+        start: Instant?,
+        end: Instant?,
+        limit: Int
+    ): Flow<List<Session>> = sessionDao.getSessions(query, start, end, limit)
 
     override fun getSession(id: String): Flow<Session?> =
         sessionDao.getSession(id)
-
-    override fun getActiveSession(): Flow<Session?> =
-        sessionDao.getActiveSession()
 
     override suspend fun addSession(session: Session) {
         sessionDao.insertSession(session)
@@ -41,7 +39,6 @@ class DefaultSessionRepository(
     override suspend fun startSession(): String {
         val session = Session(
             startTime = nowInstant(),
-            isCompleted = false
         )
         sessionDao.insertSession(session)
         return session.id
@@ -51,7 +48,6 @@ class DefaultSessionRepository(
         val session = sessionDao.getSession(id).firstOrNull() ?: return
         sessionDao.updateSession(
             session.copy(
-                isCompleted = true,
                 durationSeconds = durationSeconds
             )
         )

@@ -64,11 +64,11 @@ class DailyLogViewModel(
         val startOfDay = date.atStartOfDayIn(timeZone)
         val endOfDay = date.atTime(23, 59, 59, 999_999_999).toInstant(timeZone)
 
-        journal.getMealLogsInRange(startOfDay, endOfDay).flatMapLatest { logs ->
+        journal.getMealLogs(start = startOfDay, end = endOfDay).flatMapLatest { logs ->
             if (logs.isEmpty()) {
                 fetchSavedMeals(showDialog, query, emptyList())
             } else {
-                val mealLogsFlows: List<Flow<List<MealLogUiModel>>> = logs.map { log ->
+                val mealLogsFlows = logs.map { log ->
                     journal.getMealsForLog(log.id).flatMapLatest { meals ->
                         if (meals.isEmpty()) flowOf(emptyList())
                         else combine(meals.map { meal ->

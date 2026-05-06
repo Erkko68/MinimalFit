@@ -10,12 +10,12 @@ import kotlin.time.Instant
  */
 class DefaultTrackRepository(private val trackDao: TrackDao) : TrackRepository {
 
-    override fun getTracks(query: String, limit: Int): Flow<List<Track>> =
-        if (query.isBlank()) trackDao.getTracks(limit)
-        else trackDao.getTracks(query, limit)
-
-    override fun getTracks(start: Instant, end: Instant): Flow<List<Track>> =
-        trackDao.getTracks(start, end)
+    override fun getTracks(
+        query: String,
+        start: Instant?,
+        end: Instant?,
+        limit: Int
+    ): Flow<List<Track>> = trackDao.getTracks(query, start, end, limit)
 
     override fun getTrack(id: String): Flow<Track?> =
         trackDao.getTrack(id)

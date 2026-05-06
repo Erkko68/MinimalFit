@@ -1,23 +1,21 @@
 package eric.bitria.minimalfit.data.gym
 
-import eric.bitria.minimalfit.data.entity.gym.Session
+import eric.bitria.minimalfit.data.entity.gym.Set
 import kotlinx.coroutines.flow.StateFlow
 import kotlin.time.Duration
 
 interface GymSessionManager {
-    val activeSession: StateFlow<Session?>
+    val activeSets: StateFlow<List<Set>>
     val elapsed: StateFlow<Duration>
     val restRemaining: StateFlow<Duration>
     val isRestRunning: StateFlow<Boolean>
 
     fun start()
-    fun pause()
-    fun resume()
     fun finish()
-    fun startRestForExercise(exerciseId: String)
-    fun addRestSeconds(seconds: Int)
+    fun addSet(exerciseId: String)
+    fun updateSet(set: Set)
+    fun deleteSet(setId: String)
+    
+    fun startRest(seconds: Int = 60)
     fun stopRest()
-    fun finishLatestSetAndStartRest()
-    fun updateExerciseRest(exerciseId: String, restSeconds: Int)
 }
-

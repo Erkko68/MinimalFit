@@ -9,11 +9,15 @@ import kotlin.time.Instant
  */
 interface TrackRepository {
 
-    /** Returns tracks matching the query or recent ones if query is empty. */
-    fun getTracks(query: String = "", limit: Int = 20): Flow<List<Track>>
-
-    /** Returns tracks within a specific time range. */
-    fun getTracks(start: Instant, end: Instant): Flow<List<Track>>
+    /** 
+     * Returns tracks matching the optional filters.
+     */
+    fun getTracks(
+        query: String = "",
+        start: Instant? = null,
+        end: Instant? = null,
+        limit: Int = 20
+    ): Flow<List<Track>>
 
     /** Returns a specific track by ID. */
     fun getTrack(id: String): Flow<Track?>

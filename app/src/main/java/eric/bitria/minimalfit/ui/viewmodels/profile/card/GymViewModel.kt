@@ -5,7 +5,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-class GymViewModel : ViewModel() {
+class CardGymViewModel : ViewModel() {
     private val _weight = MutableStateFlow("12,450")
     val weight: StateFlow<String> = _weight.asStateFlow()
 

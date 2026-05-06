@@ -13,6 +13,5 @@ data class Session(
     val id: String = UUID.randomUUID().toString(),
     val startTime: Instant,
     val durationSeconds: Long = 0L,
-    val isCompleted: Boolean = false,
     val notes: String = ""
 )

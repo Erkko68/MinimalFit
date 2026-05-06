@@ -12,8 +12,18 @@ import kotlin.time.Instant
 
 @Dao
 interface MealLogDao {
-    @Query("SELECT * FROM meal_logs WHERE createdAt BETWEEN :start AND :end ORDER BY createdAt DESC")
-    fun getMealLogsInRange(start: Instant, end: Instant): Flow<List<MealLog>>
+    @Query("""
+        SELECT * FROM meal_logs 
+        WHERE (:start IS NULL OR createdAt >= :start)
+        AND (:end IS NULL OR createdAt <= :end)
+        ORDER BY createdAt DESC 
+        LIMIT :limit
+    """)
+    fun getMealLogs(
+        start: Instant? = null,
+        end: Instant? = null,
+        limit: Int = -1
+    ): Flow<List<MealLog>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertMealLog(mealLog: MealLog)

@@ -3,9 +3,9 @@ package eric.bitria.minimalfit.ui.viewmodels.gym
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import eric.bitria.minimalfit.data.entity.gym.Exercise
-import eric.bitria.minimalfit.data.entity.gym.Session
 import eric.bitria.minimalfit.data.entity.gym.Set
 import eric.bitria.minimalfit.data.repository.gym.ExerciseRepository
+import eric.bitria.minimalfit.data.repository.gym.SessionRepository
 import eric.bitria.minimalfit.data.repository.gym.SetRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.SharingStarted
@@ -18,57 +18,33 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 
-data class ExerciseProgressionUiState(
-    val exercise: Exercise? = null,
-    val dates: List<String> = emptyList(),
-    val maxWeights: List<Float> = emptyList(),
-    val setsHistory: List<Set> = emptyList(),
-    val groupedHistory: Map<String, List<Set>> = emptyMap()
-)
-
 class ExerciseProgressionViewModel(
     private val exerciseId: String,
     private val exerciseRepository: ExerciseRepository,
+    private val sessionRepository: SessionRepository,
     private val setRepository: SetRepository
 ) : ViewModel() {
 
+    val exercise: StateFlow<Exercise?> = exerciseRepository.getExercise(exerciseId)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
     @OptIn(ExperimentalCoroutinesApi::class)
-    private val setsWithSessionFlow = setRepository
+    val setsWithSessions = setRepository
         .getSetsForExercise(exerciseId)
         .flatMapLatest { sets ->
-            if (sets.isEmpty()) {
-                flowOf(emptyList())
-            } else {
-                combine(
-                    sets.map { set ->
-                        setRepository.getSessionForSet(set.id).map { session -> set to session }
-                    }
-                ) { pairs ->
-                    pairs.toList()
+            if (sets.isEmpty()) flowOf(emptyList())
+            else combine(
+                sets.map { set ->
+                    sessionRepository.getSession(set.sessionId).map { session -> set to session }
                 }
-            }
-        }
+            ) { it.toList() }
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    val uiState: StateFlow<ExerciseProgressionUiState> = combine(
-        exerciseRepository.getExercises().map { list -> list.find { it.id == exerciseId } },
-        setsWithSessionFlow
-    ) { exercise, setsWithSession ->
-
-        val validSets = setsWithSession.filter { it.second != null }
-        val completedSets = validSets.filter { (set, _) -> set.isCompleted || set.weight > 0 }
-        
+    val progressionData = setsWithSessions.map { pairs ->
+        val validPairs = pairs.filter { it.second != null }
         val timeZone = TimeZone.currentSystemDefault()
-
-        // Group sets by date for history (descending)
-        val grouped = completedSets
-            .sortedByDescending { (_, session) -> session!!.startTime }
-            .groupBy(
-                keySelector = { (_, session) -> session!!.startTime.toLocalDateTime(timeZone).date.toString() },
-                valueTransform = { (set, _) -> set }
-            )
-
-        // Calculate progression data (chronological)
-        val chronologicalGroups = completedSets
+        
+        val chronologicalGroups = validPairs
             .groupBy { (_, session) -> session!!.startTime.toLocalDateTime(timeZone).date }
             .toSortedMap()
 
@@ -76,17 +52,17 @@ class ExerciseProgressionViewModel(
         val maxWeights = chronologicalGroups.values.map { sets ->
             sets.maxOfOrNull { (set, _) -> set.weight } ?: 0f
         }
+        
+        dates to maxWeights
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList<String>() to emptyList<Float>())
 
-        ExerciseProgressionUiState(
-            exercise = exercise,
-            dates = dates,
-            maxWeights = maxWeights,
-            setsHistory = completedSets.map { (set, _) -> set },
-            groupedHistory = grouped
-        )
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = ExerciseProgressionUiState()
-    )
+    val groupedHistory = setsWithSessions.map { pairs ->
+        val timeZone = TimeZone.currentSystemDefault()
+        pairs.filter { it.second != null }
+            .sortedByDescending { it.second!!.startTime }
+            .groupBy(
+                keySelector = { it.second!!.startTime.toLocalDateTime(timeZone).date.toString() },
+                valueTransform = { it.first }
+            )
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 }

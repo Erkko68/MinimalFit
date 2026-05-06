@@ -1,33 +1,46 @@
 package eric.bitria.minimalfit.data.gym
 
 import eric.bitria.minimalfit.data.entity.gym.Session
+import eric.bitria.minimalfit.data.entity.gym.Set as GymSet
 import eric.bitria.minimalfit.data.repository.gym.ExerciseRepository
 import eric.bitria.minimalfit.data.repository.gym.SessionRepository
 import eric.bitria.minimalfit.data.repository.gym.SetRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.seconds
 
 class GymTrackingLogic(
     private val sessionRepository: SessionRepository,
-    private val setRepository: SetRepository,
-    private val exerciseRepository: ExerciseRepository
+    private val exerciseRepository: ExerciseRepository,
+    private val setRepository: SetRepository
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
     private val _activeSession = MutableStateFlow<Session?>(null)
     val activeSession: StateFlow<Session?> = _activeSession.asStateFlow()
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val activeSets: StateFlow<List<GymSet>> = _activeSession
+        .flatMapLatest { session ->
+            if (session == null) flowOf(emptyList())
+            else setRepository.getSetsForSession(session.id)
+        }
+        .stateIn(scope, SharingStarted.Eagerly, emptyList())
 
     private val _elapsed = MutableStateFlow(Duration.ZERO)
     val elapsed: StateFlow<Duration> = _elapsed.asStateFlow()
@@ -38,166 +51,84 @@ class GymTrackingLogic(
     private val _isRestRunning = MutableStateFlow(false)
     val isRestRunning: StateFlow<Boolean> = _isRestRunning.asStateFlow()
 
-    private val _hasIncompleteSet = MutableStateFlow(false)
-    val hasIncompleteSet: StateFlow<Boolean> = _hasIncompleteSet.asStateFlow()
-
-    private val _nextIncompleteSetInfo = MutableStateFlow<String?>(null)
-    val nextIncompleteSetInfo: StateFlow<String?> = _nextIncompleteSetInfo.asStateFlow()
-
     private var tickerJob: Job? = null
     private var restJob: Job? = null
-    private var setObserverJob: Job? = null
     private var restEndEpochMillis: Long? = null
-
-    init {
-        scope.launch {
-            sessionRepository.getActiveSession().collect { session ->
-                _activeSession.value = session
-                syncTicker(session)
-                syncIncompleteSetObserver(session)
-            }
-        }
-    }
 
     fun start() {
         scope.launch {
-            val current = sessionRepository.getActiveSession().first()
-            when (current?.status) {
-                null -> sessionRepository.startSession()
-                SessionStatus.PAUSED -> sessionRepository.resumeSession()
-                else -> Unit
+            if (_activeSession.value == null) {
+                val sessionId = sessionRepository.startSession()
+                sessionRepository.getSession(sessionId).first()?.let {
+                    _activeSession.value = it
+                    syncTicker(it)
+                }
             }
         }
     }
 
-    fun pause() {
-        scope.launch { sessionRepository.pauseSession() }
+    fun addSet(exerciseId: String) {
+        scope.launch {
+            val session = _activeSession.value ?: return@launch
+            setRepository.addSet(
+                GymSet(
+                    sessionId = session.id,
+                    exerciseId = exerciseId,
+                    weight = 0f,
+                    reps = 0
+                ),
+                session.id
+            )
+        }
     }
 
-    fun resume() {
-        scope.launch { sessionRepository.resumeSession() }
+    fun updateSet(set: GymSet) {
+        scope.launch {
+            setRepository.updateSet(set)
+        }
+    }
+
+    fun deleteSet(setId: String) {
+        scope.launch {
+            setRepository.deleteSet(setId)
+        }
     }
 
     fun finish() {
         scope.launch {
-            sessionRepository.finishSession()
+            val session = _activeSession.value ?: return@launch
+            sessionRepository.finishSession(session.id, _elapsed.value.inWholeSeconds)
+            _activeSession.value = null
             _elapsed.value = Duration.ZERO
             stopRestInternal()
         }
     }
 
-    fun startRestForExercise(exerciseId: String) {
-        scope.launch {
-            val exercise = exerciseRepository.getExerciseById(exerciseId)
-            val seconds = (exercise?.restSeconds ?: 120).coerceAtLeast(0)
-            startRestCountdown(seconds)
-        }
-    }
-
-    fun addRestSeconds(seconds: Int) {
+    fun startRest(seconds: Int = 60) {
         if (seconds <= 0) return
         val currentEnd = restEndEpochMillis
-        if (currentEnd == null) {
+        if (currentEnd == null || !_isRestRunning.value) {
             startRestCountdown(seconds)
-            return
+        } else {
+            restEndEpochMillis = currentEnd + (seconds * 1000L)
+            syncRestTick()
         }
-        restEndEpochMillis = currentEnd + (seconds * 1000L)
-        syncRestTick()
     }
 
     fun stopRest() {
         stopRestInternal()
     }
 
-    fun finishLatestSetAndStartRest() {
-        scope.launch {
-            val sessionId = _activeSession.value?.id ?: return@launch
-            val completedSet = setRepository.completeLatestIncompleteSet(sessionId) ?: return@launch
-            val exercise = exerciseRepository.getExerciseById(completedSet.exerciseId)
-            val seconds = (exercise?.restSeconds ?: 120).coerceAtLeast(0)
-            startRestCountdown(seconds)
-        }
-    }
-
-    fun updateExerciseRest(exerciseId: String, restSeconds: Int) {
-        scope.launch {
-            exerciseRepository.updateExerciseRest(exerciseId, restSeconds)
-        }
-    }
-
-    private fun syncTicker(session: Session?) {
+    private fun syncTicker(session: Session) {
         tickerJob?.cancel()
-
-        if (session == null) {
-            _elapsed.value = Duration.ZERO
-            stopRestInternal()
-            return
-        }
-
-        if (session.status != SessionStatus.ACTIVE) {
-            _elapsed.value = calculateElapsed(session)
-            return
-        }
 
         tickerJob = scope.launch {
             while (true) {
-                _elapsed.value = calculateElapsed(session)
+                val now = Clock.System.now()
+                _elapsed.value = (now - session.startTime).coerceAtLeast(Duration.ZERO)
                 delay(1000)
             }
         }
-    }
-
-    private fun syncIncompleteSetObserver(session: Session?) {
-        setObserverJob?.cancel()
-
-        if (session == null || session.status == SessionStatus.COMPLETED) {
-            _hasIncompleteSet.value = false
-            _nextIncompleteSetInfo.value = null
-            return
-        }
-
-        setObserverJob = scope.launch {
-            setRepository.getSetsForSession(session.id)
-                .collect { sets ->
-                    val nextSet = sets
-                        .filter { !it.isCompleted }
-                        .minByOrNull { it.orderInSession }
-
-                    _hasIncompleteSet.value = nextSet != null
-
-                    if (nextSet == null) {
-                        _nextIncompleteSetInfo.value = null
-                    } else {
-                        val setNumber = sets
-                            .filter { it.exerciseId == nextSet.exerciseId }
-                            .sortedBy { it.orderInSession }
-                            .indexOfFirst { it.id == nextSet.id }
-                            .let { if (it >= 0) it + 1 else 1 }
-
-                        val exerciseName = exerciseRepository
-                            .getExerciseById(nextSet.exerciseId)
-                            ?.name
-                            ?.takeIf { it.isNotBlank() }
-
-                        _nextIncompleteSetInfo.value = if (exerciseName != null) {
-                            "$exerciseName - Set $setNumber"
-                        } else {
-                            "Set $setNumber"
-                        }
-                    }
-                }
-        }
-    }
-
-    private fun calculateElapsed(session: Session): Duration {
-        val endReference = when {
-            session.status == SessionStatus.PAUSED && session.pausedAt != null -> session.pausedAt
-            session.status == SessionStatus.COMPLETED && session.endTime != null -> session.endTime
-            else -> Clock.System.now()
-        }
-
-        val raw = endReference - session.startTime
-        return (raw - session.pausedDurationSeconds.seconds).coerceAtLeast(Duration.ZERO)
     }
 
     private fun startRestCountdown(seconds: Int) {
@@ -232,4 +163,3 @@ class GymTrackingLogic(
         _isRestRunning.value = false
     }
 }
-

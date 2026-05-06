@@ -21,9 +21,8 @@ class DefaultDietRepository(
     override fun getDiet(id: String): Flow<Diet?> =
         dietDao.getDiet(id)
 
-    override fun getDiets(query: String): Flow<List<Diet>> =
-        if (query.isBlank()) dietDao.getAllDiets()
-        else dietDao.searchDiets(query)
+    override fun getDiets(query: String, limit: Int): Flow<List<Diet>> =
+        dietDao.getDiets(query, limit)
 
     override suspend fun addDiet(diet: Diet) =
         dietDao.insertDiet(diet)

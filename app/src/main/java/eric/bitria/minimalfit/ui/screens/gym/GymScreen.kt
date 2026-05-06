@@ -47,7 +47,7 @@ import eric.bitria.minimalfit.ui.components.gym.cards.ExerciseCard
 import eric.bitria.minimalfit.ui.components.gym.cards.GymSessionCard
 import eric.bitria.minimalfit.ui.components.gym.cards.RoutineCard
 import eric.bitria.minimalfit.ui.theme.Spacing
-import eric.bitria.minimalfit.ui.viewmodels.gym.GymHomeViewModel
+import eric.bitria.minimalfit.ui.viewmodels.gym.GymViewModel
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -55,7 +55,7 @@ import org.koin.androidx.compose.koinViewModel
 fun GymScreen(
     onNavigateToSession: (String?) -> Unit,
     onNavigateToExerciseProgression: (String) -> Unit,
-    viewModel: GymHomeViewModel = koinViewModel()
+    viewModel: GymViewModel = koinViewModel()
 ) {
     val sessions by viewModel.recentSessions.collectAsState()
     val exercises by viewModel.exercises.collectAsState()

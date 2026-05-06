@@ -19,8 +19,11 @@ class DefaultJournalRepository(
     private val foodCatalog: FoodCatalogRepository
 ) : JournalRepository {
 
-    override fun getMealLogsInRange(start: Instant, end: Instant): Flow<List<MealLog>> =
-        mealLogDao.getMealLogsInRange(start, end)
+    override fun getMealLogs(
+        start: Instant?,
+        end: Instant?,
+        limit: Int
+    ): Flow<List<MealLog>> = mealLogDao.getMealLogs(start, end, limit)
 
     override suspend fun addMealLog(mealLog: MealLog) {
         mealLogDao.insertMealLog(mealLog)

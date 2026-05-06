@@ -59,7 +59,7 @@ class FoodViewModel(
         val weeklyProgressFlow = combine(days.map { date ->
             val start = date.startOfDayInstant()
             val end = date.endOfDayInstant()
-            journal.getMealLogsInRange(start, end).flatMapLatest { logs ->
+            journal.getMealLogs(start = start, end = end).flatMapLatest { logs ->
                 if (logs.isEmpty()) flowOf(0)
                 else combine(logs.map { journal.getLogCalories(it.id) }) { calories ->
                     calories.sum()

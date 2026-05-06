@@ -45,7 +45,7 @@ import eric.bitria.minimalfit.ui.components.food.dialogs.SearchableItemDialog
 import eric.bitria.minimalfit.ui.components.requirements.permission.RequireNotificationPermission
 import eric.bitria.minimalfit.ui.components.shared.animations.SwipeToDeleteCard
 import eric.bitria.minimalfit.ui.theme.Spacing
-import eric.bitria.minimalfit.ui.viewmodels.gym.GymSessionViewModel
+import eric.bitria.minimalfit.ui.viewmodels.gym.SessionViewModel
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -54,7 +54,7 @@ import org.koin.core.parameter.parametersOf
 fun GymSessionScreen(
     sessionId: String?,
     onNavigateBack: () -> Unit,
-    viewModel: GymSessionViewModel = koinViewModel { parametersOf(sessionId) }
+    viewModel: SessionViewModel = koinViewModel { parametersOf(sessionId) }
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val timerText by viewModel.timerText.collectAsState()
@@ -294,7 +294,7 @@ fun GymSessionScreen(
                         fontWeight = FontWeight.Bold
                     )
                     Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
-                        Button(onClick = { viewModel.addRestSeconds(30) }) {
+                        Button(onClick = { viewModel.startRest(30) }) {
                             Text("+30s")
                         }
                         Button(onClick = { viewModel.stopRest() }) {

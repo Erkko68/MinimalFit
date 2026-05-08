@@ -4,6 +4,9 @@ import eric.bitria.minimalfit.data.database.dao.SessionDao
 import eric.bitria.minimalfit.data.database.dao.SetDao
 import eric.bitria.minimalfit.data.entity.gym.Session
 import eric.bitria.minimalfit.util.nowInstant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+import eric.bitria.minimalfit.util.shortMonthDay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlin.time.Instant
@@ -37,8 +40,11 @@ class DefaultSessionRepository(
     }
 
     override suspend fun startSession(): String {
+        val start = nowInstant()
+        val title = start.toLocalDateTime(TimeZone.currentSystemDefault()).date.shortMonthDay()
         val session = Session(
-            startTime = nowInstant(),
+            startTime = start,
+            title = title
         )
         sessionDao.insertSession(session)
         return session.id

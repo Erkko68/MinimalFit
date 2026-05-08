@@ -34,6 +34,9 @@ class GymTrackingLogic(
     private val _activeSession = MutableStateFlow<Session?>(null)
     val activeSession: StateFlow<Session?> = _activeSession.asStateFlow()
 
+    private val _isPaused = MutableStateFlow(false)
+    val isPaused: StateFlow<Boolean> = _isPaused.asStateFlow()
+
     @OptIn(ExperimentalCoroutinesApi::class)
     val activeSets: StateFlow<List<GymSet>> = _activeSession
         .flatMapLatest { session ->
@@ -54,6 +57,8 @@ class GymTrackingLogic(
     private var tickerJob: Job? = null
     private var restJob: Job? = null
     private var restEndEpochMillis: Long? = null
+    private var pauseStartEpochMillis: Long? = null
+    private var totalPausedMillis: Long = 0L
 
     fun start() {
         scope.launch {
@@ -61,10 +66,32 @@ class GymTrackingLogic(
                 val sessionId = sessionRepository.startSession()
                 sessionRepository.getSession(sessionId).first()?.let {
                     _activeSession.value = it
+                    // reset paused state when starting
+                    pauseStartEpochMillis = null
+                    totalPausedMillis = 0L
+                    _isPaused.value = false
                     syncTicker(it)
                 }
             }
         }
+    }
+
+    fun pause() {
+        if (_activeSession.value == null) return
+        if (_isPaused.value) return
+        pauseStartEpochMillis = System.currentTimeMillis()
+        _isPaused.value = true
+        tickerJob?.cancel()
+    }
+
+    fun resume() {
+        val session = _activeSession.value ?: return
+        val startMillis = pauseStartEpochMillis ?: return
+        val now = System.currentTimeMillis()
+        totalPausedMillis += (now - startMillis)
+        pauseStartEpochMillis = null
+        _isPaused.value = false
+        syncTicker(session)
     }
 
     fun addSet(exerciseId: String) {
@@ -101,6 +128,11 @@ class GymTrackingLogic(
             _activeSession.value = null
             _elapsed.value = Duration.ZERO
             stopRestInternal()
+            // reset paused state when finishing
+            tickerJob?.cancel()
+            pauseStartEpochMillis = null
+            totalPausedMillis = 0L
+            _isPaused.value = false
         }
     }
 
@@ -125,7 +157,8 @@ class GymTrackingLogic(
         tickerJob = scope.launch {
             while (true) {
                 val now = Clock.System.now()
-                _elapsed.value = (now - session.startTime).coerceAtLeast(Duration.ZERO)
+                val pausedDuration = totalPausedMillis.milliseconds
+                _elapsed.value = (now - session.startTime - pausedDuration).coerceAtLeast(Duration.ZERO)
                 delay(1000)
             }
         }

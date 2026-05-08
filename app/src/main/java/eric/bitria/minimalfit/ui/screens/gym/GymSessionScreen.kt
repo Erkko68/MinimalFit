@@ -1,23 +1,19 @@
 package eric.bitria.minimalfit.ui.screens.gym
 
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -25,8 +21,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -39,149 +35,32 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import eric.bitria.minimalfit.navigation.ScreenConfiguration
 import eric.bitria.minimalfit.ui.components.food.dialogs.SearchableItemDialog
-import eric.bitria.minimalfit.ui.components.requirements.permission.RequireNotificationPermission
-import eric.bitria.minimalfit.ui.components.shared.animations.SwipeToDeleteCard
 import eric.bitria.minimalfit.ui.theme.Spacing
 import eric.bitria.minimalfit.ui.viewmodels.gym.SessionViewModel
 import org.koin.androidx.compose.koinViewModel
-import org.koin.core.parameter.parametersOf
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GymSessionScreen(
-    sessionId: String?,
-    onNavigateBack: () -> Unit,
-    viewModel: SessionViewModel = koinViewModel { parametersOf(sessionId) }
+    viewModel: SessionViewModel = koinViewModel(),
+    onNavigateBack: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val timerText by viewModel.timerText.collectAsState()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     var showFinishDialog by remember { mutableStateOf(false) }
     var showExerciseSearchDialog by remember { mutableStateOf(false) }
-    var setToDeleteId by remember { mutableStateOf<String?>(null) }
-    var exerciseToDeleteId by remember { mutableStateOf<String?>(null) }
-    var notificationPermissionGranted by remember { mutableStateOf(false) }
-    val catalogExercises by viewModel.catalogExercises.collectAsState(initial = emptyList())
 
-    if (!notificationPermissionGranted) {
-        RequireNotificationPermission(onPermissionResult = { notificationPermissionGranted = it })
+    fun formatDuration(duration: kotlin.time.Duration): String {
+        val totalSeconds = duration.inWholeSeconds
+        val mins = totalSeconds / 60
+        val secs = totalSeconds % 60
+        return "%02d:%02d".format(mins, secs)
     }
 
-    if (showFinishDialog) {
-        androidx.compose.material3.AlertDialog(
-            onDismissRequest = { showFinishDialog = false },
-            title = { Text(text = "Workout in progress") },
-            text = { Text("Do you want to finish the workout, or keep it running in the background with a pop-up notification when you leave the app?") },
-            confirmButton = {
-                androidx.compose.material3.TextButton(
-                    onClick = {
-                        showFinishDialog = false
-                        viewModel.finishSession()
-                        onNavigateBack()
-                    }
-                ) {
-                    Text("Finish Workout")
-                }
-            },
-            dismissButton = {
-                Row {
-                    androidx.compose.material3.TextButton(
-                        onClick = {
-                            showFinishDialog = false
-                            onNavigateBack()
-                        }
-                    ) {
-                        Text("Keep Running")
-                    }
-                    androidx.compose.material3.TextButton(
-                        onClick = { showFinishDialog = false }
-                    ) {
-                        Text("Cancel")
-                    }
-                }
-            }
-        )
-    }
-
-    if (showExerciseSearchDialog) {
-        SearchableItemDialog(
-            title = "Add Exercise",
-            placeholder = "Search or create new...",
-            items = catalogExercises,
-            itemKey = { it.id },
-            filter = { item, query -> item.name.contains(query, ignoreCase = true) },
-            onDismiss = { showExerciseSearchDialog = false },
-            onCreateNew = { newName ->
-                viewModel.createNewExerciseAndAddSet(newName)
-                showExerciseSearchDialog = false
-            }
-        ) { exercise ->
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable {
-                        viewModel.addSet(exercise.id)
-                        showExerciseSearchDialog = false
-                    }
-                    .padding(horizontal = Spacing.m, vertical = Spacing.l),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = exercise.name,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-        }
-    }
-
-    if (setToDeleteId != null) {
-        androidx.compose.material3.AlertDialog(
-            onDismissRequest = { setToDeleteId = null },
-            title = { Text("Delete set") },
-            text = { Text("Do you want to delete this set from the current workout?") },
-            confirmButton = {
-                androidx.compose.material3.TextButton(
-                    onClick = {
-                        viewModel.deleteSet(setToDeleteId!!)
-                        setToDeleteId = null
-                    }
-                ) { Text("Delete") }
-            },
-            dismissButton = {
-                androidx.compose.material3.TextButton(onClick = { setToDeleteId = null }) {
-                    Text("Cancel")
-                }
-            }
-        )
-    }
-
-    if (exerciseToDeleteId != null) {
-        androidx.compose.material3.AlertDialog(
-            onDismissRequest = { exerciseToDeleteId = null },
-            title = { Text("Delete exercise") },
-            text = { Text("Do you want to delete this exercise and all its sets from this session?") },
-            confirmButton = {
-                androidx.compose.material3.TextButton(
-                    onClick = {
-                        viewModel.deleteExerciseFromCurrentSession(exerciseToDeleteId!!)
-                        exerciseToDeleteId = null
-                    }
-                ) { Text("Delete") }
-            },
-            dismissButton = {
-                androidx.compose.material3.TextButton(onClick = { exerciseToDeleteId = null }) {
-                    Text("Cancel")
-                }
-            }
-        )
-    }
-
-    androidx.activity.compose.BackHandler(enabled = uiState.session?.status == SessionStatus.ACTIVE) {
+    BackHandler(enabled = uiState.isActive) {
         showFinishDialog = true
     }
 
@@ -198,7 +77,7 @@ fun GymSessionScreen(
                             color = MaterialTheme.colorScheme.onBackground
                         )
                         Text(
-                            text = timerText,
+                            text = formatDuration(uiState.elapsed),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.primary
@@ -207,22 +86,9 @@ fun GymSessionScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = {
-                        if (uiState.session?.status == SessionStatus.ACTIVE) {
-                            showFinishDialog = true
-                        } else {
-                            onNavigateBack()
-                        }
+                        if (uiState.isActive) showFinishDialog = true else onNavigateBack()
                     }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                actions = {
-                    if (uiState.session?.status == SessionStatus.ACTIVE) {
-                        IconButton(onClick = {
-                            showFinishDialog = true
-                        }) {
-                            Icon(Icons.Filled.Check, contentDescription = "Finish workout")
-                        }
                     }
                 },
                 scrollBehavior = scrollBehavior
@@ -232,16 +98,28 @@ fun GymSessionScreen(
         quickActions = false
     )
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(Spacing.m),
-        verticalArrangement = Arrangement.spacedBy(Spacing.m)
-    ) {
-        val isActive = uiState.session?.status == SessionStatus.ACTIVE
-        val totalSets = uiState.exercises.sumOf { it.sets.size }
-        val completedSets = uiState.exercises.sumOf { exercise -> exercise.sets.count { it.isCompleted } }
+    if (showFinishDialog) {
+        AlertDialog(
+            onDismissRequest = { showFinishDialog = false },
+            title = { Text(text = "Unfinished session") },
+            text = { Text("You haven't finished your session yet. Do you want to finish it now?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showFinishDialog = false
+                        viewModel.finishSession()
+                        onNavigateBack()
+                    }
+                ) { Text("Finish") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showFinishDialog = false }) { Text("Cancel") }
+            }
+        )
+    }
 
+    Column(modifier = Modifier.fillMaxSize().padding(Spacing.m)) {
+        // Summary card
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = MaterialTheme.shapes.extraLarge,
@@ -255,31 +133,25 @@ fun GymSessionScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = if (isActive) "Active" else "Paused",
+                    text = if (!uiState.isActive) "Idle" else if (uiState.isPaused) "Paused" else "Active",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
                 )
                 Text(
-                    text = "Exercises: ${uiState.exercises.size}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = "Sets: $completedSets/$totalSets",
+                    text = "Sets: ${uiState.sets.size}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
 
+        // Rest timer
         if (uiState.isRestRunning) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = MaterialTheme.shapes.extraLarge,
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                )
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
             ) {
                 Row(
                     modifier = Modifier
@@ -289,247 +161,81 @@ fun GymSessionScreen(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "Rest: ${uiState.restTimerText}",
+                        text = "Rest: ${formatDuration(uiState.restRemaining)}",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
                     Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
-                        Button(onClick = { viewModel.startRest(30) }) {
-                            Text("+30s")
-                        }
-                        Button(onClick = { viewModel.stopRest() }) {
-                            Text("Stop Rest")
-                        }
+                        Button(onClick = { viewModel.startRest(30) }) { Text("+30s") }
+                        Button(onClick = { viewModel.stopRest() }) { Text("Stop Rest") }
                     }
                 }
             }
         }
 
-        // Lista de ejercicios y sets
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .weight(1f),
-            contentPadding = PaddingValues(bottom = Spacing.m),
-            verticalArrangement = Arrangement.spacedBy(Spacing.m)
-        ) {
-            item {
-                Text(
-                    text = "Exercises",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.ExtraBold
-                )
-            }
+        // Sets list
+        LazyColumn(modifier = Modifier.fillMaxSize().weight(1f), verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
+            item { Text(text = "Sets", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold) }
 
-            if (uiState.exercises.isEmpty()) {
+            if (uiState.sets.isEmpty()) {
                 item {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = MaterialTheme.shapes.extraLarge,
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(Spacing.m),
-                            verticalArrangement = Arrangement.spacedBy(Spacing.s)
-                        ) {
-                            Text(
-                                text = "No exercises yet",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                text = "Add an exercise to start logging your first set and unlock one-tap complete set actions from the notification.",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            if (isActive) {
-                                Button(onClick = { showExerciseSearchDialog = true }) {
-                                    Text("Add Exercise")
-                                }
-                            }
+                    Card(modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.extraLarge) {
+                        Column(modifier = Modifier.padding(Spacing.m)) {
+                            Text("No sets yet", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                            if (!uiState.isPaused) Button(onClick = { showExerciseSearchDialog = true }) { Text("Add Exercise") }
                         }
                     }
                 }
             }
 
-            items(uiState.exercises, key = { it.exercise.id }) { item ->
-                val exerciseContent: @Composable () -> Unit = {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = MaterialTheme.shapes.extraLarge,
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
-                        )
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(Spacing.m),
-                            verticalArrangement = Arrangement.spacedBy(Spacing.s)
-                        ) {
-                            Text(
-                                text = item.exercise.name,
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-
-                            var restText by remember(item.exercise.id, item.exercise.restSeconds) {
-                                mutableStateOf(item.exercise.restSeconds.toString())
-                            }
-
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(Spacing.s)
-                            ) {
-                                Text(
-                                    text = "Rest (sec)",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                OutlinedTextField(
-                                    value = restText,
-                                    onValueChange = { restText = it.filter { ch -> ch.isDigit() } },
-                                    singleLine = true,
-                                    enabled = isActive,
-                                    modifier = Modifier
-                                        .width(120.dp)
-                                        .height(56.dp)
-                                )
-                                Button(
-                                    onClick = {
-                                        val restSeconds = (restText.toIntOrNull() ?: item.exercise.restSeconds)
-                                            .coerceIn(0, 900)
-                                        restText = restSeconds.toString()
-                                        viewModel.updateExerciseRest(item.exercise.id, restSeconds)
-                                    },
-                                    enabled = isActive
-                                ) {
-                                    Text("Save")
-                                }
-                            }
-
-                            item.sets.forEachIndexed { index, set ->
-                                var weightText by remember(set.id) { mutableStateOf(if (set.weight > 0) set.weight.toString() else "") }
-                                var repsText by remember(set.id) { mutableStateOf(if (set.reps > 0) set.reps.toString() else "") }
-
-                                val setRow: @Composable () -> Unit = {
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(vertical = Spacing.xs),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(Spacing.s)
-                                    ) {
-                                        Text(
-                                            text = "${index + 1}",
-                                            style = MaterialTheme.typography.titleMedium,
-                                            fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            modifier = Modifier.width(24.dp)
-                                        )
-
-                                        OutlinedTextField(
-                                            value = weightText,
-                                            onValueChange = {
-                                                weightText = it
-                                                val weight = it.toFloatOrNull() ?: 0f
-                                                viewModel.updateSet(set.copy(weight = weight))
-                                            },
-                                            label = { Text("kg") },
-                                            enabled = isActive,
-                                            modifier = Modifier.weight(1f)
-                                        )
-                                        OutlinedTextField(
-                                            value = repsText,
-                                            onValueChange = {
-                                                repsText = it
-                                                val reps = it.toIntOrNull() ?: 0
-                                                viewModel.updateSet(set.copy(reps = reps))
-                                            },
-                                            label = { Text("reps") },
-                                            enabled = isActive,
-                                            modifier = Modifier.weight(1f)
-                                        )
-
-                                        val isCompleted = set.isCompleted
-                                        IconButton(
-                                            onClick = { if (isActive) viewModel.toggleSetCompleted(set) },
-                                            modifier = Modifier.background(
-                                                color = if (isCompleted) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
-                                                shape = MaterialTheme.shapes.small
-                                            )
-                                        ) {
-                                            Icon(
-                                                Icons.Filled.Check,
-                                                contentDescription = "Complete set",
-                                                tint = if (isCompleted) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
-                                        }
-                                    }
-                                }
-
-                                if (isActive) {
-                                    SwipeToDeleteCard(
-                                        onDismiss = {},
-                                        onDeleteRequested = { setToDeleteId = set.id }
-                                    ) {
-                                        setRow()
-                                    }
-                                } else {
-                                    setRow()
-                                }
-                            }
-
-                            if (isActive) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.End
-                                ) {
-                                    Button(onClick = { viewModel.addSet(item.exercise.id) }) {
-                                        Text("+ Set")
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                if (isActive) {
-                    SwipeToDeleteCard(
-                        onDismiss = {},
-                        onDeleteRequested = { exerciseToDeleteId = item.exercise.id }
-                    ) {
-                        exerciseContent()
-                    }
-                } else {
-                    exerciseContent()
-                }
-            }
-
-            if (isActive && uiState.exercises.isNotEmpty()) {
-                item {
-                    Button(
-                        onClick = { showExerciseSearchDialog = true },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.padding(end = 8.dp))
-                        Text("Add Exercise")
+            items(uiState.sets, key = { it.id }) { set ->
+                Card(modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.extraLarge) {
+                    Row(modifier = Modifier.fillMaxWidth().padding(Spacing.m), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                        val exerciseName = uiState.catalogExercises.find { it.id == set.exerciseId }?.name ?: set.exerciseId
+                        Text(text = exerciseName, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
+                        Text(text = "${set.weight} kg • ${set.reps} reps", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }
         }
 
-        if (isActive) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .navigationBarsPadding()
-                    .padding(bottom = Spacing.m),
-                horizontalArrangement = Arrangement.End
+        // Bottom floating toolbar
+        Row(modifier = Modifier.fillMaxWidth().navigationBarsPadding().padding(bottom = Spacing.m), horizontalArrangement = Arrangement.SpaceEvenly) {
+            if (!uiState.isActive || uiState.isPaused) {
+                Button(onClick = { viewModel.startSession() }) { Text(if (!uiState.isActive) "Start" else "Resume") }
+            } else {
+                Button(onClick = { viewModel.pauseSession() }) { Text("Pause") }
+            }
+
+            Button(onClick = { viewModel.finishSession() }, enabled = uiState.isActive) { Text("Stop") }
+
+            Button(onClick = { if (!uiState.isPaused) showExerciseSearchDialog = true }, enabled = uiState.isActive && !uiState.isPaused) { Text("+ Exercise") }
+        }
+    }
+
+    if (showExerciseSearchDialog) {
+        SearchableItemDialog(
+            title = "Add Exercise",
+            placeholder = "Search...",
+            items = uiState.catalogExercises,
+            itemKey = { it.id },
+            filter = { item, query -> item.name.contains(query, ignoreCase = true) },
+            onDismiss = { showExerciseSearchDialog = false },
+            onCreateNew = { newName ->
+                viewModel.createNewExerciseAndAddSet(newName)
+                showExerciseSearchDialog = false
+            }
+        ) { exercise ->
+            Row(modifier = Modifier
+                .fillMaxWidth()
+                .clickable {
+                    viewModel.addSet(exercise.id)
+                    showExerciseSearchDialog = false
+                }
+                .padding(horizontal = Spacing.m, vertical = Spacing.l),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Button(onClick = { showFinishDialog = true }) {
-                    Icon(Icons.Filled.Check, contentDescription = null)
-                    Text("Finish", modifier = Modifier.padding(start = 8.dp))
-                }
+                Text(text = exercise.name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
             }
         }
     }

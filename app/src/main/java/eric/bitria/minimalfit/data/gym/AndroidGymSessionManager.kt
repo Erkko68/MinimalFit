@@ -14,6 +14,8 @@ class AndroidGymSessionManager(
     override val elapsed = gymTrackingLogic.elapsed
     override val restRemaining = gymTrackingLogic.restRemaining
     override val isRestRunning = gymTrackingLogic.isRestRunning
+    override val isPaused = gymTrackingLogic.isPaused
+    override val activeSession = gymTrackingLogic.activeSession
 
     override fun start() {
         sendCommand(GymSessionService.ACTION_START)
@@ -21,6 +23,14 @@ class AndroidGymSessionManager(
 
     override fun finish() {
         sendCommand(GymSessionService.ACTION_FINISH)
+    }
+
+    override fun pause() {
+        gymTrackingLogic.pause()
+    }
+
+    override fun resume() {
+        gymTrackingLogic.resume()
     }
 
     override fun addSet(exerciseId: String) {

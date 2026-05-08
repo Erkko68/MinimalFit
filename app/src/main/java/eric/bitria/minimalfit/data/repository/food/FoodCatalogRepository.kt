@@ -13,7 +13,8 @@ interface FoodCatalogRepository {
     /** 
      * Returns available meals matching the optional filters.
      */
-    fun getMeals(query: String = "", limit: Int = 20): Flow<List<Meal>>
+    /** Default limit = -1 returns all results. */
+    fun getMeals(query: String = "", limit: Int = -1): Flow<List<Meal>>
 
     /** Returns a specific meal by ID. */
     fun getMeal(id: String): Flow<Meal?>
@@ -43,7 +44,8 @@ interface FoodCatalogRepository {
     /** 
      * Returns available ingredients matching the optional filters.
      */
-    fun getIngredients(query: String = "", limit: Int = 20): Flow<List<Ingredient>>
+    /** Default limit = -1 returns all results. */
+    fun getIngredients(query: String = "", limit: Int = -1): Flow<List<Ingredient>>
 
     /** Returns a specific ingredient by ID. */
     fun getIngredient(id: String): Flow<Ingredient?>

@@ -135,11 +135,12 @@ class TrackingLogic(
     private fun saveTrack() {
         val endTime = nowInstant()
         val currentStartTime = startTime ?: endTime
+        val duration = endTime - currentStartTime
         val id = UUID.randomUUID().toString()
         val track = Track(
             id = id,
             startTime = currentStartTime,
-            endTime = endTime,
+            duration = duration,
             name = "Run",
             distance = _distanceKm.value,
             pace = _pace.value,

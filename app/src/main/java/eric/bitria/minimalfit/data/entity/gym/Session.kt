@@ -12,6 +12,7 @@ data class Session(
     @PrimaryKey
     val id: String = UUID.randomUUID().toString(),
     val startTime: Instant,
+    val title: String = "",
     val durationSeconds: Long = 0L,
     val notes: String = ""
 )

@@ -22,12 +22,13 @@ fun ExerciseProgressionScreen(
     onNavigateBack: () -> Unit,
     viewModel: ExerciseProgressionViewModel = koinViewModel { parametersOf(exerciseId) }
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val exercise by viewModel.exercise.collectAsState()
+    val groupedHistory by viewModel.groupedHistory.collectAsState()
 
     ScreenConfiguration(
         topBar = {
             TopAppBar(
-                title = { Text(uiState.exercise?.name ?: "Progresión") },
+                title = { Text(exercise?.name ?: "Progresión") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
@@ -40,14 +41,14 @@ fun ExerciseProgressionScreen(
     )
 
     Column(modifier = Modifier.fillMaxSize()) {
-        if (uiState.groupedHistory.isEmpty()) {
+        if (groupedHistory.isEmpty()) {
             Text("No hay historial todavía.", modifier = Modifier.padding(Spacing.m))
         } else {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(Spacing.m)
             ) {
-                uiState.groupedHistory.forEach { (dateStr, sets) ->
+                groupedHistory.forEach { (dateStr, sets) ->
                     item {
                         Text(
                             text = dateStr,
@@ -57,7 +58,7 @@ fun ExerciseProgressionScreen(
                             modifier = Modifier.padding(top = Spacing.m, bottom = Spacing.s)
                         )
                     }
-                    items(sets) { item ->
+                    items(items = sets, key = { it.id }) { item ->
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -71,7 +72,7 @@ fun ExerciseProgressionScreen(
                                 verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "Set ${item.orderInSession}",
+                                    text = "Set ${sets.indexOf(item) + 1}",
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )

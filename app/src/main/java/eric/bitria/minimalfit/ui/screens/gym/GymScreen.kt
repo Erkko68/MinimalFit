@@ -11,33 +11,33 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
+import androidx.compose.foundation.lazy.staggeredgrid.items
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PageSize
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.History
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalConfiguration
+import kotlinx.datetime.toLocalDateTime
+import kotlinx.datetime.TimeZone
+import eric.bitria.minimalfit.util.shortMonthDay
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import eric.bitria.minimalfit.navigation.ScreenConfiguration
@@ -57,40 +57,15 @@ fun GymScreen(
     onNavigateToExerciseProgression: (String) -> Unit,
     viewModel: GymViewModel = koinViewModel()
 ) {
-    val sessions by viewModel.recentSessions.collectAsState()
-    val exercises by viewModel.exercises.collectAsState()
+    val sessions by viewModel.pastSessions.collectAsState()
+    val exercises by viewModel.userExercises.collectAsState()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
-    // Exercise elements similar to FoodScreen diets
-    val exerciseCardSize = screenHeight * 0.13f
     // Routine elements are bigger
     val routineCardSize = screenHeight * 0.2f
 
-    var exerciseToDelete by remember { mutableStateOf<String?>(null) }
-
-    if (exerciseToDelete != null) {
-        AlertDialog(
-            onDismissRequest = { exerciseToDelete = null },
-            title = { Text("Delete Exercise") },
-            text = { Text("Are you sure you want to delete this exercise? This will not delete past sets but the exercise won't appear in the catalog anymore.") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        viewModel.deleteExercise(exerciseToDelete!!)
-                        exerciseToDelete = null
-                    }
-                ) {
-                    Text("Delete", color = MaterialTheme.colorScheme.error)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { exerciseToDelete = null }) {
-                    Text("Cancel")
-                }
-            }
-        )
-    }
+    // Deletion confirmation dialog removed; exercises can be deleted with a swipe gesture.
 
     ScreenConfiguration(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -117,21 +92,24 @@ fun GymScreen(
         quickActions = false
     )
 
-    LazyColumn(
+    LazyVerticalStaggeredGrid(
+        columns = StaggeredGridCells.Fixed(2),
         modifier = Modifier.fillMaxSize(),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.m),
+        verticalItemSpacing = Spacing.m,
         contentPadding = PaddingValues(
-            bottom = 120.dp // Space for FAB
-        ),
-        verticalArrangement = Arrangement.spacedBy(Spacing.l)
+            bottom = Spacing.m,
+            start = Spacing.m,
+            end = Spacing.m
+        )
     ) {
-        // 1. ROUTINES SECTION
-        item {
+        // Routines carousel (full width)
+        item(span = StaggeredGridItemSpan.FullLine) {
             Column(verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
                 Text(
                     text = "Your Routines",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.ExtraBold,
-                    modifier = Modifier.padding(start = Spacing.m, end = Spacing.m, top = Spacing.m)
                 )
 
                 val routinePagerState = rememberPagerState(pageCount = { 3 })
@@ -139,7 +117,6 @@ fun GymScreen(
                     state = routinePagerState,
                     modifier = Modifier.fillMaxWidth(),
                     pageSize = PageSize.Fixed(routineCardSize),
-                    contentPadding = PaddingValues(horizontal = Spacing.m),
                     pageSpacing = Spacing.m,
                     beyondViewportPageCount = 1
                 ) { page ->
@@ -155,69 +132,64 @@ fun GymScreen(
             }
         }
 
-        // 2. EXERCISES SECTION
-        item {
-            Column(verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
-                Row(
+        // Exercises title (full width)
+        item(span = StaggeredGridItemSpan.FullLine) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Your Exercises",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.ExtraBold,
+                )
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Add Exercise",
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = Spacing.m),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Your Exercises",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.ExtraBold,
-                    )
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Add Exercise",
-                        modifier = Modifier
-                            .clip(MaterialTheme.shapes.small)
-                            .background(MaterialTheme.colorScheme.secondaryContainer)
-                            .clickable { /* TODO: Show add exercise dialog */ }
-                            .padding(Spacing.xs),
-                        tint = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
-                }
-
-                if (exercises.isNotEmpty()) {
-                    val exercisePagerState = rememberPagerState(pageCount = { exercises.size })
-                    HorizontalPager(
-                        state = exercisePagerState,
-                        modifier = Modifier.fillMaxWidth(),
-                        pageSize = PageSize.Fixed(exerciseCardSize),
-                        contentPadding = PaddingValues(horizontal = Spacing.m),
-                        pageSpacing = Spacing.m,
-                        beyondViewportPageCount = 1
-                    ) { page ->
-                        val exercise = exercises[page]
-                        ExerciseCard(
-                            exercise = exercise,
-                            onClick = { onNavigateToExerciseProgression(exercise.id) },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .aspectRatio(1f)
-                        )
-                    }
-                } else {
-                    Text(
-                        text = "No exercises yet",
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(horizontal = Spacing.m),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+                        .clip(MaterialTheme.shapes.small)
+                        .background(MaterialTheme.colorScheme.secondaryContainer)
+                        .clickable { /* TODO: Show add exercise dialog */ }
+                        .padding(Spacing.xs),
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer
+                )
             }
         }
 
-        // 3. WORKOUT HISTORY SECTION
-        item {
+        // Exercises grid items
+        if (exercises.isNotEmpty()) {
+            items(items = exercises, key = { it.id }) { exercise ->
+                SwipeToDeleteCard(
+                    onDismiss = { /* no-op; we use onDeleteRequested to avoid auto-dismiss */ },
+                    onDeleteRequested = { viewModel.deleteExercise(exercise.id) },
+                    modifier = Modifier
+                        .clip(MaterialTheme.shapes.extraLarge)
+                ) {
+                    ExerciseCard(
+                        exercise = exercise,
+                        onClick = { onNavigateToExerciseProgression(exercise.id) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(1f)
+                    )
+                }
+            }
+        } else {
+            item(span = StaggeredGridItemSpan.FullLine) {
+                Text(
+                    text = "No exercises yet",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+
+        // Workout history title
+        item(span = StaggeredGridItemSpan.FullLine) {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = Spacing.m),
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(Spacing.s)
             ) {
@@ -236,30 +208,40 @@ fun GymScreen(
         }
 
         if (sessions.isNotEmpty()) {
-            items(sessions, key = { it.id }) { session ->
-                SwipeToDeleteCard(
-                    onDismiss = { viewModel.deleteSession(session.id) },
-                    modifier = Modifier
-                        .padding(horizontal = Spacing.m)
-                        .clip(MaterialTheme.shapes.extraLarge)
-                ) {
-                    GymSessionCard(
-                        title = session.title,
-                        duration = session.duration,
-                        subtitle = session.subtitle,
-                        exercisesCount = session.exercisesCount,
-                        setsCount = session.setsCount,
-                        volume = session.volume,
-                        onClick = { onNavigateToSession(session.id) }
-                    )
+            // Render each session as a full-line item
+            sessions.forEach { session ->
+                item(span = StaggeredGridItemSpan.FullLine) {
+                    val sess = session.session
+                    val setsList = session.sets
+                    val title = sess.title
+                    val mins = sess.durationSeconds / 60
+                    val secs = sess.durationSeconds % 60
+                    val duration = "%d:%02d".format(mins, secs)
+                    val exercisesCount = setsList.map { it.exerciseId }.distinct().size
+                    val setsCount = setsList.size
+                    val volume = setsList.fold(0f) { acc, s -> acc + (s.weight * s.reps) }
+
+                    SwipeToDeleteCard(
+                        onDismiss = { viewModel.deleteSession(sess.id) },
+                        modifier = Modifier
+                            .clip(MaterialTheme.shapes.extraLarge)
+                    ) {
+                        GymSessionCard(
+                            title = title,
+                            duration = duration,
+                            exercisesCount = exercisesCount,
+                            setsCount = setsCount,
+                            volume = volume,
+                            onClick = { onNavigateToSession(sess.id) }
+                        )
+                    }
                 }
             }
         } else {
-            item {
+            item(span = StaggeredGridItemSpan.FullLine) {
                 Text(
                     text = "No workouts yet. Start your first session!",
                     style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(horizontal = Spacing.m),
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
                 )
             }

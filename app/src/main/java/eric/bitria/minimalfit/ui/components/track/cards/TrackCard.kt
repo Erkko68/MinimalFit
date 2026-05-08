@@ -37,7 +37,7 @@ fun TrackCard(
     val widerStroke = with(LocalDensity.current) { 8.dp.toPx() }
 
     val startDateTime = track.startTime.toLocalDateTime(TimeZone.currentSystemDefault())
-    val duration = track.endTime - track.startTime
+    val duration = track.duration
 
     Card(
         onClick = onClick,

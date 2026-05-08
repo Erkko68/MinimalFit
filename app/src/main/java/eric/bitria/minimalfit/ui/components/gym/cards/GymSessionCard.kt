@@ -24,7 +24,6 @@ import eric.bitria.minimalfit.ui.theme.Spacing
 fun GymSessionCard(
     title: String,
     duration: String,
-    subtitle: String,
     exercisesCount: Int,
     setsCount: Int,
     volume: Float,
@@ -73,12 +72,7 @@ fun GymSessionCard(
                 }
             }
 
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
+            // subtitle removed; session title should be descriptive enough
             Row(
                 modifier = Modifier
                     .fillMaxWidth()

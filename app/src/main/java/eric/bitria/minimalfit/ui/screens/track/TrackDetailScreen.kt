@@ -68,7 +68,7 @@ fun TrackDetailScreen(
 
     if (track != null) {
         val startDateTime = track.startTime.toLocalDateTime(TimeZone.currentSystemDefault())
-        val duration = track.endTime - track.startTime
+        val duration = track.duration
 
         LaunchedEffect(track.routePoints) {
             cameraState.fitRoute(track.routePoints)

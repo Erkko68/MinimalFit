@@ -19,18 +19,18 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.text.font.FontWeight
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import eric.bitria.minimalfit.ui.components.profile.StatCardChip
 import eric.bitria.minimalfit.ui.components.profile.StatCardLayout
 import eric.bitria.minimalfit.ui.theme.Spacing
-import eric.bitria.minimalfit.ui.viewmodels.profile.card.GymViewModel
+import eric.bitria.minimalfit.ui.viewmodels.profile.card.CardGymViewModel
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun GymCard(
     modifier: Modifier = Modifier,
-    viewModel: GymViewModel = viewModel()
+    viewModel: CardGymViewModel = koinViewModel()
 ) {
     val weight by viewModel.weight.collectAsState()
     val comparison by viewModel.comparison.collectAsState()

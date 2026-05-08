@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import kotlinx.serialization.Serializable
 import kotlin.time.Instant
+import kotlin.time.Duration
 import java.util.UUID
 
 @Serializable
@@ -12,9 +13,10 @@ data class Track(
     @PrimaryKey
     val id: String = UUID.randomUUID().toString(),
     val startTime: Instant,
-    val durationSeconds: Long = 0L,
+    val duration: Duration = Duration.ZERO,
     val name: String,
     val distance: Double, // in km
     val pace: String, // e.g., "5:30 min/km"
     val routePoints: List<TrackPoint> = emptyList()
 )
+

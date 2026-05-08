@@ -169,9 +169,7 @@ fun AppNavHost(
             )
         }
         composable<Route.GymSession> { backStackEntry ->
-            val args = backStackEntry.toRoute<Route.GymSession>()
             GymSessionScreen(
-                sessionId = args.sessionId,
                 onNavigateBack = { navController.popBackStack() }
             )
         }

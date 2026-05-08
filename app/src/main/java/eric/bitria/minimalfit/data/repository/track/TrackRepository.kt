@@ -16,7 +16,8 @@ interface TrackRepository {
         query: String = "",
         start: Instant? = null,
         end: Instant? = null,
-        limit: Int = 20
+        /** Default limit = -1 returns all results. */
+        limit: Int = -1
     ): Flow<List<Track>>
 
     /** Returns a specific track by ID. */

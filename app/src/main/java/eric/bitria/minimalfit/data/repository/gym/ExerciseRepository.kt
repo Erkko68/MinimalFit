@@ -8,8 +8,10 @@ import kotlinx.coroutines.flow.Flow
  */
 interface ExerciseRepository {
 
-    /** Returns exercises matching the query or all if query is empty. */
-    fun getExercises(query: String = "", limit: Int = 20): Flow<List<Exercise>>
+    /** Returns exercises matching the query or all if query is empty.
+     *  Default limit = -1 means return all results.
+     */
+    fun getExercises(query: String = "", limit: Int = -1): Flow<List<Exercise>>
 
     /** Returns a specific exercise by ID. */
     fun getExercise(id: String): Flow<Exercise?>

@@ -189,11 +189,17 @@ val viewModels = module {
 
     // Gym
     viewModelOf(::GymViewModel)
-    viewModelOf(::SessionViewModel)
+    viewModel {
+        SessionViewModel(
+            exerciseRepository = get(),
+            gymSessionManager = get()
+        )
+    }
     viewModel { (exerciseId: String) ->
         ExerciseProgressionViewModel(
             exerciseId = exerciseId,
             exerciseRepository = get(),
+            sessionRepository = get(),
             setRepository = get()
         )
     }

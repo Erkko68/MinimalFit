@@ -193,7 +193,7 @@ class DatabaseInitializer(private val db: AppDatabase) {
             Track(
                 id = "1",
                 startTime = eveningRunStartTime,
-                endTime = eveningRunStartTime + 30.minutes,
+                duration = 30.minutes,
                 name = "Evening Run",
                 distance = 5.2,
                 pace = "5:46",
@@ -202,7 +202,7 @@ class DatabaseInitializer(private val db: AppDatabase) {
             Track(
                 id = "2",
                 startTime = morningWalkStartTime,
-                endTime = morningWalkStartTime + 45.minutes,
+                duration = 45.minutes,
                 name = "Morning Walk",
                 distance = 3.1,
                 pace = "14:31",

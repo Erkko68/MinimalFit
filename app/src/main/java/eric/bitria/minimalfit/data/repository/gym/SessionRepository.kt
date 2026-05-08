@@ -16,7 +16,8 @@ interface SessionRepository {
         query: String = "",
         start: Instant? = null,
         end: Instant? = null,
-        limit: Int = 20
+        /** Default limit = -1 returns all results. */
+        limit: Int = -1
     ): Flow<List<Session>>
 
     /** Returns a specific session by ID. */

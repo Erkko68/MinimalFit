@@ -1,5 +1,6 @@
 package eric.bitria.minimalfit.ui.screens.track
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -7,11 +8,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -21,6 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import eric.bitria.minimalfit.data.track.RecordingState
 import eric.bitria.minimalfit.navigation.ScreenConfiguration
 import eric.bitria.minimalfit.ui.components.requirements.permission.RequireActivityRecognitionPermission
 import eric.bitria.minimalfit.ui.components.requirements.permission.RequireLocationPermission
@@ -58,7 +63,6 @@ fun TrackRecordingScreen(
     var notificationPermissionGranted by remember { mutableStateOf(false) }
     var gpsSettingEnabled by remember { mutableStateOf(false) }
 
-    // 1. Permission Logic Chain (Setup Phase)
     if (!locationPermissionGranted) {
         RequireLocationPermission(onPermissionResult = { isGranted ->
             if (isGranted) locationPermissionGranted = true else {
@@ -81,8 +85,6 @@ fun TrackRecordingScreen(
             }
         })
     } else {
-        // We always want to monitor the GPS setting, even after it's initially enabled.
-        // If it's disabled later, this component will show the dialog and notify onResult(false).
         RequireLocationEnabledSetting(onResult = { isEnabled ->
             gpsSettingEnabled = isEnabled
             if (!isEnabled) {
@@ -93,6 +95,9 @@ fun TrackRecordingScreen(
 
         if (gpsSettingEnabled) {
             val uiState by viewModel.uiState.collectAsState()
+            val isActive = uiState.recordingState != RecordingState.IDLE
+
+            var showFinishDialog by remember { mutableStateOf(false) }
 
             val defaultLatLng = LatLng(0.0, 0.0)
             val currentLatLng = uiState.currentLocation?.let { LatLng(it.latitude, it.longitude) } ?: defaultLatLng
@@ -106,14 +111,10 @@ fun TrackRecordingScreen(
             var isFollowingUser by remember { mutableStateOf(true) }
             var pendingCameraAction by remember { mutableStateOf<TrackMapCameraAction?>(null) }
 
-            // Fetch the initial location map center once permissions are good
             LaunchedEffect(Unit) {
                 viewModel.requestInitialLocation()
             }
 
-            // --- Follow Mode Logic ---
-
-            // 1. Center camera reactively when location updates or Follow Mode is toggled on
             LaunchedEffect(uiState.currentLocation, isFollowingUser) {
                 if (isFollowingUser) {
                     uiState.currentLocation?.let { location ->
@@ -122,14 +123,12 @@ fun TrackRecordingScreen(
                 }
             }
 
-            // 2. Disable Follow Mode if the user manually drags the map
             LaunchedEffect(cameraState.isCameraMoving, cameraState.moveReason) {
                 if (cameraState.isCameraMoving && cameraState.moveReason == CameraMoveReason.GESTURE) {
                     isFollowingUser = false
                 }
             }
 
-            // Handle Fit Route Action
             LaunchedEffect(pendingCameraAction, uiState.routePoints) {
                 if (pendingCameraAction == TrackMapCameraAction.FitRoute) {
                     cameraState.fitRoute(uiState.routePoints)
@@ -137,17 +136,18 @@ fun TrackRecordingScreen(
                 }
             }
 
-            // 3. Main UI Layout
+            BackHandler(enabled = isActive) {
+                showFinishDialog = true
+            }
+
             Box(modifier = Modifier.fillMaxSize()) {
 
-                // Map Layer
                 TrackMap(
                     routePoints = uiState.routePoints,
                     cameraState = cameraState,
                     modifier = Modifier.fillMaxSize()
                 )
 
-                // Top Overlay: Floating Back Button
                 Box(
                     modifier = Modifier
                         .align(Alignment.TopStart)
@@ -156,8 +156,8 @@ fun TrackRecordingScreen(
                 ) {
                     FilledTonalIconButton(
                         onClick = {
-                            onNavigateBack()
-                            viewModel.stop() },
+                            if (isActive) showFinishDialog = true else onNavigateBack()
+                        },
                         colors = IconButtonDefaults.filledTonalIconButtonColors(
                             containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f),
                             contentColor = MaterialTheme.colorScheme.onSurface
@@ -167,7 +167,6 @@ fun TrackRecordingScreen(
                     }
                 }
 
-                // Top Overlay: Floating Bold Stats
                 FloatingStats(
                     distanceKm = uiState.distanceKm,
                     duration = uiState.duration,
@@ -177,18 +176,15 @@ fun TrackRecordingScreen(
                         .padding(top = Spacing.m)
                 )
 
-                // Bottom Overlay: Floating Toolbar (Pill)
                 TrackingToolbar(
                     state = uiState.recordingState,
                     onStartResume = {
-                        isFollowingUser = true // Re-center map when they start
+                        isFollowingUser = true
                         viewModel.startOrResume()
                     },
                     onPause = viewModel::pause,
-                    onStop = viewModel::stop,
-                    onCenterOnUser = {
-                        isFollowingUser = true
-                    },
+                    onStop = { showFinishDialog = true },
+                    onCenterOnUser = { isFollowingUser = true },
                     onCenterOnRoute = {
                         isFollowingUser = false
                         pendingCameraAction = TrackMapCameraAction.FitRoute
@@ -197,6 +193,24 @@ fun TrackRecordingScreen(
                         .align(Alignment.BottomCenter)
                         .navigationBarsPadding()
                         .padding(bottom = Spacing.l)
+                )
+            }
+
+            if (showFinishDialog) {
+                AlertDialog(
+                    onDismissRequest = { showFinishDialog = false },
+                    title = { Text("Finish track?") },
+                    text = { Text("Do you want to finish and save this track?") },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            showFinishDialog = false
+                            viewModel.stop()
+                            onNavigateBack()
+                        }) { Text("Finish") }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showFinishDialog = false }) { Text("Cancel") }
+                    }
                 )
             }
         }

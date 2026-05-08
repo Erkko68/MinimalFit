@@ -75,6 +75,7 @@ class TrackingLogic(
     }
 
     fun stop() {
+        if (_recordingState.value == RecordingState.IDLE) return
         stopInternal()
         if (_routePoints.value.isNotEmpty()) {
             saveTrack()

@@ -9,6 +9,7 @@ import eric.bitria.minimalfit.data.database.dao.IngredientDao
 import eric.bitria.minimalfit.data.database.dao.MealDao
 import eric.bitria.minimalfit.data.database.dao.MealLogDao
 import eric.bitria.minimalfit.data.database.dao.SessionDao
+import eric.bitria.minimalfit.data.database.dao.SessionExerciseDao
 import eric.bitria.minimalfit.data.database.dao.SetDao
 import eric.bitria.minimalfit.data.database.dao.TrackDao
 import eric.bitria.minimalfit.data.entity.food.Diet
@@ -20,6 +21,7 @@ import eric.bitria.minimalfit.data.entity.food.relations.MealIngredientCrossRef
 import eric.bitria.minimalfit.data.entity.food.relations.MealLogMealCrossRef
 import eric.bitria.minimalfit.data.entity.gym.Exercise
 import eric.bitria.minimalfit.data.entity.gym.Session
+import eric.bitria.minimalfit.data.entity.gym.SessionExercise
 import eric.bitria.minimalfit.data.entity.gym.Set
 import eric.bitria.minimalfit.data.entity.track.Track
 
@@ -35,6 +37,7 @@ import eric.bitria.minimalfit.data.entity.track.Track
         MealLogMealCrossRef::class,
         Exercise::class,
         Session::class,
+        SessionExercise::class,
         Set::class
     ],
     version = 1
@@ -48,5 +51,6 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun mealLogDao(): MealLogDao
     abstract fun exerciseDao(): ExerciseDao
     abstract fun sessionDao(): SessionDao
+    abstract fun sessionExerciseDao(): SessionExerciseDao
     abstract fun setDao(): SetDao
 }

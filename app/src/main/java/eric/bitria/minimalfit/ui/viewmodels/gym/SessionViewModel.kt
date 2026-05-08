@@ -3,6 +3,8 @@ package eric.bitria.minimalfit.ui.viewmodels.gym
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import eric.bitria.minimalfit.data.entity.gym.Exercise
+import eric.bitria.minimalfit.data.entity.gym.Session
+import eric.bitria.minimalfit.data.entity.gym.SessionExercise
 import eric.bitria.minimalfit.data.entity.gym.Set
 import eric.bitria.minimalfit.data.gym.GymSessionManager
 import eric.bitria.minimalfit.data.repository.gym.ExerciseRepository
@@ -11,10 +13,12 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlin.time.Duration
+import kotlin.time.Instant
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class SessionViewModel(
@@ -22,19 +26,27 @@ class SessionViewModel(
     private val gymSessionManager: GymSessionManager
 ) : ViewModel() {
 
+    data class SessionExerciseGroup(
+        val sessionExerciseId: String,
+        val exerciseName: String,
+        val sets: List<Set>,
+        val createdAt: Instant
+    )
+
     data class SessionUiState(
-        val sets: List<Set> = emptyList(),
+        val exerciseGroups: List<SessionExerciseGroup> = emptyList(),
         val elapsed: Duration = Duration.ZERO,
         val restRemaining: Duration = Duration.ZERO,
         val isRestRunning: Boolean = false,
         val isPaused: Boolean = false,
         val isActive: Boolean = false,
+        val sessionTitle: String = "",
+        val sessionStartTime: Instant? = null,
         val catalogExercises: List<Exercise> = emptyList()
     )
 
     private val _searchQuery = MutableStateFlow("")
 
-    /** Expose search query so the UI can update it. */
     fun setSearchQuery(query: String) {
         _searchQuery.value = query
     }
@@ -44,6 +56,7 @@ class SessionViewModel(
     }
 
     val uiState: StateFlow<SessionUiState> = combine(
+        gymSessionManager.activeSessionExercises,
         gymSessionManager.activeSets,
         gymSessionManager.elapsed,
         gymSessionManager.restRemaining,
@@ -52,14 +65,34 @@ class SessionViewModel(
         gymSessionManager.activeSession,
         exercisesFlow
     ) { args: Array<Any?> ->
+        @Suppress("UNCHECKED_CAST")
+        val sessionExercises = args[0] as List<SessionExercise>
+        @Suppress("UNCHECKED_CAST")
+        val sets = args[1] as List<Set>
+        val session = args[6] as? Session
+        @Suppress("UNCHECKED_CAST")
+        val catalogExercises = args[7] as List<Exercise>
+        val exercisesById = catalogExercises.associateBy { it.id }
+
+        val groups = sessionExercises.map { se ->
+            SessionExerciseGroup(
+                sessionExerciseId = se.id,
+                exerciseName = exercisesById[se.exerciseId]?.name ?: "Exercise",
+                sets = sets.filter { it.sessionExerciseId == se.id }.sortedBy { it.createdAt },
+                createdAt = se.createdAt
+            )
+        }
+
         SessionUiState(
-            sets = args[0] as List<Set>,
-            elapsed = args[1] as Duration,
-            restRemaining = args[2] as Duration,
-            isRestRunning = args[3] as Boolean,
-            isPaused = args[4] as Boolean,
-            isActive = args[5] != null,
-            catalogExercises = args[6] as List<Exercise>
+            exerciseGroups = groups,
+            elapsed = args[2] as Duration,
+            restRemaining = args[3] as Duration,
+            isRestRunning = args[4] as Boolean,
+            isPaused = args[5] as Boolean,
+            isActive = session != null,
+            sessionTitle = session?.title ?: "",
+            sessionStartTime = session?.startTime,
+            catalogExercises = catalogExercises
         )
     }.stateIn(
         scope = viewModelScope,
@@ -67,7 +100,10 @@ class SessionViewModel(
         initialValue = SessionUiState()
     )
 
-    init {
+    fun initialize(sessionId: String?) {
+        if (sessionId != null) {
+            gymSessionManager.loadSession(sessionId)
+        }
     }
 
     fun startSession() {
@@ -82,9 +118,12 @@ class SessionViewModel(
         gymSessionManager.resume()
     }
 
+    fun addExercise(exerciseId: String) {
+        gymSessionManager.addExercise(exerciseId)
+    }
 
-    fun addSet(exerciseId: String) {
-        gymSessionManager.addSet(exerciseId)
+    fun addSet(sessionExerciseId: String) {
+        gymSessionManager.addSet(sessionExerciseId)
     }
 
     fun updateSet(set: Set) {
@@ -93,6 +132,10 @@ class SessionViewModel(
 
     fun deleteSet(setId: String) {
         gymSessionManager.deleteSet(setId)
+    }
+
+    fun deleteExercise(sessionExerciseId: String) {
+        gymSessionManager.deleteExercise(sessionExerciseId)
     }
 
     fun finishSession() {
@@ -109,12 +152,26 @@ class SessionViewModel(
         gymSessionManager.stopRest()
     }
 
-    fun createNewExerciseAndAddSet(name: String) {
-        if (name.isBlank()) return
+    fun createNewExerciseAndAdd(name: String) {
+        val trimmed = name.trim()
+        if (trimmed.isBlank()) return
         viewModelScope.launch {
-            val exercise = Exercise(name = name)
-            exerciseRepository.addExercise(exercise)
-            gymSessionManager.addSet(exercise.id)
+            val existing = exerciseRepository
+                .getExercises(query = trimmed, limit = 10)
+                .first()
+                .firstOrNull { it.name.equals(trimmed, ignoreCase = true) }
+            val exerciseId = if (existing != null) {
+                existing.id
+            } else {
+                val exercise = Exercise(name = trimmed)
+                exerciseRepository.addExercise(exercise)
+                exercise.id
+            }
+            gymSessionManager.addExercise(exerciseId)
         }
+    }
+
+    fun updateSessionTitle(title: String) {
+        gymSessionManager.updateSessionTitle(title)
     }
 }

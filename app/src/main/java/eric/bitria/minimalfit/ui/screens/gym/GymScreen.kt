@@ -38,6 +38,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.datetime.TimeZone
 import eric.bitria.minimalfit.util.shortMonthDay
+import eric.bitria.minimalfit.util.hourMinute
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import eric.bitria.minimalfit.navigation.ScreenConfiguration
@@ -172,7 +173,7 @@ fun GymScreen(
                         onClick = { onNavigateToExerciseProgression(exercise.id) },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .aspectRatio(1f)
+                            .aspectRatio(1.4f)
                     )
                 }
             }
@@ -213,12 +214,13 @@ fun GymScreen(
                 item(span = StaggeredGridItemSpan.FullLine) {
                     val sess = session.session
                     val setsList = session.sets
-                    val title = sess.title
+                    val localStart = sess.startTime.toLocalDateTime(TimeZone.currentSystemDefault())
+                    val dateString = "${localStart.date.shortMonthDay()} • ${localStart.time.hourMinute()}"
+                    val title = sess.title.ifBlank { "Workout" }
                     val mins = sess.durationSeconds / 60
                     val secs = sess.durationSeconds % 60
                     val duration = "%d:%02d".format(mins, secs)
-                    val exercisesCount = setsList.map { it.exerciseId }.distinct().size
-                    val setsCount = setsList.size
+                    val exercisesCount = setsList.map { it.sessionExerciseId }.distinct().size
                     val volume = setsList.fold(0f) { acc, s -> acc + (s.weight * s.reps) }
 
                     SwipeToDeleteCard(
@@ -227,10 +229,11 @@ fun GymScreen(
                             .clip(MaterialTheme.shapes.extraLarge)
                     ) {
                         GymSessionCard(
+                            dateString = dateString,
                             title = title,
                             duration = duration,
                             exercisesCount = exercisesCount,
-                            setsCount = setsCount,
+                            setsCount = setsList.size,
                             volume = volume,
                             onClick = { onNavigateToSession(sess.id) }
                         )

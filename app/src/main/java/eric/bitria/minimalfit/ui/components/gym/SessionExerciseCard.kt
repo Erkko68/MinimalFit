@@ -1,0 +1,168 @@
+package eric.bitria.minimalfit.ui.components.gym
+
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import eric.bitria.minimalfit.data.entity.gym.Set
+import eric.bitria.minimalfit.ui.components.shared.animations.SwipeToDeleteCard
+import eric.bitria.minimalfit.ui.theme.Spacing
+import eric.bitria.minimalfit.util.hourMinute
+import kotlin.time.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+
+@Composable
+fun SessionExerciseCard(
+    exerciseName: String,
+    sets: List<Set>,
+    isCollapsed: Boolean,
+    canEdit: Boolean,
+    createdAt: Instant,
+    onToggleCollapse: () -> Unit,
+    onUpdateSet: (Set) -> Unit,
+    onDeleteSet: (String) -> Unit,
+    onAddSet: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val addedTime = createdAt
+        .toLocalDateTime(TimeZone.currentSystemDefault())
+        .time
+        .hourMinute()
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.extraLarge,
+        colors = CardDefaults.cardColors(
+            containerColor = if (isCollapsed)
+                MaterialTheme.colorScheme.surfaceContainerLow
+            else
+                MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        Column(modifier = Modifier.padding(Spacing.m)) {
+            // Header row — collapse toggle is scoped to this row only
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(onClick = onToggleCollapse),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = exerciseName,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.ExtraBold
+                    )
+                    Text(
+                        text = addedTime,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                    )
+                }
+                if (isCollapsed) {
+                    val totalWeight = sets.sumOf { (it.weight * it.reps).toDouble() }
+                    Text(
+                        text = "${sets.size} sets • ${totalWeight.toInt()} kg",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+
+            if (!isCollapsed) {
+                Spacer(modifier = Modifier.height(Spacing.m))
+
+                // Inlined column header aligned with set rows
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = Spacing.m),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.s)
+                ) {
+                    Spacer(modifier = Modifier.width(Spacing.m)) // aligns with set number
+                    Text(
+                        text = "KG",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Spacer(modifier = Modifier.width(Spacing.s)) // aligns with VerticalDivider
+                    Text(
+                        text = "REPS",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(Spacing.xs))
+
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    sets.forEachIndexed { index, set ->
+                        if (index > 0) {
+                            HorizontalDivider(
+                                modifier = Modifier.padding(horizontal = Spacing.xs),
+                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                            )
+                        }
+                        if (canEdit) {
+                            SwipeToDeleteCard(
+                                onDismiss = {},
+                                onDeleteRequested = { onDeleteSet(set.id) },
+                                modifier = Modifier.clip(MaterialTheme.shapes.medium)
+                            ) {
+                                ExerciseSetRow(
+                                    index = index,
+                                    set = set,
+                                    onUpdate = onUpdateSet,
+                                    isActive = true
+                                )
+                            }
+                        } else {
+                            ExerciseSetRow(
+                                index = index,
+                                set = set,
+                                onUpdate = {},
+                                isActive = false
+                            )
+                        }
+                    }
+                }
+
+                if (canEdit) {
+                    Spacer(modifier = Modifier.height(Spacing.s))
+                    Button(
+                        onClick = onAddSet,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.medium
+                    ) {
+                        Text("Add Set")
+                    }
+                }
+            }
+        }
+    }
+}

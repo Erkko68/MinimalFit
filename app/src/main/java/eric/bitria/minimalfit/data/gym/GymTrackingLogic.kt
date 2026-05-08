@@ -1,8 +1,10 @@
 package eric.bitria.minimalfit.data.gym
 
 import eric.bitria.minimalfit.data.entity.gym.Session
+import eric.bitria.minimalfit.data.entity.gym.SessionExercise
 import eric.bitria.minimalfit.data.entity.gym.Set as GymSet
 import eric.bitria.minimalfit.data.repository.gym.ExerciseRepository
+import eric.bitria.minimalfit.data.repository.gym.SessionExerciseRepository
 import eric.bitria.minimalfit.data.repository.gym.SessionRepository
 import eric.bitria.minimalfit.data.repository.gym.SetRepository
 import kotlinx.coroutines.CoroutineScope
@@ -20,14 +22,15 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 class GymTrackingLogic(
     private val sessionRepository: SessionRepository,
     private val exerciseRepository: ExerciseRepository,
-    private val setRepository: SetRepository
+    private val setRepository: SetRepository,
+    private val sessionExerciseRepository: SessionExerciseRepository
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
@@ -36,6 +39,14 @@ class GymTrackingLogic(
 
     private val _isPaused = MutableStateFlow(false)
     val isPaused: StateFlow<Boolean> = _isPaused.asStateFlow()
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val activeSessionExercises: StateFlow<List<SessionExercise>> = _activeSession
+        .flatMapLatest { session ->
+            if (session == null) flowOf(emptyList())
+            else sessionExerciseRepository.getSessionExercises(session.id)
+        }
+        .stateIn(scope, SharingStarted.Eagerly, emptyList())
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val activeSets: StateFlow<List<GymSet>> = _activeSession
@@ -57,82 +68,113 @@ class GymTrackingLogic(
     private var tickerJob: Job? = null
     private var restJob: Job? = null
     private var restEndEpochMillis: Long? = null
-    private var pauseStartEpochMillis: Long? = null
-    private var totalPausedMillis: Long = 0L
+
+    // Elapsed when we last paused (or the stored duration when loading a past session)
+    private var elapsedAtPause: Duration = Duration.ZERO
+    // Wall-clock millis when we last resumed (null when paused)
+    private var resumeWallMillis: Long = 0L
 
     fun start() {
         scope.launch {
-            if (_activeSession.value == null) {
-                val sessionId = sessionRepository.startSession()
-                sessionRepository.getSession(sessionId).first()?.let {
-                    _activeSession.value = it
-                    // reset paused state when starting
-                    pauseStartEpochMillis = null
-                    totalPausedMillis = 0L
-                    _isPaused.value = false
-                    syncTicker(it)
-                }
+            if (_activeSession.value != null) return@launch
+            val sessionId = sessionRepository.startSession()
+            sessionRepository.getSession(sessionId).first()?.let { session ->
+                elapsedAtPause = Duration.ZERO
+                resumeWallMillis = System.currentTimeMillis()
+                _elapsed.value = Duration.ZERO
+                _isPaused.value = false
+                _activeSession.value = session
+                startTicker()
+            }
+        }
+    }
+
+    fun loadSession(sessionId: String) {
+        scope.launch {
+            sessionRepository.getSession(sessionId).first()?.let { session ->
+                tickerJob?.cancel()
+                stopRestInternal()
+                elapsedAtPause = session.durationSeconds.seconds
+                _elapsed.value = elapsedAtPause
+                resumeWallMillis = 0L
+                _isPaused.value = true
+                _activeSession.value = session
             }
         }
     }
 
     fun pause() {
-        if (_activeSession.value == null) return
-        if (_isPaused.value) return
-        pauseStartEpochMillis = System.currentTimeMillis()
+        if (_activeSession.value == null || _isPaused.value) return
+        elapsedAtPause = _elapsed.value
         _isPaused.value = true
         tickerJob?.cancel()
     }
 
     fun resume() {
-        val session = _activeSession.value ?: return
-        val startMillis = pauseStartEpochMillis ?: return
-        val now = System.currentTimeMillis()
-        totalPausedMillis += (now - startMillis)
-        pauseStartEpochMillis = null
+        if (_activeSession.value == null || !_isPaused.value) return
+        elapsedAtPause = _elapsed.value
+        resumeWallMillis = System.currentTimeMillis()
         _isPaused.value = false
-        syncTicker(session)
+        startTicker()
     }
 
-    fun addSet(exerciseId: String) {
+    fun addExercise(exerciseId: String) {
+        scope.launch {
+            val session = _activeSession.value ?: return@launch
+            val sessionExercise = SessionExercise(sessionId = session.id, exerciseId = exerciseId)
+            sessionExerciseRepository.add(sessionExercise)
+            setRepository.addSet(
+                GymSet(
+                    sessionExerciseId = sessionExercise.id,
+                    sessionId = session.id,
+                    weight = 0f,
+                    reps = 0
+                )
+            )
+        }
+    }
+
+    fun addSet(sessionExerciseId: String) {
         scope.launch {
             val session = _activeSession.value ?: return@launch
             setRepository.addSet(
                 GymSet(
+                    sessionExerciseId = sessionExerciseId,
                     sessionId = session.id,
-                    exerciseId = exerciseId,
                     weight = 0f,
                     reps = 0
-                ),
-                session.id
+                )
             )
         }
     }
 
     fun updateSet(set: GymSet) {
-        scope.launch {
-            setRepository.updateSet(set)
-        }
+        scope.launch { setRepository.updateSet(set) }
     }
 
     fun deleteSet(setId: String) {
+        scope.launch { setRepository.deleteSet(setId) }
+    }
+
+    fun deleteExercise(sessionExerciseId: String) {
         scope.launch {
-            setRepository.deleteSet(setId)
+            setRepository.deleteSetsForSessionExercise(sessionExerciseId)
+            sessionExerciseRepository.delete(sessionExerciseId)
         }
     }
 
     fun finish() {
+        val session = _activeSession.value ?: return
+        val finalElapsed = _elapsed.value
+        tickerJob?.cancel()
+        stopRestInternal()
+        _activeSession.value = null
+        _elapsed.value = Duration.ZERO
+        _isPaused.value = false
+        elapsedAtPause = Duration.ZERO
+        resumeWallMillis = 0L
         scope.launch {
-            val session = _activeSession.value ?: return@launch
-            sessionRepository.finishSession(session.id, _elapsed.value.inWholeSeconds)
-            _activeSession.value = null
-            _elapsed.value = Duration.ZERO
-            stopRestInternal()
-            // reset paused state when finishing
-            tickerJob?.cancel()
-            pauseStartEpochMillis = null
-            totalPausedMillis = 0L
-            _isPaused.value = false
+            sessionRepository.finishSession(session.id, finalElapsed.inWholeSeconds)
         }
     }
 
@@ -151,15 +193,22 @@ class GymTrackingLogic(
         stopRestInternal()
     }
 
-    private fun syncTicker(session: Session) {
-        tickerJob?.cancel()
+    fun updateSessionTitle(title: String) {
+        scope.launch {
+            val session = _activeSession.value ?: return@launch
+            val updated = session.copy(title = title)
+            sessionRepository.updateSession(updated)
+            _activeSession.value = updated
+        }
+    }
 
+    private fun startTicker() {
+        tickerJob?.cancel()
         tickerJob = scope.launch {
             while (true) {
-                val now = Clock.System.now()
-                val pausedDuration = totalPausedMillis.milliseconds
-                _elapsed.value = (now - session.startTime - pausedDuration).coerceAtLeast(Duration.ZERO)
-                delay(1000)
+                val added = (System.currentTimeMillis() - resumeWallMillis).milliseconds
+                _elapsed.value = elapsedAtPause + added
+                delay(500)
             }
         }
     }
@@ -167,7 +216,6 @@ class GymTrackingLogic(
     private fun startRestCountdown(seconds: Int) {
         stopRestInternal()
         if (seconds <= 0) return
-
         _isRestRunning.value = true
         restEndEpochMillis = System.currentTimeMillis() + seconds * 1000L
         restJob = scope.launch {
@@ -183,9 +231,7 @@ class GymTrackingLogic(
         val end = restEndEpochMillis ?: return
         val leftMillis = (end - System.currentTimeMillis()).coerceAtLeast(0L)
         _restRemaining.value = leftMillis.milliseconds
-        if (leftMillis == 0L) {
-            stopRestInternal()
-        }
+        if (leftMillis == 0L) stopRestInternal()
     }
 
     private fun stopRestInternal() {

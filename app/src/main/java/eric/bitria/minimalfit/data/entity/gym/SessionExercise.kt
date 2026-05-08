@@ -10,18 +10,12 @@ import java.util.UUID
 
 @Serializable
 @Entity(
-    tableName = "sets",
-    indices = [
-        Index(value = ["sessionId"]),
-        Index(value = ["sessionExerciseId"])
-    ]
+    tableName = "session_exercises",
+    indices = [Index(value = ["sessionId"]), Index(value = ["exerciseId"])]
 )
-data class Set(
+data class SessionExercise(
     @PrimaryKey val id: String = UUID.randomUUID().toString(),
-    val sessionExerciseId: String,
     val sessionId: String,
-    val weight: Float,
-    val reps: Int,
-    val notes: String = "",
+    val exerciseId: String,
     val createdAt: Instant = nowInstant()
 )

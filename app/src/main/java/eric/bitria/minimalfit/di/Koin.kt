@@ -14,11 +14,13 @@ import eric.bitria.minimalfit.data.repository.track.LocationRepository
 import eric.bitria.minimalfit.data.repository.track.TrackRepository
 import eric.bitria.minimalfit.data.repository.track.TrackingLocationRepository
 import eric.bitria.minimalfit.data.repository.gym.DefaultExerciseRepository
-import eric.bitria.minimalfit.data.repository.gym.DefaultSetRepository
+import eric.bitria.minimalfit.data.repository.gym.DefaultSessionExerciseRepository
 import eric.bitria.minimalfit.data.repository.gym.DefaultSessionRepository
+import eric.bitria.minimalfit.data.repository.gym.DefaultSetRepository
 import eric.bitria.minimalfit.data.repository.gym.ExerciseRepository
-import eric.bitria.minimalfit.data.repository.gym.SetRepository
+import eric.bitria.minimalfit.data.repository.gym.SessionExerciseRepository
 import eric.bitria.minimalfit.data.repository.gym.SessionRepository
+import eric.bitria.minimalfit.data.repository.gym.SetRepository
 import eric.bitria.minimalfit.data.repository.user.DataStoreUserPreferencesRepository
 import eric.bitria.minimalfit.data.repository.user.UserPreferencesRepository
 import eric.bitria.minimalfit.data.remote.auth.AuthRepository
@@ -84,6 +86,7 @@ val dataModule = module {
     single { get<AppDatabase>().mealLogDao() }
     single { get<AppDatabase>().exerciseDao() }
     single { get<AppDatabase>().sessionDao() }
+    single { get<AppDatabase>().sessionExerciseDao() }
     single { get<AppDatabase>().setDao() }
 
     singleOf(::DatabaseInitializer)
@@ -119,6 +122,7 @@ val dataModule = module {
     // Gym Repositories
     single<SessionRepository> { DefaultSessionRepository(sessionDao = get(), setDao = get()) }
     single<ExerciseRepository> { DefaultExerciseRepository(exerciseDao = get()) }
+    single<SessionExerciseRepository> { DefaultSessionExerciseRepository(dao = get()) }
     single<SetRepository> { DefaultSetRepository(setDao = get()) }
     singleOf(::GymTrackingLogic)
     single<GymSessionManager> { AndroidGymSessionManager(androidContext(), get()) }

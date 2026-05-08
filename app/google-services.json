@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "329998532007",
+    "project_id": "minimalfit-e4f0d",
+    "storage_bucket": "minimalfit-e4f0d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:329998532007:android:56e03b4957461a91250a82",
+        "android_client_info": {
+          "package_name": "eric.bitria.minimalfit"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB1sGCMY8_R0Rs-ZSsY0RKe63xM1CmPIq4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

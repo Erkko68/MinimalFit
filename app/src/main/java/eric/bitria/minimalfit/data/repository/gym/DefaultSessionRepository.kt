@@ -7,6 +7,7 @@ import eric.bitria.minimalfit.util.nowInstant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import eric.bitria.minimalfit.util.shortMonthDay
+import eric.bitria.minimalfit.util.hourMinute
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlin.time.Instant
@@ -41,7 +42,8 @@ class DefaultSessionRepository(
 
     override suspend fun startSession(): String {
         val start = nowInstant()
-        val title = start.toLocalDateTime(TimeZone.currentSystemDefault()).date.shortMonthDay()
+        val localStart = start.toLocalDateTime(TimeZone.currentSystemDefault())
+        val title = "${localStart.date.shortMonthDay()} • ${localStart.time.hourMinute()}"
         val session = Session(
             startTime = start,
             title = title

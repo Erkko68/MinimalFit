@@ -3,20 +3,22 @@ package eric.bitria.minimalfit.ui.screens.gym
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -26,6 +28,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -33,25 +36,52 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.em
 import eric.bitria.minimalfit.navigation.ScreenConfiguration
 import eric.bitria.minimalfit.ui.components.food.dialogs.SearchableItemDialog
+import eric.bitria.minimalfit.ui.components.gym.GymSessionState
+import eric.bitria.minimalfit.ui.components.gym.GymSessionToolbar
+import eric.bitria.minimalfit.ui.components.gym.RestDialog
+import eric.bitria.minimalfit.ui.components.gym.SessionExerciseCard
+import eric.bitria.minimalfit.ui.components.requirements.permission.RequireNotificationPermission
+import eric.bitria.minimalfit.ui.components.shared.animations.SwipeToDeleteCard
 import eric.bitria.minimalfit.ui.theme.Spacing
 import eric.bitria.minimalfit.ui.viewmodels.gym.SessionViewModel
+import eric.bitria.minimalfit.util.hourMinute
+import eric.bitria.minimalfit.util.shortMonthDay
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GymSessionScreen(
+    sessionId: String? = null,
     viewModel: SessionViewModel = koinViewModel(),
     onNavigateBack: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
+    var notificationPermissionGranted by remember { mutableStateOf(false) }
+
+    // True only after the user explicitly presses Start or Resume in this screen visit.
+    // Prevents the finish dialog from appearing when merely viewing a past session.
+    var sessionStarted by remember { mutableStateOf(false) }
+
+    LaunchedEffect(sessionId) {
+        viewModel.initialize(sessionId)
+    }
+
     var showFinishDialog by remember { mutableStateOf(false) }
     var showExerciseSearchDialog by remember { mutableStateOf(false) }
+    var showRestDialog by remember { mutableStateOf(false) }
+    var editedTitle by remember(uiState.sessionTitle) { mutableStateOf(uiState.sessionTitle) }
+    var collapsedExercises by remember { mutableStateOf(setOf<String>()) }
 
     fun formatDuration(duration: kotlin.time.Duration): String {
         val totalSeconds = duration.inWholeSeconds
@@ -60,8 +90,31 @@ fun GymSessionScreen(
         return "%02d:%02d".format(mins, secs)
     }
 
-    BackHandler(enabled = uiState.isActive) {
+    val defaultTitle = uiState.sessionStartTime?.let { start ->
+        val local = start.toLocalDateTime(TimeZone.currentSystemDefault())
+        "${local.date.shortMonthDay()} • ${local.time.hourMinute()}"
+    } ?: "Workout"
+
+    val toolbarState = when {
+        !uiState.isActive -> GymSessionState.IDLE
+        uiState.isPaused && !sessionStarted -> GymSessionState.VIEWING
+        uiState.isPaused -> GymSessionState.PAUSED
+        else -> GymSessionState.RUNNING
+    }
+
+    BackHandler(enabled = sessionStarted) {
         showFinishDialog = true
+    }
+
+    if (!notificationPermissionGranted) {
+        RequireNotificationPermission(onPermissionResult = { isGranted ->
+            if (isGranted) {
+                notificationPermissionGranted = true
+            } else {
+                onNavigateBack()
+            }
+        })
+        return
     }
 
     ScreenConfiguration(
@@ -70,23 +123,47 @@ fun GymSessionScreen(
             TopAppBar(
                 title = {
                     Column {
-                        Text(
-                            text = "Workout Session",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Black,
-                            color = MaterialTheme.colorScheme.onBackground
+                        BasicTextField(
+                            value = editedTitle,
+                            onValueChange = {
+                                editedTitle = it
+                                viewModel.updateSessionTitle(it)
+                            },
+                            singleLine = true,
+                            textStyle = MaterialTheme.typography.titleLarge.copy(
+                                fontWeight = FontWeight.Black,
+                                color = MaterialTheme.colorScheme.onBackground,
+                                letterSpacing = (-0.02).em
+                            ),
+                            cursorBrush = SolidColor(MaterialTheme.colorScheme.onBackground),
+                            decorationBox = { innerTextField ->
+                                if (editedTitle.isBlank()) {
+                                    Text(
+                                        text = defaultTitle,
+                                        style = MaterialTheme.typography.titleLarge,
+                                        fontWeight = FontWeight.Black,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                innerTextField()
+                            }
                         )
-                        Text(
-                            text = formatDuration(uiState.elapsed),
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
+                        if (sessionStarted) {
+                            Text(
+                                text = formatDuration(uiState.elapsed),
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = if (uiState.isPaused)
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                else
+                                    MaterialTheme.colorScheme.primary
+                            )
+                        }
                     }
                 },
                 navigationIcon = {
                     IconButton(onClick = {
-                        if (uiState.isActive) showFinishDialog = true else onNavigateBack()
+                        if (sessionStarted) showFinishDialog = true else onNavigateBack()
                     }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
@@ -101,16 +178,15 @@ fun GymSessionScreen(
     if (showFinishDialog) {
         AlertDialog(
             onDismissRequest = { showFinishDialog = false },
-            title = { Text(text = "Unfinished session") },
-            text = { Text("You haven't finished your session yet. Do you want to finish it now?") },
+            title = { Text("Finish session?") },
+            text = { Text("Do you want to finish and save this session?") },
             confirmButton = {
-                TextButton(
-                    onClick = {
-                        showFinishDialog = false
-                        viewModel.finishSession()
-                        onNavigateBack()
-                    }
-                ) { Text("Finish") }
+                TextButton(onClick = {
+                    showFinishDialog = false
+                    sessionStarted = false
+                    viewModel.finishSession()
+                    onNavigateBack()
+                }) { Text("Finish") }
             },
             dismissButton = {
                 TextButton(onClick = { showFinishDialog = false }) { Text("Cancel") }
@@ -118,99 +194,108 @@ fun GymSessionScreen(
         )
     }
 
-    Column(modifier = Modifier.fillMaxSize().padding(Spacing.m)) {
-        // Summary card
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = MaterialTheme.shapes.extraLarge,
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)
+    if (showRestDialog) {
+        RestDialog(
+            isRestRunning = uiState.isRestRunning,
+            restRemaining = uiState.restRemaining,
+            onDismiss = { showRestDialog = false },
+            onStartRest = { seconds ->
+                viewModel.startRest(seconds)
+            },
+            onAddTime = { seconds ->
+                viewModel.startRest(seconds)
+            },
+            onStopRest = {
+                viewModel.stopRest()
+            }
+        )
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        val canEdit = uiState.isActive && !uiState.isPaused
+
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = Spacing.m),
+            verticalArrangement = Arrangement.spacedBy(Spacing.m)
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = Spacing.m, vertical = Spacing.s),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = if (!uiState.isActive) "Idle" else if (uiState.isPaused) "Paused" else "Active",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                Text(
-                    text = "Sets: ${uiState.sets.size}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
+            item { Spacer(modifier = Modifier.height(Spacing.xs)) }
 
-        // Rest timer
-        if (uiState.isRestRunning) {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.extraLarge,
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(Spacing.m),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = "Rest: ${formatDuration(uiState.restRemaining)}",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
-                        Button(onClick = { viewModel.startRest(30) }) { Text("+30s") }
-                        Button(onClick = { viewModel.stopRest() }) { Text("Stop Rest") }
-                    }
-                }
-            }
-        }
-
-        // Sets list
-        LazyColumn(modifier = Modifier.fillMaxSize().weight(1f), verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
-            item { Text(text = "Sets", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold) }
-
-            if (uiState.sets.isEmpty()) {
+            if (uiState.exerciseGroups.isEmpty()) {
                 item {
-                    Card(modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.extraLarge) {
-                        Column(modifier = Modifier.padding(Spacing.m)) {
-                            Text("No sets yet", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                            if (!uiState.isPaused) Button(onClick = { showExerciseSearchDialog = true }) { Text("Add Exercise") }
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.extraLarge
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(Spacing.l),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = if (uiState.isActive) "No exercises yet"
+                                       else "Press Start to begin your workout",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                     }
                 }
             }
 
-            items(uiState.sets, key = { it.id }) { set ->
-                Card(modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.extraLarge) {
-                    Row(modifier = Modifier.fillMaxWidth().padding(Spacing.m), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                        val exerciseName = uiState.catalogExercises.find { it.id == set.exerciseId }?.name ?: set.exerciseId
-                        Text(text = exerciseName, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
-                        Text(text = "${set.weight} kg • ${set.reps} reps", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
+            items(items = uiState.exerciseGroups, key = { it.sessionExerciseId }) { group ->
+                val isCollapsed = collapsedExercises.contains(group.sessionExerciseId)
+                val card: @Composable () -> Unit = {
+                    SessionExerciseCard(
+                        exerciseName = group.exerciseName,
+                        sets = group.sets,
+                        isCollapsed = isCollapsed,
+                        canEdit = canEdit,
+                        createdAt = group.createdAt,
+                        onToggleCollapse = {
+                            collapsedExercises = if (isCollapsed)
+                                collapsedExercises - group.sessionExerciseId
+                            else
+                                collapsedExercises + group.sessionExerciseId
+                        },
+                        onUpdateSet = { viewModel.updateSet(it) },
+                        onDeleteSet = { viewModel.deleteSet(it) },
+                        onAddSet = { viewModel.addSet(group.sessionExerciseId) }
+                    )
+                }
+                if (canEdit) {
+                    SwipeToDeleteCard(
+                        onDismiss = {},
+                        onDeleteRequested = { viewModel.deleteExercise(group.sessionExerciseId) },
+                        modifier = Modifier.clip(MaterialTheme.shapes.extraLarge)
+                    ) { card() }
+                } else {
+                    card()
                 }
             }
+
+            item { Spacer(modifier = Modifier.height(Spacing.xxl)) }
         }
 
-        // Bottom floating toolbar
-        Row(modifier = Modifier.fillMaxWidth().navigationBarsPadding().padding(bottom = Spacing.m), horizontalArrangement = Arrangement.SpaceEvenly) {
-            if (!uiState.isActive || uiState.isPaused) {
-                Button(onClick = { viewModel.startSession() }) { Text(if (!uiState.isActive) "Start" else "Resume") }
-            } else {
-                Button(onClick = { viewModel.pauseSession() }) { Text("Pause") }
-            }
-
-            Button(onClick = { viewModel.finishSession() }, enabled = uiState.isActive) { Text("Stop") }
-
-            Button(onClick = { if (!uiState.isPaused) showExerciseSearchDialog = true }, enabled = uiState.isActive && !uiState.isPaused) { Text("+ Exercise") }
-        }
+        GymSessionToolbar(
+            state = toolbarState,
+            onStart = {
+                sessionStarted = true
+                viewModel.startSession()
+            },
+            onPause = { viewModel.pauseSession() },
+            onResume = {
+                sessionStarted = true
+                viewModel.resumeSession()
+            },
+            onStop = { showFinishDialog = true },
+            onAddExercise = { showExerciseSearchDialog = true },
+            onStartRest = { showRestDialog = true },
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .navigationBarsPadding()
+                .padding(bottom = Spacing.l)
+        )
     }
 
     if (showExerciseSearchDialog) {
@@ -222,20 +307,21 @@ fun GymSessionScreen(
             filter = { item, query -> item.name.contains(query, ignoreCase = true) },
             onDismiss = { showExerciseSearchDialog = false },
             onCreateNew = { newName ->
-                viewModel.createNewExerciseAndAddSet(newName)
-                showExerciseSearchDialog = false
+                viewModel.createNewExerciseAndAdd(newName)
             }
         ) { exercise ->
-            Row(modifier = Modifier
-                .fillMaxWidth()
-                .clickable {
-                    viewModel.addSet(exercise.id)
-                    showExerciseSearchDialog = false
-                }
-                .padding(horizontal = Spacing.m, vertical = Spacing.l),
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { viewModel.addExercise(exercise.id) }
+                    .padding(horizontal = Spacing.m, vertical = Spacing.l),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = exercise.name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
+                Text(
+                    text = exercise.name,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.SemiBold
+                )
             }
         }
     }

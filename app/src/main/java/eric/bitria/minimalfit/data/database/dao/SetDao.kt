@@ -11,8 +11,16 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface SetDao {
 
-    @Query("SELECT * FROM sets WHERE exerciseId = :exerciseId ORDER BY createdAt ASC")
+    @Query("""
+        SELECT s.* FROM sets s
+        JOIN session_exercises se ON s.sessionExerciseId = se.id
+        WHERE se.exerciseId = :exerciseId
+        ORDER BY s.createdAt ASC
+    """)
     fun getSetsForExercise(exerciseId: String): Flow<List<Set>>
+
+    @Query("SELECT * FROM sets WHERE sessionExerciseId = :sessionExerciseId ORDER BY createdAt ASC")
+    fun getSetsForSessionExercise(sessionExerciseId: String): Flow<List<Set>>
 
     @Query("SELECT * FROM sets WHERE sessionId = :sessionId ORDER BY createdAt ASC")
     fun getSetsForSession(sessionId: String): Flow<List<Set>>
@@ -28,6 +36,9 @@ interface SetDao {
 
     @Query("DELETE FROM sets WHERE id = :id")
     suspend fun deleteSet(id: String)
+
+    @Query("DELETE FROM sets WHERE sessionExerciseId = :sessionExerciseId")
+    suspend fun deleteSetsForSessionExercise(sessionExerciseId: String)
 
     @Query("DELETE FROM sets WHERE sessionId = :sessionId")
     suspend fun deleteSetsForSession(sessionId: String)

@@ -6,6 +6,10 @@ import eric.bitria.minimalfit.data.remote.auth.AuthRepository
 import eric.bitria.minimalfit.data.remote.sync.SyncRepository
 import eric.bitria.minimalfit.data.repository.food.FoodCatalogRepository
 import eric.bitria.minimalfit.data.repository.gym.ExerciseRepository
+import eric.bitria.minimalfit.data.repository.gym.RoutineRepository
+import eric.bitria.minimalfit.data.repository.gym.SessionExerciseRepository
+import eric.bitria.minimalfit.data.repository.gym.SessionRepository
+import eric.bitria.minimalfit.data.repository.gym.SetRepository
 import eric.bitria.minimalfit.data.repository.user.UserPreferencesRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -38,7 +42,11 @@ class SettingsViewModel(
     private val userPreferencesRepository: UserPreferencesRepository,
     private val syncRepository: SyncRepository,
     private val foodCatalogRepository: FoodCatalogRepository,
-    private val exerciseRepository: ExerciseRepository
+    private val exerciseRepository: ExerciseRepository,
+    private val routineRepository: RoutineRepository,
+    private val sessionRepository: SessionRepository,
+    private val sessionExerciseRepository: SessionExerciseRepository,
+    private val setRepository: SetRepository
 ) : ViewModel() {
 
     private val _isSyncing = MutableStateFlow(false)
@@ -126,6 +134,20 @@ class SettingsViewModel(
 
                 val localExercises = exerciseRepository.getExercises().first()
                 syncRepository.uploadUserExercises(user.uid, localExercises)
+
+                val localRoutines = routineRepository.getRoutineEntities().first()
+                val localRoutineExercises = routineRepository.getRoutineExercises().first()
+                syncRepository.uploadUserRoutines(user.uid, localRoutines, localRoutineExercises)
+
+                val localSessions = sessionRepository.getSessions(limit = -1).first()
+                val localSessionExercises = sessionExerciseRepository.getAllSessionExercises().first()
+                val localSets = setRepository.getAllSets().first()
+                syncRepository.uploadUserGymSessions(
+                    user.uid,
+                    localSessions,
+                    localSessionExercises,
+                    localSets
+                )
 
                 _isSyncing.value = false
             }

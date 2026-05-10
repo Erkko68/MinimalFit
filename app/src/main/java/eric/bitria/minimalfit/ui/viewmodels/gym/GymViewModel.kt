@@ -3,6 +3,7 @@ package eric.bitria.minimalfit.ui.viewmodels.gym
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import eric.bitria.minimalfit.data.entity.gym.Exercise
+import eric.bitria.minimalfit.data.entity.gym.RoutineExerciseTarget
 import eric.bitria.minimalfit.data.entity.gym.RoutineSummary
 import eric.bitria.minimalfit.data.entity.gym.Session
 import eric.bitria.minimalfit.data.entity.gym.Set
@@ -94,6 +95,14 @@ class GymViewModel(
         if (trimmedName.isBlank() || exerciseIds.isEmpty()) return
         viewModelScope.launch {
             routineRepository.createRoutine(trimmedName, exerciseIds)
+        }
+    }
+
+    fun createRoutineWithTargets(name: String, exerciseTargets: List<RoutineExerciseTarget>) {
+        val trimmedName = name.trim()
+        if (trimmedName.isBlank() || exerciseTargets.isEmpty()) return
+        viewModelScope.launch {
+            routineRepository.createRoutineWithTargets(trimmedName, exerciseTargets)
         }
     }
 

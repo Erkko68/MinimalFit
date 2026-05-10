@@ -5,6 +5,7 @@ import eric.bitria.minimalfit.data.database.AppDatabase
 import eric.bitria.minimalfit.data.database.DatabaseInitializer
 import eric.bitria.minimalfit.data.database.MIGRATION_1_2
 import eric.bitria.minimalfit.data.database.MIGRATION_2_3
+import eric.bitria.minimalfit.data.database.MIGRATION_3_4
 import eric.bitria.minimalfit.data.repository.food.DefaultDietRepository
 import eric.bitria.minimalfit.data.repository.food.DefaultFoodCatalogRepository
 import eric.bitria.minimalfit.data.repository.food.DefaultJournalRepository
@@ -80,7 +81,7 @@ val dataModule = module {
             AppDatabase::class.java,
             "minimalfit.db"
         )
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
             .build()
     }
 

@@ -7,6 +7,7 @@ import eric.bitria.minimalfit.data.entity.gym.Session
 import eric.bitria.minimalfit.data.entity.gym.SessionExercise
 import eric.bitria.minimalfit.data.entity.gym.Set
 import eric.bitria.minimalfit.data.gym.GymSessionManager
+import eric.bitria.minimalfit.data.gym.RoutineExercisePlan
 import eric.bitria.minimalfit.data.repository.gym.ExerciseRepository
 import eric.bitria.minimalfit.data.repository.gym.RoutineRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -117,18 +118,26 @@ class SessionViewModel(
 
     private fun startRoutineSession(routineId: String, replaceActiveWorkout: Boolean) {
         viewModelScope.launch {
-            val exerciseIds = routineRepository.getRoutineExerciseIds(routineId)
+            val exercises = routineRepository.getRoutineExercises(routineId)
+                .map { ref ->
+                    RoutineExercisePlan(
+                        exerciseId = ref.exerciseId,
+                        targetSets = ref.targetSets,
+                        targetReps = ref.targetReps,
+                        targetWeight = ref.targetWeight
+                    )
+                }
             val routineName = routineRepository.getRoutines()
                 .first()
                 .firstOrNull { it.id == routineId }
                 ?.name
                 ?: "Workout"
             if (replaceActiveWorkout) {
-                gymSessionManager.replaceWithRoutine(exerciseIds, routineName)
-            } else if (exerciseIds.isEmpty()) {
+                gymSessionManager.replaceWithRoutine(exercises, routineName)
+            } else if (exercises.isEmpty()) {
                 gymSessionManager.start()
             } else {
-                gymSessionManager.startFromRoutine(exerciseIds, routineName)
+                gymSessionManager.startFromRoutine(exercises, routineName)
             }
         }
     }

@@ -10,6 +10,9 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface SessionExerciseDao {
 
+    @Query("SELECT * FROM session_exercises ORDER BY sessionId, createdAt ASC")
+    fun getAllSessionExercises(): Flow<List<SessionExercise>>
+
     @Query("SELECT * FROM session_exercises WHERE sessionId = :sessionId ORDER BY createdAt ASC")
     fun getSessionExercises(sessionId: String): Flow<List<SessionExercise>>
 

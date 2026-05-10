@@ -22,32 +22,44 @@ class AndroidGymSessionManager(
         sendCommand(GymSessionService.ACTION_START)
     }
 
-    override fun startFromRoutine(exerciseIds: List<String>, routineName: String) {
+    override fun startFromRoutine(exercises: List<RoutineExercisePlan>, routineName: String) {
         sendRoutineCommand(
             action = GymSessionService.ACTION_START_ROUTINE,
-            exerciseIds = exerciseIds,
+            exercises = exercises,
             routineName = routineName
         )
     }
 
-    override fun replaceWithRoutine(exerciseIds: List<String>, routineName: String) {
+    override fun replaceWithRoutine(exercises: List<RoutineExercisePlan>, routineName: String) {
         sendRoutineCommand(
             action = GymSessionService.ACTION_REPLACE_WITH_ROUTINE,
-            exerciseIds = exerciseIds,
+            exercises = exercises,
             routineName = routineName
         )
     }
 
     private fun sendRoutineCommand(
         action: String,
-        exerciseIds: List<String>,
+        exercises: List<RoutineExercisePlan>,
         routineName: String
     ) {
         val intent = Intent(context, GymSessionService::class.java).apply {
             this.action = action
             putStringArrayListExtra(
                 GymSessionService.EXTRA_EXERCISE_IDS,
-                ArrayList(exerciseIds)
+                ArrayList(exercises.map { it.exerciseId })
+            )
+            putIntegerArrayListExtra(
+                GymSessionService.EXTRA_TARGET_SETS,
+                ArrayList(exercises.map { it.targetSets })
+            )
+            putIntegerArrayListExtra(
+                GymSessionService.EXTRA_TARGET_REPS,
+                ArrayList(exercises.map { it.targetReps })
+            )
+            putExtra(
+                GymSessionService.EXTRA_TARGET_WEIGHTS,
+                exercises.map { it.targetWeight }.toFloatArray()
             )
             putExtra(GymSessionService.EXTRA_SESSION_TITLE, routineName)
         }

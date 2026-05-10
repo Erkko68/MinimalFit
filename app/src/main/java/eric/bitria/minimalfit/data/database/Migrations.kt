@@ -33,3 +33,20 @@ val MIGRATION_2_3 = object : Migration(2, 3) {
         )
     }
 }
+
+val MIGRATION_3_4 = object : Migration(3, 4) {
+    override fun migrate(connection: SQLiteConnection) {
+        connection.execSQL(
+            "ALTER TABLE routine_exercise_cross_refs ADD COLUMN targetSets INTEGER NOT NULL DEFAULT 1"
+        )
+        connection.execSQL(
+            "ALTER TABLE routine_exercise_cross_refs ADD COLUMN targetReps INTEGER NOT NULL DEFAULT 0"
+        )
+        connection.execSQL(
+            "ALTER TABLE routine_exercise_cross_refs ADD COLUMN targetWeight REAL NOT NULL DEFAULT 0"
+        )
+        connection.execSQL(
+            "ALTER TABLE routine_exercise_cross_refs ADD COLUMN position INTEGER NOT NULL DEFAULT 0"
+        )
+    }
+}

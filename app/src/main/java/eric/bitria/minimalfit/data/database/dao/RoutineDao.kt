@@ -8,6 +8,7 @@ import androidx.room.Transaction
 import eric.bitria.minimalfit.data.entity.gym.Routine
 import eric.bitria.minimalfit.data.entity.gym.RoutineExerciseCrossRef
 import eric.bitria.minimalfit.data.entity.gym.RoutineSummary
+import eric.bitria.minimalfit.data.entity.gym.RoutineExerciseTarget
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -24,8 +25,17 @@ interface RoutineDao {
     )
     fun getRoutineSummaries(): Flow<List<RoutineSummary>>
 
-    @Query("SELECT exerciseId FROM routine_exercise_cross_refs WHERE routineId = :routineId")
+    @Query("SELECT * FROM routines ORDER BY name COLLATE NOCASE ASC")
+    fun getAllRoutines(): Flow<List<Routine>>
+
+    @Query("SELECT * FROM routine_exercise_cross_refs ORDER BY routineId, position ASC")
+    fun getAllRoutineExercises(): Flow<List<RoutineExerciseCrossRef>>
+
+    @Query("SELECT exerciseId FROM routine_exercise_cross_refs WHERE routineId = :routineId ORDER BY position ASC")
     suspend fun getRoutineExerciseIds(routineId: String): List<String>
+
+    @Query("SELECT * FROM routine_exercise_cross_refs WHERE routineId = :routineId ORDER BY position ASC")
+    suspend fun getRoutineExercises(routineId: String): List<RoutineExerciseCrossRef>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertRoutine(routine: Routine)
@@ -44,13 +54,30 @@ interface RoutineDao {
 
     @Transaction
     suspend fun createRoutine(name: String, exerciseIds: List<String>) {
+        createRoutineWithTargets(
+            name = name,
+            exerciseTargets = exerciseIds.map { exerciseId ->
+                RoutineExerciseTarget(exerciseId = exerciseId)
+            }
+        )
+    }
+
+    @Transaction
+    suspend fun createRoutineWithTargets(
+        name: String,
+        exerciseTargets: List<RoutineExerciseTarget>
+    ) {
         val routine = Routine(name = name)
         insertRoutine(routine)
         insertRoutineExercises(
-            exerciseIds.distinct().map { exerciseId ->
+            exerciseTargets.distinctBy { it.exerciseId }.mapIndexed { index, target ->
                 RoutineExerciseCrossRef(
                     routineId = routine.id,
-                    exerciseId = exerciseId
+                    exerciseId = target.exerciseId,
+                    targetSets = target.targetSets.coerceAtLeast(1),
+                    targetReps = target.targetReps.coerceAtLeast(0),
+                    targetWeight = target.targetWeight.coerceAtLeast(0f),
+                    position = index
                 )
             }
         )

@@ -8,5 +8,9 @@ import androidx.room.Entity
 )
 data class RoutineExerciseCrossRef(
     val routineId: String,
-    val exerciseId: String
+    val exerciseId: String,
+    val targetSets: Int = 1,
+    val targetReps: Int = 0,
+    val targetWeight: Float = 0f,
+    val position: Int = 0
 )

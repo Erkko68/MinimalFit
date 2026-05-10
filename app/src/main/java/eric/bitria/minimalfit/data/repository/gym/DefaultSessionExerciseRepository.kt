@@ -8,6 +8,9 @@ class DefaultSessionExerciseRepository(
     private val dao: SessionExerciseDao
 ) : SessionExerciseRepository {
 
+    override fun getAllSessionExercises(): Flow<List<SessionExercise>> =
+        dao.getAllSessionExercises()
+
     override fun getSessionExercises(sessionId: String): Flow<List<SessionExercise>> =
         dao.getSessionExercises(sessionId)
 

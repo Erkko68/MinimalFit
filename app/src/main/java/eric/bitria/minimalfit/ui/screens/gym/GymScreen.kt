@@ -51,6 +51,7 @@ import eric.bitria.minimalfit.util.hourMinute
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import eric.bitria.minimalfit.navigation.ScreenConfiguration
+import eric.bitria.minimalfit.data.entity.gym.RoutineExerciseTarget
 import eric.bitria.minimalfit.data.entity.gym.RoutineSummary
 import eric.bitria.minimalfit.ui.components.shared.animations.SwipeToDeleteCard
 import eric.bitria.minimalfit.ui.components.food.actions.PrimaryFloatingActionButton
@@ -317,8 +318,8 @@ fun GymScreen(
         AddRoutineDialog(
             exercises = exercises,
             onDismiss = { showAddRoutineDialog = false },
-            onCreate = { name, exerciseIds ->
-                viewModel.createRoutine(name, exerciseIds)
+            onCreate = { name, exerciseTargets ->
+                viewModel.createRoutineWithTargets(name, exerciseTargets)
                 showAddRoutineDialog = false
             }
         )
@@ -483,10 +484,36 @@ private fun RenameRoutineDialog(
 private fun AddRoutineDialog(
     exercises: List<eric.bitria.minimalfit.data.entity.gym.Exercise>,
     onDismiss: () -> Unit,
-    onCreate: (name: String, exerciseIds: List<String>) -> Unit
+    onCreate: (name: String, exerciseTargets: List<RoutineExerciseTarget>) -> Unit
 ) {
     var name by remember { mutableStateOf("") }
     var selectedExerciseIds by remember { mutableStateOf(setOf<String>()) }
+    var targetSetsByExercise by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
+    var targetRepsByExercise by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
+    var targetWeightByExercise by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
+
+    fun toggleExercise(exerciseId: String, selected: Boolean) {
+        selectedExerciseIds = if (selected) {
+            selectedExerciseIds + exerciseId
+        } else {
+            selectedExerciseIds - exerciseId
+        }
+        if (selected) {
+            targetSetsByExercise = targetSetsByExercise + (exerciseId to (targetSetsByExercise[exerciseId] ?: "3"))
+            targetRepsByExercise = targetRepsByExercise + (exerciseId to (targetRepsByExercise[exerciseId] ?: "10"))
+            targetWeightByExercise = targetWeightByExercise + (exerciseId to (targetWeightByExercise[exerciseId] ?: "0"))
+        }
+    }
+
+    fun buildTargets(): List<RoutineExerciseTarget> =
+        selectedExerciseIds.map { exerciseId ->
+            RoutineExerciseTarget(
+                exerciseId = exerciseId,
+                targetSets = targetSetsByExercise[exerciseId]?.toIntOrNull()?.coerceAtLeast(1) ?: 1,
+                targetReps = targetRepsByExercise[exerciseId]?.toIntOrNull()?.coerceAtLeast(0) ?: 0,
+                targetWeight = targetWeightByExercise[exerciseId]?.toFloatOrNull()?.coerceAtLeast(0f) ?: 0f
+            )
+        }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -510,26 +537,19 @@ private fun AddRoutineDialog(
                     )
                 } else {
                     exercises.forEach { exercise ->
+                        val selected = selectedExerciseIds.contains(exercise.id)
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable {
-                                    selectedExerciseIds = if (selectedExerciseIds.contains(exercise.id)) {
-                                        selectedExerciseIds - exercise.id
-                                    } else {
-                                        selectedExerciseIds + exercise.id
-                                    }
+                                    toggleExercise(exercise.id, !selected)
                                 },
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Checkbox(
-                                checked = selectedExerciseIds.contains(exercise.id),
+                                checked = selected,
                                 onCheckedChange = { checked ->
-                                    selectedExerciseIds = if (checked) {
-                                        selectedExerciseIds + exercise.id
-                                    } else {
-                                        selectedExerciseIds - exercise.id
-                                    }
+                                    toggleExercise(exercise.id, checked)
                                 }
                             )
                             Text(
@@ -538,6 +558,42 @@ private fun AddRoutineDialog(
                                 fontWeight = FontWeight.SemiBold
                             )
                         }
+                        if (selected) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(Spacing.s)
+                            ) {
+                                OutlinedTextField(
+                                    value = targetSetsByExercise[exercise.id] ?: "3",
+                                    onValueChange = { value ->
+                                        targetSetsByExercise = targetSetsByExercise + (exercise.id to value.filter { it.isDigit() }.take(2))
+                                    },
+                                    label = { Text("Sets") },
+                                    singleLine = true,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                OutlinedTextField(
+                                    value = targetRepsByExercise[exercise.id] ?: "10",
+                                    onValueChange = { value ->
+                                        targetRepsByExercise = targetRepsByExercise + (exercise.id to value.filter { it.isDigit() }.take(3))
+                                    },
+                                    label = { Text("Reps") },
+                                    singleLine = true,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                OutlinedTextField(
+                                    value = targetWeightByExercise[exercise.id] ?: "0",
+                                    onValueChange = { value ->
+                                        targetWeightByExercise = targetWeightByExercise + (
+                                            exercise.id to value.filter { it.isDigit() || it == '.' }.take(5)
+                                        )
+                                    },
+                                    label = { Text("Kg") },
+                                    singleLine = true,
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -545,7 +601,7 @@ private fun AddRoutineDialog(
         confirmButton = {
             TextButton(
                 enabled = name.isNotBlank() && selectedExerciseIds.isNotEmpty(),
-                onClick = { onCreate(name, selectedExerciseIds.toList()) }
+                onClick = { onCreate(name, buildTargets()) }
             ) {
                 Text("Create")
             }

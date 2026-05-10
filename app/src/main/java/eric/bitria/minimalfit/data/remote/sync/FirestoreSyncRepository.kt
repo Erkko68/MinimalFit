@@ -4,6 +4,11 @@ import com.google.firebase.firestore.FirebaseFirestore
 import eric.bitria.minimalfit.data.entity.food.Ingredient
 import eric.bitria.minimalfit.data.entity.food.Meal
 import eric.bitria.minimalfit.data.entity.gym.Exercise
+import eric.bitria.minimalfit.data.entity.gym.Routine
+import eric.bitria.minimalfit.data.entity.gym.RoutineExerciseCrossRef
+import eric.bitria.minimalfit.data.entity.gym.Session
+import eric.bitria.minimalfit.data.entity.gym.SessionExercise
+import eric.bitria.minimalfit.data.entity.gym.Set
 import kotlinx.coroutines.tasks.await
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -107,5 +112,81 @@ class FirestoreSyncRepository(
             json.decodeFromJsonElement<Exercise>(json.parseToJsonElement(Json.encodeToString(doc.data)))
                 .copy(id = doc.id, isGlobal = false, creatorId = userId)
         }
+    }
+
+    override suspend fun uploadUserRoutines(
+        userId: String,
+        routines: List<Routine>,
+        routineExercises: List<RoutineExerciseCrossRef>
+    ): Result<Unit> = runCatching {
+        val batch = firestore.batch()
+        val userDoc = firestore.collection("users").document(userId)
+        routines.forEach { routine ->
+            batch.set(
+                userDoc.collection("routines").document(routine.id),
+                mapOf("name" to routine.name)
+            )
+        }
+        routineExercises.forEach { ref ->
+            val docId = "${ref.routineId}_${ref.exerciseId}"
+            batch.set(
+                userDoc.collection("routine_exercises").document(docId),
+                mapOf(
+                    "routineId" to ref.routineId,
+                    "exerciseId" to ref.exerciseId,
+                    "targetSets" to ref.targetSets,
+                    "targetReps" to ref.targetReps,
+                    "targetWeight" to ref.targetWeight,
+                    "position" to ref.position
+                )
+            )
+        }
+        batch.commit().await()
+    }
+
+    override suspend fun uploadUserGymSessions(
+        userId: String,
+        sessions: List<Session>,
+        sessionExercises: List<SessionExercise>,
+        sets: List<Set>
+    ): Result<Unit> = runCatching {
+        val batch = firestore.batch()
+        val userDoc = firestore.collection("users").document(userId)
+        sessions.forEach { session ->
+            batch.set(
+                userDoc.collection("gym_sessions").document(session.id),
+                mapOf(
+                    "startTime" to session.startTime.toString(),
+                    "title" to session.title,
+                    "durationSeconds" to session.durationSeconds,
+                    "notes" to session.notes
+                )
+            )
+        }
+        sessionExercises.forEach { sessionExercise ->
+            batch.set(
+                userDoc.collection("gym_session_exercises").document(sessionExercise.id),
+                mapOf(
+                    "sessionId" to sessionExercise.sessionId,
+                    "exerciseId" to sessionExercise.exerciseId,
+                    "createdAt" to sessionExercise.createdAt.toString()
+                )
+            )
+        }
+        sets.forEach { set ->
+            batch.set(
+                userDoc.collection("gym_sets").document(set.id),
+                mapOf(
+                    "sessionExerciseId" to set.sessionExerciseId,
+                    "sessionId" to set.sessionId,
+                    "weight" to set.weight,
+                    "reps" to set.reps,
+                    "notes" to set.notes,
+                    "isCompleted" to set.isCompleted,
+                    "createdAt" to set.createdAt.toString()
+                )
+            )
+        }
+        batch.commit().await()
     }
 }

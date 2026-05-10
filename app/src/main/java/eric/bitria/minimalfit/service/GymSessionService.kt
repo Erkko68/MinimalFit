@@ -14,6 +14,7 @@ import eric.bitria.minimalfit.MainActivity
 import eric.bitria.minimalfit.R
 import eric.bitria.minimalfit.data.entity.gym.Set as GymSet
 import eric.bitria.minimalfit.data.gym.GymTrackingLogic
+import eric.bitria.minimalfit.data.gym.RoutineExercisePlan
 import eric.bitria.minimalfit.data.repository.gym.ExerciseRepository
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
@@ -35,6 +36,9 @@ class GymSessionService : LifecycleService() {
 
         const val EXTRA_EXERCISE_ID = "extra_exercise_id"
         const val EXTRA_EXERCISE_IDS = "extra_exercise_ids"
+        const val EXTRA_TARGET_SETS = "extra_target_sets"
+        const val EXTRA_TARGET_REPS = "extra_target_reps"
+        const val EXTRA_TARGET_WEIGHTS = "extra_target_weights"
         const val EXTRA_SESSION_TITLE = "extra_session_title"
         const val EXTRA_SECONDS = "extra_seconds"
 
@@ -65,14 +69,14 @@ class GymSessionService : LifecycleService() {
         when (intent?.action) {
             ACTION_START -> startSession()
             ACTION_START_ROUTINE -> {
-                val exerciseIds = intent.getStringArrayListExtra(EXTRA_EXERCISE_IDS).orEmpty()
+                val exercises = intent.toRoutineExercisePlans()
                 val routineName = intent.getStringExtra(EXTRA_SESSION_TITLE).orEmpty()
-                startSessionFromRoutine(exerciseIds, routineName)
+                startSessionFromRoutine(exercises, routineName)
             }
             ACTION_REPLACE_WITH_ROUTINE -> {
-                val exerciseIds = intent.getStringArrayListExtra(EXTRA_EXERCISE_IDS).orEmpty()
+                val exercises = intent.toRoutineExercisePlans()
                 val routineName = intent.getStringExtra(EXTRA_SESSION_TITLE).orEmpty()
-                replaceSessionWithRoutine(exerciseIds, routineName)
+                replaceSessionWithRoutine(exercises, routineName)
             }
             ACTION_FINISH -> finishSession()
             ACTION_START_REST -> {
@@ -99,14 +103,29 @@ class GymSessionService : LifecycleService() {
         showForegroundNotification()
     }
 
-    private fun startSessionFromRoutine(exerciseIds: List<String>, routineName: String) {
-        trackingLogic.startFromRoutine(exerciseIds, routineName)
+    private fun startSessionFromRoutine(exercises: List<RoutineExercisePlan>, routineName: String) {
+        trackingLogic.startFromRoutine(exercises, routineName)
         showForegroundNotification()
     }
 
-    private fun replaceSessionWithRoutine(exerciseIds: List<String>, routineName: String) {
-        trackingLogic.replaceWithRoutine(exerciseIds, routineName)
+    private fun replaceSessionWithRoutine(exercises: List<RoutineExercisePlan>, routineName: String) {
+        trackingLogic.replaceWithRoutine(exercises, routineName)
         showForegroundNotification()
+    }
+
+    private fun Intent.toRoutineExercisePlans(): List<RoutineExercisePlan> {
+        val exerciseIds = getStringArrayListExtra(EXTRA_EXERCISE_IDS).orEmpty()
+        val targetSets = getIntegerArrayListExtra(EXTRA_TARGET_SETS).orEmpty()
+        val targetReps = getIntegerArrayListExtra(EXTRA_TARGET_REPS).orEmpty()
+        val targetWeights = getFloatArrayExtra(EXTRA_TARGET_WEIGHTS) ?: FloatArray(0)
+        return exerciseIds.mapIndexed { index, exerciseId ->
+            RoutineExercisePlan(
+                exerciseId = exerciseId,
+                targetSets = targetSets.getOrNull(index) ?: 1,
+                targetReps = targetReps.getOrNull(index) ?: 0,
+                targetWeight = targetWeights.getOrNull(index) ?: 0f
+            )
+        }
     }
 
     private fun finishSession() {

@@ -149,7 +149,18 @@ class GymTrackingLogic(
     }
 
     fun updateSet(set: GymSet) {
-        scope.launch { setRepository.updateSet(set) }
+        scope.launch {
+            val previous = setRepository.getSet(set.id).first()
+            setRepository.updateSet(set)
+
+            if (previous?.isCompleted == false && set.isCompleted) {
+                val sessionExercise = activeSessionExercises.value
+                    .firstOrNull { it.id == set.sessionExerciseId }
+                    ?: return@launch
+                val exercise = exerciseRepository.getExercise(sessionExercise.exerciseId).first()
+                startRest(exercise?.restSeconds ?: 60)
+            }
+        }
     }
 
     fun deleteSet(setId: String) {

@@ -116,6 +116,14 @@ fun SessionExerciseCard(
                         textAlign = TextAlign.Center,
                         modifier = Modifier.weight(1f)
                     )
+                    Text(
+                        text = "DONE",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.width(Spacing.xl)
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(Spacing.xs))

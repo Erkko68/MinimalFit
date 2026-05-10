@@ -45,7 +45,7 @@ import eric.bitria.minimalfit.data.entity.track.Track
         SessionExercise::class,
         Set::class
     ],
-    version = 2
+    version = 3
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {

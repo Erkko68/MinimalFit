@@ -23,5 +23,6 @@ data class Set(
     val weight: Float,
     val reps: Int,
     val notes: String = "",
+    val isCompleted: Boolean = false,
     val createdAt: Instant = nowInstant()
 )

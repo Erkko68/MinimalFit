@@ -27,11 +27,15 @@ class GymSessionService : LifecycleService() {
 
     companion object {
         const val ACTION_START = "ACTION_START"
+        const val ACTION_START_ROUTINE = "ACTION_START_ROUTINE"
+        const val ACTION_REPLACE_WITH_ROUTINE = "ACTION_REPLACE_WITH_ROUTINE"
         const val ACTION_FINISH = "ACTION_FINISH"
         const val ACTION_START_REST = "ACTION_START_REST"
         const val ACTION_STOP_REST = "ACTION_STOP_REST"
 
         const val EXTRA_EXERCISE_ID = "extra_exercise_id"
+        const val EXTRA_EXERCISE_IDS = "extra_exercise_ids"
+        const val EXTRA_SESSION_TITLE = "extra_session_title"
         const val EXTRA_SECONDS = "extra_seconds"
 
         private const val CHANNEL_ID = "gym_session_channel"
@@ -60,6 +64,16 @@ class GymSessionService : LifecycleService() {
         super.onStartCommand(intent, flags, startId)
         when (intent?.action) {
             ACTION_START -> startSession()
+            ACTION_START_ROUTINE -> {
+                val exerciseIds = intent.getStringArrayListExtra(EXTRA_EXERCISE_IDS).orEmpty()
+                val routineName = intent.getStringExtra(EXTRA_SESSION_TITLE).orEmpty()
+                startSessionFromRoutine(exerciseIds, routineName)
+            }
+            ACTION_REPLACE_WITH_ROUTINE -> {
+                val exerciseIds = intent.getStringArrayListExtra(EXTRA_EXERCISE_IDS).orEmpty()
+                val routineName = intent.getStringExtra(EXTRA_SESSION_TITLE).orEmpty()
+                replaceSessionWithRoutine(exerciseIds, routineName)
+            }
             ACTION_FINISH -> finishSession()
             ACTION_START_REST -> {
                 val seconds = intent.getIntExtra(EXTRA_SECONDS, 60)
@@ -82,6 +96,16 @@ class GymSessionService : LifecycleService() {
 
     private fun startSession() {
         trackingLogic.start()
+        showForegroundNotification()
+    }
+
+    private fun startSessionFromRoutine(exerciseIds: List<String>, routineName: String) {
+        trackingLogic.startFromRoutine(exerciseIds, routineName)
+        showForegroundNotification()
+    }
+
+    private fun replaceSessionWithRoutine(exerciseIds: List<String>, routineName: String) {
+        trackingLogic.replaceWithRoutine(exerciseIds, routineName)
         showForegroundNotification()
     }
 
@@ -170,10 +194,14 @@ class GymSessionService : LifecycleService() {
         } else {
             "No sets yet"
         }
+        val exerciseContext = stats.currentExerciseName.takeIf { it != "-" }
         val contentText = when {
-            restRunning -> "Rest $restText - ${stats.currentExerciseName} - $setProgress"
-            trackingLogic.isPaused.value -> "Paused - ${stats.currentExerciseName} - $setProgress"
-            else -> "${stats.currentExerciseName} - $elapsedText - $setProgress"
+            restRunning && exerciseContext != null -> "Rest $restText - $exerciseContext - $setProgress"
+            restRunning -> "Rest $restText - $setProgress"
+            trackingLogic.isPaused.value && exerciseContext != null -> "Paused - $exerciseContext - $setProgress"
+            trackingLogic.isPaused.value -> "Paused - $setProgress"
+            exerciseContext != null -> "$exerciseContext - $elapsedText - $setProgress"
+            else -> "$elapsedText - $setProgress"
         }
         val title = session?.title?.takeIf { it.isNotBlank() } ?: "Workout in progress"
 
@@ -224,7 +252,7 @@ class GymSessionService : LifecycleService() {
             ?: sessionExercises.lastOrNull()
         val currentExerciseName = currentSessionExercise
             ?.let { exerciseNamesById[it.exerciseId] }
-            ?: "Current exercise"
+            ?: "-"
         return WorkoutStats(
             exerciseCount = sessionExercises.size,
             completedSets = sets.count { it.isCompleted },

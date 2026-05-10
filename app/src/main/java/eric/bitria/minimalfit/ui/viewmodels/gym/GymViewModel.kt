@@ -6,6 +6,7 @@ import eric.bitria.minimalfit.data.entity.gym.Exercise
 import eric.bitria.minimalfit.data.entity.gym.RoutineSummary
 import eric.bitria.minimalfit.data.entity.gym.Session
 import eric.bitria.minimalfit.data.entity.gym.Set
+import eric.bitria.minimalfit.data.gym.GymSessionManager
 import eric.bitria.minimalfit.data.repository.gym.ExerciseRepository
 import eric.bitria.minimalfit.data.repository.gym.RoutineRepository
 import eric.bitria.minimalfit.data.repository.gym.SessionRepository
@@ -26,7 +27,8 @@ class GymViewModel(
     private val sessionRepository: SessionRepository,
     private val exerciseRepository: ExerciseRepository,
     private val setRepository: SetRepository,
-    private val routineRepository: RoutineRepository
+    private val routineRepository: RoutineRepository,
+    gymSessionManager: GymSessionManager
 ) : ViewModel() {
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -54,6 +56,10 @@ class GymViewModel(
     val routines: StateFlow<List<RoutineSummary>> = routineRepository
         .getRoutines()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val hasActiveWorkout: StateFlow<Boolean> = gymSessionManager.activeSession
+        .map { it != null }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
     fun deleteSession(sessionId: String) {
         viewModelScope.launch { sessionRepository.deleteSession(sessionId) }

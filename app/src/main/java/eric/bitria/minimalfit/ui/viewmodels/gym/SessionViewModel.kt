@@ -104,9 +104,32 @@ class SessionViewModel(
         initialValue = SessionUiState()
     )
 
-    fun initialize(sessionId: String?) {
-        if (sessionId != null) {
-            gymSessionManager.loadSession(sessionId)
+    fun initialize(
+        sessionId: String?,
+        routineId: String?,
+        replaceActiveWorkout: Boolean
+    ) {
+        when {
+            sessionId != null -> gymSessionManager.loadSession(sessionId)
+            routineId != null -> startRoutineSession(routineId, replaceActiveWorkout)
+        }
+    }
+
+    private fun startRoutineSession(routineId: String, replaceActiveWorkout: Boolean) {
+        viewModelScope.launch {
+            val exerciseIds = routineRepository.getRoutineExerciseIds(routineId)
+            val routineName = routineRepository.getRoutines()
+                .first()
+                .firstOrNull { it.id == routineId }
+                ?.name
+                ?: "Workout"
+            if (replaceActiveWorkout) {
+                gymSessionManager.replaceWithRoutine(exerciseIds, routineName)
+            } else if (exerciseIds.isEmpty()) {
+                gymSessionManager.start()
+            } else {
+                gymSessionManager.startFromRoutine(exerciseIds, routineName)
+            }
         }
     }
 

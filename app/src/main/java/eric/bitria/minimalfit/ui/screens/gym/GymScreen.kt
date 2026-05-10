@@ -65,16 +65,19 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun GymScreen(
     onNavigateToSession: (String?) -> Unit,
+    onNavigateToRoutineSession: (String, Boolean) -> Unit,
     onNavigateToExerciseProgression: (String) -> Unit,
     viewModel: GymViewModel = koinViewModel()
 ) {
     val sessions by viewModel.pastSessions.collectAsState()
     val exercises by viewModel.userExercises.collectAsState()
     val routines by viewModel.routines.collectAsState()
+    val hasActiveWorkout by viewModel.hasActiveWorkout.collectAsState()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     var showAddExerciseDialog by remember { mutableStateOf(false) }
     var showAddRoutineDialog by remember { mutableStateOf(false) }
     var routineToRename by remember { mutableStateOf<RoutineSummary?>(null) }
+    var routineToStart by remember { mutableStateOf<RoutineSummary?>(null) }
 
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
     // Routine elements are bigger
@@ -170,7 +173,7 @@ fun GymScreen(
                             RoutineCard(
                                 name = routine.name,
                                 exercisesCount = routine.exerciseCount,
-                                onClick = { },
+                                onClick = { routineToStart = routine },
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .aspectRatio(1.4f),
@@ -331,6 +334,18 @@ fun GymScreen(
             }
         )
     }
+
+    routineToStart?.let { routine ->
+        StartRoutineDialog(
+            routine = routine,
+            hasActiveWorkout = hasActiveWorkout,
+            onDismiss = { routineToStart = null },
+            onStart = { replaceActiveWorkout ->
+                onNavigateToRoutineSession(routine.id, replaceActiveWorkout)
+                routineToStart = null
+            }
+        )
+    }
 }
 
 @Composable
@@ -387,6 +402,38 @@ private fun AddExerciseDialog(
                 onClick = { onCreate(name, muscleGroup, isBodyweight, restSeconds) }
             ) {
                 Text("Create")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
+}
+
+@Composable
+private fun StartRoutineDialog(
+    routine: RoutineSummary,
+    hasActiveWorkout: Boolean,
+    onDismiss: () -> Unit,
+    onStart: (replaceActiveWorkout: Boolean) -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(if (hasActiveWorkout) "Replace current workout?" else "Start routine?") },
+        text = {
+            Text(
+                text = if (hasActiveWorkout) {
+                    "You already have a workout in progress. Starting ${routine.name} will discard the current workout and use this routine instead."
+                } else {
+                    "Start ${routine.name} with ${routine.exerciseCount} exercises?"
+                }
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = { onStart(hasActiveWorkout) }) {
+                Text(if (hasActiveWorkout) "Discard and start" else "Start")
             }
         },
         dismissButton = {

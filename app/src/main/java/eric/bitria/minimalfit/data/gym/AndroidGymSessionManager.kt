@@ -22,6 +22,38 @@ class AndroidGymSessionManager(
         sendCommand(GymSessionService.ACTION_START)
     }
 
+    override fun startFromRoutine(exerciseIds: List<String>, routineName: String) {
+        sendRoutineCommand(
+            action = GymSessionService.ACTION_START_ROUTINE,
+            exerciseIds = exerciseIds,
+            routineName = routineName
+        )
+    }
+
+    override fun replaceWithRoutine(exerciseIds: List<String>, routineName: String) {
+        sendRoutineCommand(
+            action = GymSessionService.ACTION_REPLACE_WITH_ROUTINE,
+            exerciseIds = exerciseIds,
+            routineName = routineName
+        )
+    }
+
+    private fun sendRoutineCommand(
+        action: String,
+        exerciseIds: List<String>,
+        routineName: String
+    ) {
+        val intent = Intent(context, GymSessionService::class.java).apply {
+            this.action = action
+            putStringArrayListExtra(
+                GymSessionService.EXTRA_EXERCISE_IDS,
+                ArrayList(exerciseIds)
+            )
+            putExtra(GymSessionService.EXTRA_SESSION_TITLE, routineName)
+        }
+        context.startService(intent)
+    }
+
     override fun loadSession(sessionId: String) {
         gymTrackingLogic.loadSession(sessionId)
     }

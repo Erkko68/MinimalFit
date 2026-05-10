@@ -62,6 +62,8 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun GymSessionScreen(
     sessionId: String? = null,
+    routineId: String? = null,
+    replaceActiveWorkout: Boolean = false,
     viewModel: SessionViewModel = koinViewModel(),
     onNavigateBack: () -> Unit
 ) {
@@ -70,8 +72,12 @@ fun GymSessionScreen(
 
     var notificationPermissionGranted by remember { mutableStateOf(false) }
 
-    LaunchedEffect(sessionId) {
-        viewModel.initialize(sessionId)
+    LaunchedEffect(sessionId, routineId, replaceActiveWorkout) {
+        viewModel.initialize(
+            sessionId = sessionId,
+            routineId = routineId,
+            replaceActiveWorkout = replaceActiveWorkout
+        )
     }
 
     var showFinishDialog by remember { mutableStateOf(false) }

@@ -12,7 +12,20 @@
           "package_name": "eric.bitria.minimalfit"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "329998532007-5d2htdbubkateel51ruv1ppiqsq7787b.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "eric.bitria.minimalfit",
+            "certificate_hash": "c5881367fd400c8d43ac2ecb53271414212c49f8"
+          }
+        },
+        {
+          "client_id": "329998532007-aan8v1p1vnsdcj628akat3p39pr99tg7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyB1sGCMY8_R0Rs-ZSsY0RKe63xM1CmPIq4"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "329998532007-aan8v1p1vnsdcj628akat3p39pr99tg7.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

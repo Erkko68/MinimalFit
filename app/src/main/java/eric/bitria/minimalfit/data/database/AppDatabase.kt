@@ -8,6 +8,7 @@ import eric.bitria.minimalfit.data.database.dao.ExerciseDao
 import eric.bitria.minimalfit.data.database.dao.IngredientDao
 import eric.bitria.minimalfit.data.database.dao.MealDao
 import eric.bitria.minimalfit.data.database.dao.MealLogDao
+import eric.bitria.minimalfit.data.database.dao.RoutineDao
 import eric.bitria.minimalfit.data.database.dao.SessionDao
 import eric.bitria.minimalfit.data.database.dao.SessionExerciseDao
 import eric.bitria.minimalfit.data.database.dao.SetDao
@@ -20,6 +21,8 @@ import eric.bitria.minimalfit.data.entity.food.relations.DietMealCrossRef
 import eric.bitria.minimalfit.data.entity.food.relations.MealIngredientCrossRef
 import eric.bitria.minimalfit.data.entity.food.relations.MealLogMealCrossRef
 import eric.bitria.minimalfit.data.entity.gym.Exercise
+import eric.bitria.minimalfit.data.entity.gym.Routine
+import eric.bitria.minimalfit.data.entity.gym.RoutineExerciseCrossRef
 import eric.bitria.minimalfit.data.entity.gym.Session
 import eric.bitria.minimalfit.data.entity.gym.SessionExercise
 import eric.bitria.minimalfit.data.entity.gym.Set
@@ -36,11 +39,13 @@ import eric.bitria.minimalfit.data.entity.track.Track
         DietMealCrossRef::class,
         MealLogMealCrossRef::class,
         Exercise::class,
+        Routine::class,
+        RoutineExerciseCrossRef::class,
         Session::class,
         SessionExercise::class,
         Set::class
     ],
-    version = 1
+    version = 2
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
@@ -50,6 +55,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun dietDao(): DietDao
     abstract fun mealLogDao(): MealLogDao
     abstract fun exerciseDao(): ExerciseDao
+    abstract fun routineDao(): RoutineDao
     abstract fun sessionDao(): SessionDao
     abstract fun sessionExerciseDao(): SessionExerciseDao
     abstract fun setDao(): SetDao

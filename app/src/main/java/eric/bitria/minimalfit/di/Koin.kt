@@ -3,6 +3,7 @@ package eric.bitria.minimalfit.di
 import androidx.room.Room
 import eric.bitria.minimalfit.data.database.AppDatabase
 import eric.bitria.minimalfit.data.database.DatabaseInitializer
+import eric.bitria.minimalfit.data.database.MIGRATION_1_2
 import eric.bitria.minimalfit.data.repository.food.DefaultDietRepository
 import eric.bitria.minimalfit.data.repository.food.DefaultFoodCatalogRepository
 import eric.bitria.minimalfit.data.repository.food.DefaultJournalRepository
@@ -14,10 +15,12 @@ import eric.bitria.minimalfit.data.repository.track.LocationRepository
 import eric.bitria.minimalfit.data.repository.track.TrackRepository
 import eric.bitria.minimalfit.data.repository.track.TrackingLocationRepository
 import eric.bitria.minimalfit.data.repository.gym.DefaultExerciseRepository
+import eric.bitria.minimalfit.data.repository.gym.DefaultRoutineRepository
 import eric.bitria.minimalfit.data.repository.gym.DefaultSessionExerciseRepository
 import eric.bitria.minimalfit.data.repository.gym.DefaultSessionRepository
 import eric.bitria.minimalfit.data.repository.gym.DefaultSetRepository
 import eric.bitria.minimalfit.data.repository.gym.ExerciseRepository
+import eric.bitria.minimalfit.data.repository.gym.RoutineRepository
 import eric.bitria.minimalfit.data.repository.gym.SessionExerciseRepository
 import eric.bitria.minimalfit.data.repository.gym.SessionRepository
 import eric.bitria.minimalfit.data.repository.gym.SetRepository
@@ -76,6 +79,7 @@ val dataModule = module {
             AppDatabase::class.java,
             "minimalfit.db"
         )
+            .addMigrations(MIGRATION_1_2)
             .build()
     }
 
@@ -85,6 +89,7 @@ val dataModule = module {
     single { get<AppDatabase>().dietDao() }
     single { get<AppDatabase>().mealLogDao() }
     single { get<AppDatabase>().exerciseDao() }
+    single { get<AppDatabase>().routineDao() }
     single { get<AppDatabase>().sessionDao() }
     single { get<AppDatabase>().sessionExerciseDao() }
     single { get<AppDatabase>().setDao() }
@@ -122,6 +127,7 @@ val dataModule = module {
     // Gym Repositories
     single<SessionRepository> { DefaultSessionRepository(sessionDao = get(), setDao = get()) }
     single<ExerciseRepository> { DefaultExerciseRepository(exerciseDao = get()) }
+    single<RoutineRepository> { DefaultRoutineRepository(routineDao = get()) }
     single<SessionExerciseRepository> { DefaultSessionExerciseRepository(dao = get()) }
     single<SetRepository> { DefaultSetRepository(setDao = get()) }
     singleOf(::GymTrackingLogic)

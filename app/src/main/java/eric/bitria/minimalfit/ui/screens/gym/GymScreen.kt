@@ -51,6 +51,7 @@ import eric.bitria.minimalfit.util.hourMinute
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import eric.bitria.minimalfit.navigation.ScreenConfiguration
+import eric.bitria.minimalfit.data.entity.gym.RoutineSummary
 import eric.bitria.minimalfit.ui.components.shared.animations.SwipeToDeleteCard
 import eric.bitria.minimalfit.ui.components.food.actions.PrimaryFloatingActionButton
 import eric.bitria.minimalfit.ui.components.gym.cards.ExerciseCard
@@ -73,6 +74,7 @@ fun GymScreen(
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     var showAddExerciseDialog by remember { mutableStateOf(false) }
     var showAddRoutineDialog by remember { mutableStateOf(false) }
+    var routineToRename by remember { mutableStateOf<RoutineSummary?>(null) }
 
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
     // Routine elements are bigger
@@ -171,7 +173,8 @@ fun GymScreen(
                                 onClick = { },
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .aspectRatio(1.4f)
+                                    .aspectRatio(1.4f),
+                                onMoreClick = { routineToRename = routine }
                             )
                         }
                     }
@@ -317,6 +320,17 @@ fun GymScreen(
             }
         )
     }
+
+    routineToRename?.let { routine ->
+        RenameRoutineDialog(
+            routine = routine,
+            onDismiss = { routineToRename = null },
+            onRename = { newName ->
+                viewModel.renameRoutine(routine.id, newName)
+                routineToRename = null
+            }
+        )
+    }
 }
 
 @Composable
@@ -373,6 +387,41 @@ private fun AddExerciseDialog(
                 onClick = { onCreate(name, muscleGroup, isBodyweight, restSeconds) }
             ) {
                 Text("Create")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
+}
+
+@Composable
+private fun RenameRoutineDialog(
+    routine: RoutineSummary,
+    onDismiss: () -> Unit,
+    onRename: (String) -> Unit
+) {
+    var name by remember(routine.id) { mutableStateOf(routine.name) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Rename routine") },
+        text = {
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                label = { Text("Routine name") },
+                singleLine = true
+            )
+        },
+        confirmButton = {
+            TextButton(
+                enabled = name.isNotBlank(),
+                onClick = { onRename(name) }
+            ) {
+                Text("Save")
             }
         },
         dismissButton = {

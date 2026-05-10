@@ -18,6 +18,10 @@ class DefaultRoutineRepository(
         routineDao.createRoutine(name.trim(), exerciseIds)
     }
 
+    override suspend fun renameRoutine(id: String, name: String) {
+        routineDao.renameRoutine(id, name.trim())
+    }
+
     override suspend fun deleteRoutine(id: String) {
         routineDao.deleteRoutineWithExercises(id)
     }

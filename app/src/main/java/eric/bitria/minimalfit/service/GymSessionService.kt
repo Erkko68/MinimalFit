@@ -12,7 +12,7 @@ import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.lifecycleScope
 import eric.bitria.minimalfit.MainActivity
 import eric.bitria.minimalfit.R
-import eric.bitria.minimalfit.data.entity.gym.Session
+import eric.bitria.minimalfit.data.entity.gym.Set as GymSet
 import eric.bitria.minimalfit.data.gym.GymTrackingLogic
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
@@ -20,32 +20,26 @@ import org.koin.android.ext.android.inject
 import kotlin.time.Duration
 
 /**
- * GymSessionService manages gym workout tracking as a Foreground Service.
- *
- * Lifecycle:
- *  - ACTION_START       → starts GymTrackingLogic + shows persistent notification
- *  - ACTION_FINISH      → completes the session, removes notification, stops service
- *  - ACTION_START_REST  → starts/adds to a rest timer (EXTRA_SECONDS)
- *  - ACTION_STOP_REST   → cancels the current rest timer
+ * GymSessionService manages gym workout tracking as a foreground service.
  */
 class GymSessionService : LifecycleService() {
 
     companion object {
-        const val ACTION_START                = "ACTION_START"
-        const val ACTION_FINISH               = "ACTION_FINISH"
-        const val ACTION_START_REST           = "ACTION_START_REST"
-        const val ACTION_STOP_REST            = "ACTION_STOP_REST"
+        const val ACTION_START = "ACTION_START"
+        const val ACTION_FINISH = "ACTION_FINISH"
+        const val ACTION_START_REST = "ACTION_START_REST"
+        const val ACTION_STOP_REST = "ACTION_STOP_REST"
 
         const val EXTRA_EXERCISE_ID = "extra_exercise_id"
-        const val EXTRA_SECONDS     = "extra_seconds"
+        const val EXTRA_SECONDS = "extra_seconds"
 
-        private const val CHANNEL_ID      = "gym_session_channel"
+        private const val CHANNEL_ID = "gym_session_channel"
         private const val NOTIFICATION_ID = 2
 
-        private const val REQUEST_OPEN           = 0
+        private const val REQUEST_OPEN = 0
         private const val REQUEST_FINISH_WORKOUT = 1
-        private const val REQUEST_STOP_REST      = 2
-        private const val REQUEST_START_REST      = 3
+        private const val REQUEST_STOP_REST = 2
+        private const val REQUEST_START_REST = 3
     }
 
     private val trackingLogic: GymTrackingLogic by inject()
@@ -61,13 +55,13 @@ class GymSessionService : LifecycleService() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
         when (intent?.action) {
-            ACTION_START  -> startSession()
+            ACTION_START -> startSession()
             ACTION_FINISH -> finishSession()
             ACTION_START_REST -> {
                 val seconds = intent.getIntExtra(EXTRA_SECONDS, 60)
                 trackingLogic.startRest(seconds)
             }
-            ACTION_STOP_REST  -> trackingLogic.stopRest()
+            ACTION_STOP_REST -> trackingLogic.stopRest()
         }
         return START_NOT_STICKY
     }
@@ -103,8 +97,9 @@ class GymSessionService : LifecycleService() {
                 trackingLogic.activeSession,
                 trackingLogic.elapsed,
                 trackingLogic.restRemaining,
-                trackingLogic.isRestRunning
-            ) { activeSession, _, _, _ ->
+                trackingLogic.isRestRunning,
+                trackingLogic.activeSets
+            ) { activeSession, _, _, _, _ ->
                 activeSession
             }.collect { session ->
                 if (isForeground) {
@@ -151,21 +146,39 @@ class GymSessionService : LifecycleService() {
     }
 
     private fun buildNotification(): Notification {
-        val elapsedText    = formatDuration(trackingLogic.elapsed.value)
-        val restRunning    = trackingLogic.isRestRunning.value
-        val restText       = formatDuration(trackingLogic.restRemaining.value)
-
-        val contentText = if (restRunning) {
-            "Rest: $restText  ·  Workout: $elapsedText"
+        val session = trackingLogic.activeSession.value
+        val elapsedText = formatDuration(trackingLogic.elapsed.value)
+        val restRunning = trackingLogic.isRestRunning.value
+        val restText = formatDuration(trackingLogic.restRemaining.value)
+        val stats = buildWorkoutStats()
+        val setProgress = if (stats.totalSets > 0) {
+            "${stats.completedSets}/${stats.totalSets} sets"
         } else {
-            "Time: $elapsedText"
+            "No sets yet"
         }
+        val contentText = when {
+            restRunning -> "Rest $restText - $setProgress"
+            trackingLogic.isPaused.value -> "Paused - $elapsedText - $setProgress"
+            else -> "$elapsedText - $setProgress"
+        }
+        val title = session?.title?.takeIf { it.isNotBlank() } ?: "Workout in progress"
 
         val builder = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle(if (restRunning) "Rest timer" else "Workout in progress")
+            .setContentTitle(if (restRunning) "Rest timer" else title)
             .setContentText(contentText)
+            .setStyle(
+                NotificationCompat.BigTextStyle().bigText(
+                    buildExpandedNotificationText(
+                        elapsedText = elapsedText,
+                        restText = restText,
+                        restRunning = restRunning,
+                        stats = stats
+                    )
+                )
+            )
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentIntent(buildOpenAppIntent())
+            .setSubText("${stats.exerciseCount} exercises")
             .setOnlyAlertOnce(true)
             .setOngoing(true)
 
@@ -178,6 +191,47 @@ class GymSessionService : LifecycleService() {
         builder.addAction(0, "Finish Workout", buildServiceIntent(ACTION_FINISH, REQUEST_FINISH_WORKOUT))
 
         return builder.build()
+    }
+
+    private data class WorkoutStats(
+        val exerciseCount: Int,
+        val completedSets: Int,
+        val totalSets: Int,
+        val nextSet: GymSet?
+    )
+
+    private fun buildWorkoutStats(): WorkoutStats {
+        val sets = trackingLogic.activeSets.value.sortedBy { it.createdAt }
+        return WorkoutStats(
+            exerciseCount = trackingLogic.activeSessionExercises.value.size,
+            completedSets = sets.count { it.isCompleted },
+            totalSets = sets.size,
+            nextSet = sets.firstOrNull { !it.isCompleted }
+        )
+    }
+
+    private fun buildExpandedNotificationText(
+        elapsedText: String,
+        restText: String,
+        restRunning: Boolean,
+        stats: WorkoutStats
+    ): String = buildString {
+        appendLine("Workout time: $elapsedText")
+        if (restRunning) appendLine("Rest remaining: $restText")
+        appendLine("Exercises: ${stats.exerciseCount}")
+        appendLine("Sets completed: ${stats.completedSets}/${stats.totalSets}")
+        stats.nextSet?.let { set ->
+            append("Next set: ${formatSet(set)}")
+        }
+    }.trim()
+
+    private fun formatSet(set: GymSet): String {
+        val weightText = if (set.weight == 0f) {
+            "bodyweight"
+        } else {
+            "%g kg".format(set.weight)
+        }
+        return "$weightText x ${set.reps}"
     }
 
     private fun buildOpenAppIntent(): PendingIntent =
@@ -207,7 +261,7 @@ class GymSessionService : LifecycleService() {
 
     private fun formatDuration(duration: Duration): String {
         val totalSeconds = duration.inWholeSeconds
-        val hours   = totalSeconds / 3600
+        val hours = totalSeconds / 3600
         val minutes = (totalSeconds % 3600) / 60
         val seconds = totalSeconds % 60
         return if (hours > 0) {

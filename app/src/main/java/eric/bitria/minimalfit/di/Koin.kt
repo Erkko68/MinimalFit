@@ -203,6 +203,7 @@ val viewModels = module {
     viewModel {
         SessionViewModel(
             exerciseRepository = get(),
+            routineRepository = get(),
             gymSessionManager = get()
         )
     }

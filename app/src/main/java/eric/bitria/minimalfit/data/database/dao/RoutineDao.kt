@@ -36,6 +36,9 @@ interface RoutineDao {
     @Query("DELETE FROM routine_exercise_cross_refs WHERE routineId = :routineId")
     suspend fun deleteRoutineExercises(routineId: String)
 
+    @Query("UPDATE routines SET name = :name WHERE id = :routineId")
+    suspend fun renameRoutine(routineId: String, name: String)
+
     @Query("DELETE FROM routines WHERE id = :routineId")
     suspend fun deleteRoutine(routineId: String)
 

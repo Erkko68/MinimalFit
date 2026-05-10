@@ -94,4 +94,12 @@ class GymViewModel(
     fun deleteRoutine(routineId: String) {
         viewModelScope.launch { routineRepository.deleteRoutine(routineId) }
     }
+
+    fun renameRoutine(routineId: String, name: String) {
+        val trimmedName = name.trim()
+        if (trimmedName.isBlank()) return
+        viewModelScope.launch {
+            routineRepository.renameRoutine(routineId, trimmedName)
+        }
+    }
 }

@@ -12,8 +12,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -91,8 +94,11 @@ fun SwipeToDeleteCard(
     content: @Composable () -> Unit
 ) {
     val offsetX = remember { Animatable(0f) }
+    val scope = rememberCoroutineScope()
     var cardWidth by remember { mutableIntStateOf(0) }
     var isDismissed by remember { mutableStateOf(false) }
+    var showDeleteConfirmation by remember { mutableStateOf(false) }
+    var pendingDismissDirection by remember { mutableFloatStateOf(0f) }
 
     val dragProgress by remember {
         derivedStateOf {
@@ -150,33 +156,16 @@ fun SwipeToDeleteCard(
                                     abs(velocity) > 1200f
 
                                 if (shouldDismiss) {
-                                    if (onDeleteRequested != null) {
-                                        onDeleteRequested()
-                                        launch {
-                                            offsetX.animateTo(
-                                                targetValue = 0f,
-                                                animationSpec = spring(
-                                                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                                                    stiffness = Spring.StiffnessMedium
-                                                )
+                                    pendingDismissDirection = if (offsetX.value >= 0f) 1f else -1f
+                                    showDeleteConfirmation = true
+                                    launch {
+                                        offsetX.animateTo(
+                                            targetValue = 0f,
+                                            animationSpec = spring(
+                                                dampingRatio = Spring.DampingRatioMediumBouncy,
+                                                stiffness = Spring.StiffnessMedium
                                             )
-                                        }
-                                    } else {
-                                        val targetOffset = if (offsetX.value > 0) {
-                                            cardWidth.toFloat() * 2
-                                        } else {
-                                            -cardWidth.toFloat() * 2
-                                        }
-                                        isDismissed = true
-                                        launch {
-                                            offsetX.animateTo(
-                                                targetValue = targetOffset,
-                                                animationSpec = spring(
-                                                    dampingRatio = Spring.DampingRatioNoBouncy,
-                                                    stiffness = Spring.StiffnessMedium
-                                                )
-                                            )
-                                        }
+                                        )
                                     }
                                 } else {
                                     launch {
@@ -214,5 +203,42 @@ fun SwipeToDeleteCard(
         ) {
             content()
         }
+    }
+
+    if (showDeleteConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirmation = false },
+            title = { Text("Delete item?") },
+            text = { Text("This action cannot be undone.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteConfirmation = false
+                        if (onDeleteRequested != null) {
+                            onDeleteRequested()
+                        } else {
+                            val direction = if (pendingDismissDirection >= 0f) 1f else -1f
+                            isDismissed = true
+                            scope.launch {
+                                offsetX.animateTo(
+                                    targetValue = cardWidth.toFloat() * 2 * direction,
+                                    animationSpec = spring(
+                                        dampingRatio = Spring.DampingRatioNoBouncy,
+                                        stiffness = Spring.StiffnessMedium
+                                    )
+                                )
+                            }
+                        }
+                    }
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirmation = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }

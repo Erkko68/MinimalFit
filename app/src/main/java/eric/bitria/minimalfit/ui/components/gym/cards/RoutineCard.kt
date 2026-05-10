@@ -33,7 +33,8 @@ fun RoutineCard(
     name: String,
     exercisesCount: Int,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onMoreClick: (() -> Unit)? = null
 ) {
     Card(
         modifier = modifier.clickable { onClick() },
@@ -78,15 +79,17 @@ fun RoutineCard(
                         )
                     }
                     
-                    IconButton(
-                        onClick = { /* More actions placeholder */ },
-                        modifier = Modifier.size(24.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.MoreVert,
-                            contentDescription = "More",
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
+                    if (onMoreClick != null) {
+                        IconButton(
+                            onClick = onMoreClick,
+                            modifier = Modifier.size(24.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.MoreVert,
+                                contentDescription = "Routine options",
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
                     }
                 }
 

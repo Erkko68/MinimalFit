@@ -158,7 +158,7 @@ class GymTrackingLogic(
                     .firstOrNull { it.id == set.sessionExerciseId }
                     ?: return@launch
                 val exercise = exerciseRepository.getExercise(sessionExercise.exerciseId).first()
-                startRest(exercise?.restSeconds ?: 60)
+                restartRest(exercise?.restSeconds ?: 60)
             }
         }
     }
@@ -198,6 +198,11 @@ class GymTrackingLogic(
             restEndEpochMillis = currentEnd + (seconds * 1000L)
             syncRestTick()
         }
+    }
+
+    private fun restartRest(seconds: Int) {
+        stopRestInternal()
+        startRestCountdown(seconds)
     }
 
     fun stopRest() {

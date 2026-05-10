@@ -8,6 +8,7 @@ import eric.bitria.minimalfit.data.entity.gym.SessionExercise
 import eric.bitria.minimalfit.data.entity.gym.Set
 import eric.bitria.minimalfit.data.gym.GymSessionManager
 import eric.bitria.minimalfit.data.repository.gym.ExerciseRepository
+import eric.bitria.minimalfit.data.repository.gym.RoutineRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -23,11 +24,13 @@ import kotlin.time.Instant
 @OptIn(ExperimentalCoroutinesApi::class)
 class SessionViewModel(
     private val exerciseRepository: ExerciseRepository,
+    private val routineRepository: RoutineRepository,
     private val gymSessionManager: GymSessionManager
 ) : ViewModel() {
 
     data class SessionExerciseGroup(
         val sessionExerciseId: String,
+        val exerciseId: String,
         val exerciseName: String,
         val sets: List<Set>,
         val createdAt: Instant
@@ -77,6 +80,7 @@ class SessionViewModel(
         val groups = sessionExercises.map { se ->
             SessionExerciseGroup(
                 sessionExerciseId = se.id,
+                exerciseId = se.exerciseId,
                 exerciseName = exercisesById[se.exerciseId]?.name ?: "Exercise",
                 sets = sets.filter { it.sessionExerciseId == se.id }.sortedBy { it.createdAt },
                 createdAt = se.createdAt
@@ -138,10 +142,24 @@ class SessionViewModel(
         gymSessionManager.deleteExercise(sessionExerciseId)
     }
 
-    fun finishSession() {
+    fun finishSession(saveAsRoutine: Boolean = false) {
         viewModelScope.launch {
+            if (saveAsRoutine) {
+                saveCurrentSessionAsRoutine()
+            }
             gymSessionManager.finish()
         }
+    }
+
+    private suspend fun saveCurrentSessionAsRoutine() {
+        val state = uiState.value
+        val exerciseIds = state.exerciseGroups
+            .map { it.exerciseId }
+            .distinct()
+        if (exerciseIds.isEmpty()) return
+
+        val routineName = state.sessionTitle.ifBlank { "Workout Routine" }
+        routineRepository.createRoutine(routineName, exerciseIds)
     }
 
     fun startRest(seconds: Int = 60) {

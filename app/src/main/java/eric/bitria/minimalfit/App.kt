@@ -1,5 +1,6 @@
 package eric.bitria.minimalfit
 
+import android.content.Intent
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
@@ -10,6 +11,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -19,15 +21,28 @@ import androidx.navigation.compose.rememberNavController
 import eric.bitria.minimalfit.navigation.AppNavHost
 import eric.bitria.minimalfit.navigation.LocalScreenConfig
 import eric.bitria.minimalfit.navigation.QuickAction
+import eric.bitria.minimalfit.navigation.Route
 import eric.bitria.minimalfit.navigation.ScreenConfigState
 import eric.bitria.minimalfit.navigation.composables.BottomNavigationBar
 import eric.bitria.minimalfit.navigation.composables.QuickActionButton
 
 @Composable
-fun App() {
+fun App(
+    navigationIntent: Intent? = null,
+    onNavigationIntentConsumed: () -> Unit = {}
+) {
     val navController = rememberNavController()
     
     val screenConfigState = remember { ScreenConfigState() }
+
+    LaunchedEffect(navigationIntent) {
+        if (navigationIntent?.getBooleanExtra(MainActivity.EXTRA_OPEN_GYM_SESSION, false) == true) {
+            navController.navigate(Route.GymSession(sessionId = null)) {
+                launchSingleTop = true
+            }
+            onNavigationIntentConsumed()
+        }
+    }
 
     CompositionLocalProvider(LocalScreenConfig provides screenConfigState) {
         val config = screenConfigState.config

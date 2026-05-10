@@ -14,6 +14,7 @@ import eric.bitria.minimalfit.MainActivity
 import eric.bitria.minimalfit.R
 import eric.bitria.minimalfit.data.entity.gym.Set as GymSet
 import eric.bitria.minimalfit.data.gym.GymTrackingLogic
+import eric.bitria.minimalfit.data.repository.gym.ExerciseRepository
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
@@ -43,12 +44,15 @@ class GymSessionService : LifecycleService() {
     }
 
     private val trackingLogic: GymTrackingLogic by inject()
+    private val exerciseRepository: ExerciseRepository by inject()
 
     private var isForeground = false
+    private var exerciseNamesById: Map<String, String> = emptyMap()
 
     override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
+        observeExerciseNames()
         observeTrackingState()
     }
 
@@ -98,9 +102,10 @@ class GymSessionService : LifecycleService() {
                 trackingLogic.elapsed,
                 trackingLogic.restRemaining,
                 trackingLogic.isRestRunning,
+                trackingLogic.activeSessionExercises,
                 trackingLogic.activeSets
-            ) { activeSession, _, _, _, _ ->
-                activeSession
+            ) { args: Array<Any?> ->
+                args[0]
             }.collect { session ->
                 if (isForeground) {
                     updateNotification()
@@ -108,6 +113,15 @@ class GymSessionService : LifecycleService() {
                         stopSessionService()
                     }
                 }
+            }
+        }
+    }
+
+    private fun observeExerciseNames() {
+        lifecycleScope.launch {
+            exerciseRepository.getExercises(limit = -1).collect { exercises ->
+                exerciseNamesById = exercises.associate { it.id to it.name }
+                if (isForeground) updateNotification()
             }
         }
     }
@@ -157,9 +171,9 @@ class GymSessionService : LifecycleService() {
             "No sets yet"
         }
         val contentText = when {
-            restRunning -> "Rest $restText - $setProgress"
-            trackingLogic.isPaused.value -> "Paused - $elapsedText - $setProgress"
-            else -> "$elapsedText - $setProgress"
+            restRunning -> "Rest $restText - ${stats.currentExerciseName} - $setProgress"
+            trackingLogic.isPaused.value -> "Paused - ${stats.currentExerciseName} - $setProgress"
+            else -> "${stats.currentExerciseName} - $elapsedText - $setProgress"
         }
         val title = session?.title?.takeIf { it.isNotBlank() } ?: "Workout in progress"
 
@@ -197,15 +211,25 @@ class GymSessionService : LifecycleService() {
         val exerciseCount: Int,
         val completedSets: Int,
         val totalSets: Int,
+        val currentExerciseName: String,
         val nextSet: GymSet?
     )
 
     private fun buildWorkoutStats(): WorkoutStats {
         val sets = trackingLogic.activeSets.value.sortedBy { it.createdAt }
+        val sessionExercises = trackingLogic.activeSessionExercises.value
+        val currentSessionExercise = sets
+            .firstOrNull { !it.isCompleted }
+            ?.let { nextSet -> sessionExercises.firstOrNull { it.id == nextSet.sessionExerciseId } }
+            ?: sessionExercises.lastOrNull()
+        val currentExerciseName = currentSessionExercise
+            ?.let { exerciseNamesById[it.exerciseId] }
+            ?: "Current exercise"
         return WorkoutStats(
-            exerciseCount = trackingLogic.activeSessionExercises.value.size,
+            exerciseCount = sessionExercises.size,
             completedSets = sets.count { it.isCompleted },
             totalSets = sets.size,
+            currentExerciseName = currentExerciseName,
             nextSet = sets.firstOrNull { !it.isCompleted }
         )
     }
@@ -218,6 +242,7 @@ class GymSessionService : LifecycleService() {
     ): String = buildString {
         appendLine("Workout time: $elapsedText")
         if (restRunning) appendLine("Rest remaining: $restText")
+        appendLine("Current: ${stats.currentExerciseName}")
         appendLine("Exercises: ${stats.exerciseCount}")
         appendLine("Sets completed: ${stats.completedSets}/${stats.totalSets}")
         stats.nextSet?.let { set ->
@@ -240,6 +265,7 @@ class GymSessionService : LifecycleService() {
             REQUEST_OPEN,
             Intent(this, MainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                putExtra(MainActivity.EXTRA_OPEN_GYM_SESSION, true)
             },
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )

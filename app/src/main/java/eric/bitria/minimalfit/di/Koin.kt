@@ -84,6 +84,7 @@ val dataModule = module {
             AppDatabase::class.java,
             "minimalfit.db"
         )
+            .fallbackToDestructiveMigration(dropAllTables = true)
             .build()
     }
 
@@ -215,6 +216,7 @@ val viewModels = module {
             exerciseRepository = get(),
             routineRepository = get(),
             routineExerciseRepository = get(),
+            routineSetRepository = get(),
             gymSessionManager = get()
         )
     }

@@ -14,5 +14,6 @@ data class Session(
     val startTime: Instant,
     val title: String = "",
     val durationSeconds: Long = 0L,
-    val notes: String = ""
+    val notes: String = "",
+    val isFinished: Boolean = false
 )

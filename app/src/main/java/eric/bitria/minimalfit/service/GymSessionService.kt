@@ -30,6 +30,7 @@ class GymSessionService : LifecycleService() {
         const val ACTION_START = "ACTION_START"
         const val ACTION_START_ROUTINE = "ACTION_START_ROUTINE"
         const val ACTION_REPLACE_WITH_ROUTINE = "ACTION_REPLACE_WITH_ROUTINE"
+        const val ACTION_RESUME = "ACTION_RESUME"
         const val ACTION_FINISH = "ACTION_FINISH"
         const val ACTION_START_REST = "ACTION_START_REST"
         const val ACTION_STOP_REST = "ACTION_STOP_REST"
@@ -78,6 +79,7 @@ class GymSessionService : LifecycleService() {
                 val routineName = intent.getStringExtra(EXTRA_SESSION_TITLE).orEmpty()
                 replaceSessionWithRoutine(exercises, routineName)
             }
+            ACTION_RESUME -> resumeSession()
             ACTION_FINISH -> finishSession()
             ACTION_START_REST -> {
                 val seconds = intent.getIntExtra(EXTRA_SECONDS, 60)
@@ -126,6 +128,11 @@ class GymSessionService : LifecycleService() {
                 targetWeight = targetWeights.getOrNull(index) ?: 0f
             )
         }
+    }
+
+    private fun resumeSession() {
+        trackingLogic.resume()
+        showForegroundNotification()
     }
 
     private fun finishSession() {

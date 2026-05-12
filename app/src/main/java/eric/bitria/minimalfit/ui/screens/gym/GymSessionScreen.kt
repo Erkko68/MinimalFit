@@ -17,9 +17,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -44,10 +44,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.em
 import eric.bitria.minimalfit.navigation.ScreenConfiguration
 import eric.bitria.minimalfit.ui.components.food.dialogs.SearchableItemDialog
-import eric.bitria.minimalfit.ui.components.gym.GymSessionState
-import eric.bitria.minimalfit.ui.components.gym.GymSessionToolbar
-import eric.bitria.minimalfit.ui.components.gym.RestDialog
-import eric.bitria.minimalfit.ui.components.gym.SessionExerciseCard
+import eric.bitria.minimalfit.ui.components.gym.SessionState
+import eric.bitria.minimalfit.ui.components.gym.SessionToolbar
+import eric.bitria.minimalfit.ui.components.gym.cards.SessionExerciseCard
+import eric.bitria.minimalfit.ui.components.gym.dialogs.TimerDialog
 import eric.bitria.minimalfit.ui.components.requirements.permission.RequireNotificationPermission
 import eric.bitria.minimalfit.ui.components.shared.animations.SwipeToDeleteCard
 import eric.bitria.minimalfit.ui.theme.Spacing
@@ -83,7 +83,7 @@ fun GymSessionScreen(
     var showFinishDialog by remember { mutableStateOf(false) }
     var showExerciseSearchDialog by remember { mutableStateOf(false) }
     var showRestDialog by remember { mutableStateOf(false) }
-    var saveAsRoutine by remember { mutableStateOf(false) }
+    var showSaveAsRoutineDialog by remember { mutableStateOf(false) }
     var editedTitle by remember(uiState.sessionTitle) { mutableStateOf(uiState.sessionTitle) }
     var collapsedExercises by remember { mutableStateOf(setOf<String>()) }
 
@@ -100,14 +100,16 @@ fun GymSessionScreen(
     } ?: "Workout"
 
     val toolbarState = when {
-        !uiState.isActive -> GymSessionState.IDLE
-        uiState.isPaused && sessionId != null -> GymSessionState.VIEWING
-        uiState.isPaused -> GymSessionState.PAUSED
-        else -> GymSessionState.RUNNING
+        !uiState.isActive -> SessionState.IDLE
+        uiState.isPaused && sessionId != null -> SessionState.VIEWING
+        uiState.isPaused -> SessionState.PAUSED
+        else -> SessionState.RUNNING
     }
 
-    BackHandler(enabled = uiState.isActive) {
-        onNavigateBack()
+    val interceptBack = toolbarState == SessionState.RUNNING || toolbarState == SessionState.PAUSED
+
+    BackHandler(enabled = interceptBack) {
+        showFinishDialog = true
     }
 
     if (!notificationPermissionGranted) {
@@ -166,8 +168,17 @@ fun GymSessionScreen(
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    IconButton(onClick = {
+                        if (interceptBack) showFinishDialog = true else onNavigateBack()
+                    }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    if (uiState.isActive && uiState.exerciseGroups.isNotEmpty()) {
+                        IconButton(onClick = { showSaveAsRoutineDialog = true }) {
+                            Icon(Icons.Filled.Bookmark, contentDescription = "Save as routine")
+                        }
                     }
                 },
                 scrollBehavior = scrollBehavior
@@ -181,27 +192,11 @@ fun GymSessionScreen(
         AlertDialog(
             onDismissRequest = { showFinishDialog = false },
             title = { Text("Finish session?") },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
-                    Text("Do you want to finish and save this session?")
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Checkbox(
-                            checked = saveAsRoutine,
-                            onCheckedChange = { saveAsRoutine = it },
-                            enabled = uiState.exerciseGroups.isNotEmpty()
-                        )
-                        Text("Save exercises as routine")
-                    }
-                }
-            },
+            text = { Text("Do you want to finish and save this session?") },
             confirmButton = {
                 TextButton(onClick = {
                     showFinishDialog = false
-                    viewModel.finishSession(saveAsRoutine = saveAsRoutine)
-                    saveAsRoutine = false
+                    viewModel.finishSession()
                     onNavigateBack()
                 }) { Text("Finish") }
             },
@@ -211,8 +206,25 @@ fun GymSessionScreen(
         )
     }
 
+    if (showSaveAsRoutineDialog) {
+        AlertDialog(
+            onDismissRequest = { showSaveAsRoutineDialog = false },
+            title = { Text("Save as routine?") },
+            text = { Text("Save the current exercises as a new routine?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showSaveAsRoutineDialog = false
+                    viewModel.saveSessionAsRoutine()
+                }) { Text("Save") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showSaveAsRoutineDialog = false }) { Text("Cancel") }
+            }
+        )
+    }
+
     if (showRestDialog) {
-        RestDialog(
+        TimerDialog(
             isRestRunning = uiState.isRestRunning,
             restRemaining = uiState.restRemaining,
             onDismiss = { showRestDialog = false },
@@ -242,7 +254,9 @@ fun GymSessionScreen(
             if (uiState.isRestRunning) {
                 item {
                     Card(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { showRestDialog = true },
                         shape = MaterialTheme.shapes.large
                     ) {
                         Row(
@@ -253,7 +267,7 @@ fun GymSessionScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "Rest timer",
+                                text = "Timer",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold
                             )
@@ -306,7 +320,7 @@ fun GymSessionScreen(
                         },
                         onUpdateSet = { viewModel.updateSet(it) },
                         onDeleteSet = { viewModel.deleteSet(it) },
-                        onAddSet = { viewModel.addSet(group.sessionExerciseId) }
+                        onAddSet = { w, r -> viewModel.addSet(group.sessionExerciseId, w, r) }
                     )
                 }
                 if (canEdit) {
@@ -323,7 +337,7 @@ fun GymSessionScreen(
             item { Spacer(modifier = Modifier.height(Spacing.xxl)) }
         }
 
-        GymSessionToolbar(
+        SessionToolbar(
             state = toolbarState,
             onStart = {
                 viewModel.startSession()

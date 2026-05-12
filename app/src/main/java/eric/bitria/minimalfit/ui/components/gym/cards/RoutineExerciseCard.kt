@@ -1,4 +1,4 @@
-package eric.bitria.minimalfit.ui.components.gym
+package eric.bitria.minimalfit.ui.components.gym.cards
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -21,6 +21,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import eric.bitria.minimalfit.data.entity.gym.RoutineSet
+import eric.bitria.minimalfit.ui.components.gym.rows.RoutineSetRow
 import eric.bitria.minimalfit.ui.components.shared.animations.SwipeToDeleteCard
 import eric.bitria.minimalfit.ui.theme.Spacing
 

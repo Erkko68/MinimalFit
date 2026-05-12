@@ -20,7 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
-enum class GymSessionState {
+enum class SessionState {
     /** No session active — show Start only. */
     IDLE,
     /** Loaded a past session for viewing — show Resume only (no Stop). */
@@ -32,8 +32,8 @@ enum class GymSessionState {
 }
 
 @Composable
-fun GymSessionToolbar(
-    state: GymSessionState,
+fun SessionToolbar(
+    state: SessionState,
     onStart: () -> Unit,
     onPause: () -> Unit,
     onResume: () -> Unit,
@@ -55,19 +55,19 @@ fun GymSessionToolbar(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             when (state) {
-                GymSessionState.IDLE -> {
+                SessionState.IDLE -> {
                     FilledIconButton(onClick = onStart) {
                         Icon(Icons.Filled.PlayArrow, contentDescription = "Start")
                     }
                 }
 
-                GymSessionState.VIEWING -> {
+                SessionState.VIEWING -> {
                     FilledIconButton(onClick = onResume) {
                         Icon(Icons.Filled.PlayArrow, contentDescription = "Resume")
                     }
                 }
 
-                GymSessionState.RUNNING -> {
+                SessionState.RUNNING -> {
                     FilledIconButton(onClick = onPause) {
                         Icon(Icons.Filled.Pause, contentDescription = "Pause")
                     }
@@ -81,14 +81,14 @@ fun GymSessionToolbar(
                         Icon(Icons.Filled.Stop, contentDescription = "Stop")
                     }
                     FilledTonalIconButton(onClick = onStartRest) {
-                        Icon(Icons.Filled.Timer, contentDescription = "Rest")
+                        Icon(Icons.Filled.Timer, contentDescription = "Timer")
                     }
                     FilledTonalIconButton(onClick = onAddExercise) {
                         Icon(Icons.Filled.Add, contentDescription = "Add Exercise")
                     }
                 }
 
-                GymSessionState.PAUSED -> {
+                SessionState.PAUSED -> {
                     FilledIconButton(onClick = onResume) {
                         Icon(Icons.Filled.PlayArrow, contentDescription = "Resume")
                     }

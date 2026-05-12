@@ -1,4 +1,4 @@
-package eric.bitria.minimalfit.ui.components.gym
+package eric.bitria.minimalfit.ui.components.gym.dialogs
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -31,7 +31,7 @@ import eric.bitria.minimalfit.ui.theme.Spacing
 import kotlin.time.Duration
 
 @Composable
-fun RestDialog(
+fun TimerDialog(
     isRestRunning: Boolean,
     restRemaining: Duration,
     onDismiss: () -> Unit,
@@ -63,7 +63,7 @@ fun RestDialog(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = if (isRestRunning) "Rest" else "Start Rest",
+                    text = if (isRestRunning) "Timer" else "Start Timer",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.fillMaxWidth()
@@ -104,7 +104,7 @@ fun RestDialog(
                             contentColor = MaterialTheme.colorScheme.onErrorContainer
                         )
                     ) {
-                        Text("Stop Rest")
+                        Text("Stop Timer")
                     }
                 } else {
                     TimePicker(
@@ -124,10 +124,6 @@ fun RestDialog(
     }
 }
 
-/**
- * Two side-by-side [WheelPicker]s for minutes and seconds.
- * [actionButton] receives the current total seconds and renders the confirm button.
- */
 @Composable
 private fun TimePicker(
     initialTotalSeconds: Int,
@@ -145,7 +141,6 @@ private fun TimePicker(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
-            // Each wheel + its label in a column so labels auto-align under their wheel
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 WheelPicker(
                     count = 60,
@@ -158,10 +153,8 @@ private fun TimePicker(
                         text = "%02d".format(index),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                        color = if (isSelected)
-                            MaterialTheme.colorScheme.onSecondaryContainer
-                        else
-                            MaterialTheme.colorScheme.onSurface
+                        color = if (isSelected) MaterialTheme.colorScheme.onSecondaryContainer
+                                else MaterialTheme.colorScheme.onSurface
                     )
                 }
                 Text(
@@ -190,10 +183,8 @@ private fun TimePicker(
                         text = "%02d".format(index),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                        color = if (isSelected)
-                            MaterialTheme.colorScheme.onSecondaryContainer
-                        else
-                            MaterialTheme.colorScheme.onSurface
+                        color = if (isSelected) MaterialTheme.colorScheme.onSecondaryContainer
+                                else MaterialTheme.colorScheme.onSurface
                     )
                 }
                 Text(

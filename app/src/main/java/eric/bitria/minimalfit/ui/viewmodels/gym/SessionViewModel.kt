@@ -10,9 +10,11 @@ import eric.bitria.minimalfit.data.gym.GymSessionManager
 import eric.bitria.minimalfit.data.gym.RoutineExercisePlan
 import eric.bitria.minimalfit.data.entity.gym.Routine
 import eric.bitria.minimalfit.data.entity.gym.RoutineExercise
+import eric.bitria.minimalfit.data.entity.gym.RoutineSet
 import eric.bitria.minimalfit.data.repository.gym.ExerciseRepository
 import eric.bitria.minimalfit.data.repository.gym.RoutineExerciseRepository
 import eric.bitria.minimalfit.data.repository.gym.RoutineRepository
+import eric.bitria.minimalfit.data.repository.gym.RoutineSetRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -30,6 +32,7 @@ class SessionViewModel(
     private val exerciseRepository: ExerciseRepository,
     private val routineRepository: RoutineRepository,
     private val routineExerciseRepository: RoutineExerciseRepository,
+    private val routineSetRepository: RoutineSetRepository,
     private val gymSessionManager: GymSessionManager
 ) : ViewModel() {
 
@@ -163,8 +166,8 @@ class SessionViewModel(
         gymSessionManager.addExercise(exerciseId)
     }
 
-    fun addSet(sessionExerciseId: String) {
-        gymSessionManager.addSet(sessionExerciseId)
+    fun addSet(sessionExerciseId: String, weight: Float, reps: Int) {
+        gymSessionManager.addSet(sessionExerciseId, weight, reps)
     }
 
     fun updateSet(set: Set) {
@@ -179,27 +182,28 @@ class SessionViewModel(
         gymSessionManager.deleteExercise(sessionExerciseId)
     }
 
-    fun finishSession(saveAsRoutine: Boolean = false) {
-        viewModelScope.launch {
-            if (saveAsRoutine) {
-                saveCurrentSessionAsRoutine()
-            }
-            gymSessionManager.finish()
-        }
+    fun finishSession() {
+        gymSessionManager.finish()
+    }
+
+    fun saveSessionAsRoutine() {
+        viewModelScope.launch { saveCurrentSessionAsRoutine() }
     }
 
     private suspend fun saveCurrentSessionAsRoutine() {
         val state = uiState.value
-        val exerciseIds = state.exerciseGroups
-            .map { it.exerciseId }
-            .distinct()
-        if (exerciseIds.isEmpty()) return
+        val groups = state.exerciseGroups
+        if (groups.isEmpty()) return
 
         val routineName = state.sessionTitle.ifBlank { "Workout Routine" }
         val routine = Routine(name = routineName)
         routineRepository.add(routine)
-        exerciseIds.forEach { exId ->
-            routineExerciseRepository.add(RoutineExercise(routineId = routine.id, exerciseId = exId))
+        groups.forEach { group ->
+            val routineExercise = RoutineExercise(routineId = routine.id, exerciseId = group.exerciseId)
+            routineExerciseRepository.add(routineExercise)
+            group.sets.forEach { set ->
+                routineSetRepository.add(RoutineSet(routineExerciseId = routineExercise.id, weight = set.weight, reps = set.reps))
+            }
         }
     }
 

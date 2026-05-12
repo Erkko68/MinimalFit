@@ -138,19 +138,19 @@ class GymTrackingLogic(
     fun addExercise(exerciseId: String) {
         scope.launch {
             val session = _activeSession.value ?: return@launch
-            addExerciseToSession(session, RoutineExercisePlan(exerciseId = exerciseId))
+            addExerciseToSession(session, RoutineExercisePlan(exerciseId = exerciseId, targetSets = 0))
         }
     }
 
-    fun addSet(sessionExerciseId: String) {
+    fun addSet(sessionExerciseId: String, weight: Float, reps: Int) {
         scope.launch {
             val session = _activeSession.value ?: return@launch
             setRepository.addSet(
                 GymSet(
                     sessionExerciseId = sessionExerciseId,
                     sessionId = session.id,
-                    weight = 0f,
-                    reps = 0
+                    weight = weight,
+                    reps = reps
                 )
             )
         }
@@ -160,7 +160,6 @@ class GymTrackingLogic(
         scope.launch {
             val previous = setRepository.getSet(set.id).first()
             setRepository.updateSet(set)
-
             if (previous?.isCompleted == false && set.isCompleted) {
                 val sessionExercise = activeSessionExercises.value
                     .firstOrNull { it.id == set.sessionExerciseId }
@@ -272,7 +271,7 @@ class GymTrackingLogic(
     private suspend fun addExerciseToSession(session: Session, plan: RoutineExercisePlan) {
         val sessionExercise = SessionExercise(sessionId = session.id, exerciseId = plan.exerciseId)
         sessionExerciseRepository.add(sessionExercise)
-        repeat(plan.targetSets.coerceAtLeast(1)) {
+        repeat(plan.targetSets) {
             setRepository.addSet(
                 GymSet(
                     sessionExerciseId = sessionExercise.id,
@@ -286,10 +285,18 @@ class GymTrackingLogic(
 
     private fun startTicker() {
         tickerJob?.cancel()
+        var ticksSinceLastSave = 0
         tickerJob = scope.launch {
             while (true) {
                 val added = (System.currentTimeMillis() - resumeWallMillis).milliseconds
                 _elapsed.value = elapsedAtPause + added
+                // Persist elapsed every ~30 s so the duration isn't fully lost if the process is killed.
+                if (++ticksSinceLastSave >= 60) {
+                    ticksSinceLastSave = 0
+                    _activeSession.value?.let { session ->
+                        sessionRepository.updateSession(session.copy(durationSeconds = _elapsed.value.inWholeSeconds))
+                    }
+                }
                 delay(500)
             }
         }

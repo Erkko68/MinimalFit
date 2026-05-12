@@ -54,10 +54,6 @@ class DefaultSessionRepository(
 
     override suspend fun finishSession(id: String, durationSeconds: Long) {
         val session = sessionDao.getSession(id).firstOrNull() ?: return
-        sessionDao.updateSession(
-            session.copy(
-                durationSeconds = durationSeconds
-            )
-        )
+        sessionDao.updateSession(session.copy(durationSeconds = durationSeconds, isFinished = true))
     }
 }

@@ -13,11 +13,12 @@ import kotlin.time.Instant
 interface SessionDao {
 
     @Query("""
-        SELECT * FROM sessions 
-        WHERE (notes LIKE '%' || :query || '%')
+        SELECT * FROM sessions
+        WHERE isFinished = 1
+        AND (notes LIKE '%' || :query || '%')
         AND (:start IS NULL OR startTime >= :start)
         AND (:end IS NULL OR startTime <= :end)
-        ORDER BY startTime DESC 
+        ORDER BY startTime DESC
         LIMIT :limit
     """)
     fun getSessions(

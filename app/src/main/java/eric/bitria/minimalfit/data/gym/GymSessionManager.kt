@@ -21,7 +21,7 @@ interface GymSessionManager {
     fun loadSession(sessionId: String)
     fun finish()
     fun addExercise(exerciseId: String)
-    fun addSet(sessionExerciseId: String)
+    fun addSet(sessionExerciseId: String, weight: Float, reps: Int)
     fun updateSet(set: Set)
     fun deleteSet(setId: String)
     fun deleteExercise(sessionExerciseId: String)

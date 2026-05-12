@@ -1,4 +1,4 @@
-package eric.bitria.minimalfit.ui.components.gym
+package eric.bitria.minimalfit.ui.components.gym.cards
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -21,7 +21,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import eric.bitria.minimalfit.data.entity.gym.Set
+import eric.bitria.minimalfit.ui.components.gym.dialogs.SetPickerDialog
+import eric.bitria.minimalfit.ui.components.gym.rows.SessionSetRow
 import eric.bitria.minimalfit.ui.components.shared.animations.SwipeToDeleteCard
 import eric.bitria.minimalfit.ui.theme.Spacing
 import eric.bitria.minimalfit.util.hourMinute
@@ -39,9 +46,11 @@ fun SessionExerciseCard(
     onToggleCollapse: () -> Unit,
     onUpdateSet: (Set) -> Unit,
     onDeleteSet: (String) -> Unit,
-    onAddSet: () -> Unit,
+    onAddSet: (weight: Float, reps: Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    var showAddSetDialog by remember { mutableStateOf(false) }
+
     val addedTime = createdAt
         .toLocalDateTime(TimeZone.currentSystemDefault())
         .time
@@ -57,7 +66,6 @@ fun SessionExerciseCard(
         )
     ) {
         Column(modifier = Modifier.padding(Spacing.m)) {
-            // Header row — collapse toggle is scoped to this row only
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -90,7 +98,6 @@ fun SessionExerciseCard(
             if (!isCollapsed) {
                 Spacer(modifier = Modifier.height(Spacing.m))
 
-                // Inlined column header aligned with set rows
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -98,7 +105,7 @@ fun SessionExerciseCard(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(Spacing.s)
                 ) {
-                    Spacer(modifier = Modifier.width(Spacing.m)) // aligns with set number
+                    Spacer(modifier = Modifier.width(Spacing.m))
                     Text(
                         text = "KG",
                         style = MaterialTheme.typography.labelMedium,
@@ -107,7 +114,7 @@ fun SessionExerciseCard(
                         textAlign = TextAlign.Center,
                         modifier = Modifier.weight(1f)
                     )
-                    Spacer(modifier = Modifier.width(Spacing.s)) // aligns with VerticalDivider
+                    Spacer(modifier = Modifier.width(1.dp))
                     Text(
                         text = "REPS",
                         style = MaterialTheme.typography.labelMedium,
@@ -122,7 +129,7 @@ fun SessionExerciseCard(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                         textAlign = TextAlign.Center,
-                        modifier = Modifier.width(Spacing.xl)
+                        modifier = Modifier.width(Spacing.xxl)
                     )
                 }
 
@@ -142,7 +149,7 @@ fun SessionExerciseCard(
                                 onDeleteRequested = { onDeleteSet(set.id) },
                                 modifier = Modifier.clip(MaterialTheme.shapes.medium)
                             ) {
-                                ExerciseSetRow(
+                                SessionSetRow(
                                     index = index,
                                     set = set,
                                     onUpdate = onUpdateSet,
@@ -150,7 +157,7 @@ fun SessionExerciseCard(
                                 )
                             }
                         } else {
-                            ExerciseSetRow(
+                            SessionSetRow(
                                 index = index,
                                 set = set,
                                 onUpdate = {},
@@ -163,7 +170,7 @@ fun SessionExerciseCard(
                 if (canEdit) {
                     Spacer(modifier = Modifier.height(Spacing.s))
                     Button(
-                        onClick = onAddSet,
+                        onClick = { showAddSetDialog = true },
                         modifier = Modifier.fillMaxWidth(),
                         shape = MaterialTheme.shapes.medium
                     ) {
@@ -172,5 +179,19 @@ fun SessionExerciseCard(
                 }
             }
         }
+    }
+
+    if (showAddSetDialog) {
+        val lastSet = sets.lastOrNull()
+        SetPickerDialog(
+            title = "Add Set",
+            weight = lastSet?.weight ?: 0f,
+            reps = lastSet?.reps ?: 0,
+            onDismiss = { showAddSetDialog = false },
+            onConfirm = { w, r ->
+                onAddSet(w, r)
+                showAddSetDialog = false
+            }
+        )
     }
 }

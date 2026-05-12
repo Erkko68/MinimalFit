@@ -79,15 +79,15 @@ class AndroidGymSessionManager(
     }
 
     override fun resume() {
-        gymTrackingLogic.resume()
+        sendCommand(GymSessionService.ACTION_RESUME)
     }
 
     override fun addExercise(exerciseId: String) {
         gymTrackingLogic.addExercise(exerciseId)
     }
 
-    override fun addSet(sessionExerciseId: String) {
-        gymTrackingLogic.addSet(sessionExerciseId)
+    override fun addSet(sessionExerciseId: String, weight: Float, reps: Int) {
+        gymTrackingLogic.addSet(sessionExerciseId, weight, reps)
     }
 
     override fun updateSet(set: Set) {

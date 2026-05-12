@@ -31,24 +31,23 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
+import androidx.credentials.CustomCredential
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
+import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialException
-import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import android.util.Log
-import android.widget.Toast
 import androidx.compose.ui.text.font.FontWeight
 import eric.bitria.minimalfit.R
-import kotlinx.coroutines.launch
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -73,10 +72,46 @@ fun LoginScreen(
     val error by viewModel.error.collectAsState()
     val message by viewModel.message.collectAsState()
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    val credentialManager = CredentialManager.create(context)
+    val credentialManager = remember(context) { CredentialManager.create(context) }
+    var googleSignInRequest by remember { mutableIntStateOf(0) }
 
     var passwordVisible by remember { mutableStateOf(false) }
+
+    LaunchedEffect(googleSignInRequest) {
+        if (googleSignInRequest == 0) return@LaunchedEffect
+        val googleIdOption = GetSignInWithGoogleOption.Builder(
+            context.getString(R.string.default_web_client_id)
+        )
+            .build()
+
+        val request = GetCredentialRequest.Builder()
+            .addCredentialOption(googleIdOption)
+            .build()
+
+        try {
+            val result = credentialManager.getCredential(
+                context = context,
+                request = request
+            )
+            val credential = result.credential
+            if (
+                credential is CustomCredential &&
+                credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
+            ) {
+                val googleCredential = GoogleIdTokenCredential.createFrom(credential.data)
+                viewModel.onGoogleLoginSuccess(googleCredential.idToken)
+            }
+        } catch (e: GetCredentialCancellationException) {
+            Log.d("LoginScreen", "Google Sign-In cancelled", e)
+            viewModel.onGoogleLoginError("Google sign-in cancelled")
+        } catch (e: GetCredentialException) {
+            Log.e("LoginScreen", "Google Sign-In failed", e)
+            viewModel.onGoogleLoginError(e.message ?: "Google sign-in was cancelled or no Google account is available.")
+        } catch (e: Exception) {
+            Log.e("LoginScreen", "An unexpected error occurred", e)
+            viewModel.onGoogleLoginError(e.message ?: "Google sign-in failed")
+        }
+    }
 
     ScreenConfiguration(
         topBar = {
@@ -222,36 +257,7 @@ fun LoginScreen(
         Spacer(modifier = Modifier.height(Spacing.l))
 
         OutlinedButton(
-            onClick = {
-                val googleIdOption = GetGoogleIdOption.Builder()
-                    .setFilterByAuthorizedAccounts(false)
-                    .setServerClientId(context.getString(R.string.default_web_client_id))
-                    .build()
-
-                val request = GetCredentialRequest.Builder()
-                    .addCredentialOption(googleIdOption)
-                    .build()
-
-                scope.launch {
-                    try {
-                        val result = credentialManager.getCredential(
-                            context = context,
-                            request = request
-                        )
-                        val credential = result.credential
-                        if (credential is GoogleIdTokenCredential) {
-                            viewModel.onGoogleLoginSuccess(credential.idToken)
-                        }
-                    } catch (e: GetCredentialException) {
-                        Log.e("LoginScreen", "Google Sign-In failed", e)
-                        // Error is handled via ViewModel if we had a way to pass it back, 
-                        // but here we can just log it or show a local error state if needed.
-                        // For now, let's use the ViewModel's error state if possible.
-                    } catch (e: Exception) {
-                        Log.e("LoginScreen", "An unexpected error occurred", e)
-                    }
-                }
-            },
+            onClick = { googleSignInRequest++ },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),

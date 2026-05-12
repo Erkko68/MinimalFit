@@ -70,6 +70,10 @@ class LoginViewModel(
         }
     }
 
+    fun onGoogleLoginError(message: String) {
+        _error.value = message
+    }
+
     fun onForgotPasswordClick() {
         if (_email.value.matches(emailRegex)) {
             _isLoading.value = true

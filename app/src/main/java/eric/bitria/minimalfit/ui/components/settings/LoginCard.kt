@@ -20,6 +20,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -31,6 +32,8 @@ import eric.bitria.minimalfit.ui.theme.Spacing
 @Composable
 fun LoginCard(
     onLoginClick: () -> Unit,
+    onGoogleLoginClick: () -> Unit,
+    isGoogleSignInLoading: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     val colorScheme = MaterialTheme.colorScheme
@@ -105,6 +108,21 @@ fun LoginCard(
                 Text(
                     text = "Sign In / Register",
                     modifier = Modifier.weight(0.8f),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            Spacer(modifier = Modifier.height(Spacing.s))
+
+            OutlinedButton(
+                onClick = onGoogleLoginClick,
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.large,
+                enabled = !isGoogleSignInLoading
+            ) {
+                Text(
+                    text = if (isGoogleSignInLoading) "Connecting..." else "Continue with Google",
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold
                 )

@@ -6,6 +6,7 @@ import eric.bitria.minimalfit.data.entity.gym.Exercise
 import eric.bitria.minimalfit.data.entity.gym.Routine
 import eric.bitria.minimalfit.data.entity.gym.Session
 import eric.bitria.minimalfit.data.entity.gym.Set
+import eric.bitria.minimalfit.data.gym.GymSessionManager
 import eric.bitria.minimalfit.data.repository.gym.ExerciseRepository
 import eric.bitria.minimalfit.data.repository.gym.RoutineRepository
 import eric.bitria.minimalfit.data.repository.gym.SessionRepository
@@ -23,7 +24,8 @@ class GymViewModel(
     private val sessionRepository: SessionRepository,
     private val exerciseRepository: ExerciseRepository,
     private val setRepository: SetRepository,
-    private val routineRepository: RoutineRepository
+    private val routineRepository: RoutineRepository,
+    gymSessionManager: GymSessionManager
 ) : ViewModel() {
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -52,6 +54,10 @@ class GymViewModel(
         .getAll()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    val hasActiveWorkout: StateFlow<Boolean> = gymSessionManager.activeSession
+        .map { it != null }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
     fun addRoutine(name: String) {
         if (name.isBlank()) return
         viewModelScope.launch { routineRepository.add(Routine(name = name)) }
@@ -65,12 +71,29 @@ class GymViewModel(
         viewModelScope.launch { sessionRepository.deleteSession(sessionId) }
     }
 
-    fun addExercise(name: String) {
-        if (name.isBlank()) return
-        viewModelScope.launch { exerciseRepository.addExercise(Exercise(name = name)) }
+    fun addExercise(
+        name: String,
+        muscleGroup: String?,
+        isBodyweight: Boolean,
+        restSeconds: Int
+    ) {
+        val trimmedName = name.trim()
+        if (trimmedName.isBlank()) return
+        viewModelScope.launch {
+            exerciseRepository.addExercise(
+                Exercise(
+                    name = trimmedName,
+                    muscleGroup = muscleGroup?.trim()?.takeIf { it.isNotBlank() },
+                    isBodyweight = isBodyweight,
+                    restSeconds = restSeconds.coerceAtLeast(0)
+                )
+            )
+        }
     }
 
     fun deleteExercise(exerciseId: String) {
         viewModelScope.launch { exerciseRepository.deleteExercise(exerciseId) }
     }
+
+
 }

@@ -7,7 +7,12 @@ import eric.bitria.minimalfit.data.entity.gym.Session
 import eric.bitria.minimalfit.data.entity.gym.SessionExercise
 import eric.bitria.minimalfit.data.entity.gym.Set
 import eric.bitria.minimalfit.data.gym.GymSessionManager
+import eric.bitria.minimalfit.data.gym.RoutineExercisePlan
+import eric.bitria.minimalfit.data.entity.gym.Routine
+import eric.bitria.minimalfit.data.entity.gym.RoutineExercise
 import eric.bitria.minimalfit.data.repository.gym.ExerciseRepository
+import eric.bitria.minimalfit.data.repository.gym.RoutineExerciseRepository
+import eric.bitria.minimalfit.data.repository.gym.RoutineRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -23,11 +28,14 @@ import kotlin.time.Instant
 @OptIn(ExperimentalCoroutinesApi::class)
 class SessionViewModel(
     private val exerciseRepository: ExerciseRepository,
+    private val routineRepository: RoutineRepository,
+    private val routineExerciseRepository: RoutineExerciseRepository,
     private val gymSessionManager: GymSessionManager
 ) : ViewModel() {
 
     data class SessionExerciseGroup(
         val sessionExerciseId: String,
+        val exerciseId: String,
         val exerciseName: String,
         val sets: List<Set>,
         val createdAt: Instant
@@ -77,6 +85,7 @@ class SessionViewModel(
         val groups = sessionExercises.map { se ->
             SessionExerciseGroup(
                 sessionExerciseId = se.id,
+                exerciseId = se.exerciseId,
                 exerciseName = exercisesById[se.exerciseId]?.name ?: "Exercise",
                 sets = sets.filter { it.sessionExerciseId == se.id }.sortedBy { it.createdAt },
                 createdAt = se.createdAt
@@ -100,9 +109,41 @@ class SessionViewModel(
         initialValue = SessionUiState()
     )
 
-    fun initialize(sessionId: String?) {
-        if (sessionId != null) {
-            gymSessionManager.loadSession(sessionId)
+    fun initialize(
+        sessionId: String?,
+        routineId: String?,
+        replaceActiveWorkout: Boolean
+    ) {
+        when {
+            sessionId != null -> gymSessionManager.loadSession(sessionId)
+            routineId != null -> startRoutineSession(routineId, replaceActiveWorkout)
+        }
+    }
+
+    private fun startRoutineSession(routineId: String, replaceActiveWorkout: Boolean) {
+        viewModelScope.launch {
+            val exercises = routineExerciseRepository.getForRoutine(routineId)
+                .first()
+                .map { ref ->
+                    RoutineExercisePlan(
+                        exerciseId = ref.exerciseId,
+                        targetSets = 3,
+                        targetReps = 10,
+                        targetWeight = 0f
+                    )
+                }
+            val routineName = routineRepository.getAll()
+                .first()
+                .firstOrNull { it.id == routineId }
+                ?.name
+                ?: "Workout"
+            if (replaceActiveWorkout) {
+                gymSessionManager.replaceWithRoutine(exercises, routineName)
+            } else if (exercises.isEmpty()) {
+                gymSessionManager.start()
+            } else {
+                gymSessionManager.startFromRoutine(exercises, routineName)
+            }
         }
     }
 
@@ -138,9 +179,27 @@ class SessionViewModel(
         gymSessionManager.deleteExercise(sessionExerciseId)
     }
 
-    fun finishSession() {
+    fun finishSession(saveAsRoutine: Boolean = false) {
         viewModelScope.launch {
+            if (saveAsRoutine) {
+                saveCurrentSessionAsRoutine()
+            }
             gymSessionManager.finish()
+        }
+    }
+
+    private suspend fun saveCurrentSessionAsRoutine() {
+        val state = uiState.value
+        val exerciseIds = state.exerciseGroups
+            .map { it.exerciseId }
+            .distinct()
+        if (exerciseIds.isEmpty()) return
+
+        val routineName = state.sessionTitle.ifBlank { "Workout Routine" }
+        val routine = Routine(name = routineName)
+        routineRepository.add(routine)
+        exerciseIds.forEach { exId ->
+            routineExerciseRepository.add(RoutineExercise(routineId = routine.id, exerciseId = exId))
         }
     }
 

@@ -22,6 +22,50 @@ class AndroidGymSessionManager(
         sendCommand(GymSessionService.ACTION_START)
     }
 
+    override fun startFromRoutine(exercises: List<RoutineExercisePlan>, routineName: String) {
+        sendRoutineCommand(
+            action = GymSessionService.ACTION_START_ROUTINE,
+            exercises = exercises,
+            routineName = routineName
+        )
+    }
+
+    override fun replaceWithRoutine(exercises: List<RoutineExercisePlan>, routineName: String) {
+        sendRoutineCommand(
+            action = GymSessionService.ACTION_REPLACE_WITH_ROUTINE,
+            exercises = exercises,
+            routineName = routineName
+        )
+    }
+
+    private fun sendRoutineCommand(
+        action: String,
+        exercises: List<RoutineExercisePlan>,
+        routineName: String
+    ) {
+        val intent = Intent(context, GymSessionService::class.java).apply {
+            this.action = action
+            putStringArrayListExtra(
+                GymSessionService.EXTRA_EXERCISE_IDS,
+                ArrayList(exercises.map { it.exerciseId })
+            )
+            putIntegerArrayListExtra(
+                GymSessionService.EXTRA_TARGET_SETS,
+                ArrayList(exercises.map { it.targetSets })
+            )
+            putIntegerArrayListExtra(
+                GymSessionService.EXTRA_TARGET_REPS,
+                ArrayList(exercises.map { it.targetReps })
+            )
+            putExtra(
+                GymSessionService.EXTRA_TARGET_WEIGHTS,
+                exercises.map { it.targetWeight }.toFloatArray()
+            )
+            putExtra(GymSessionService.EXTRA_SESSION_TITLE, routineName)
+        }
+        context.startService(intent)
+    }
+
     override fun loadSession(sessionId: String) {
         gymTrackingLogic.loadSession(sessionId)
     }

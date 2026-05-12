@@ -3,6 +3,7 @@ package eric.bitria.minimalfit.di
 import androidx.room.Room
 import eric.bitria.minimalfit.data.database.AppDatabase
 import eric.bitria.minimalfit.data.database.DatabaseInitializer
+
 import eric.bitria.minimalfit.data.repository.food.DefaultDietRepository
 import eric.bitria.minimalfit.data.repository.food.DefaultFoodCatalogRepository
 import eric.bitria.minimalfit.data.repository.food.DefaultJournalRepository
@@ -92,10 +93,11 @@ val dataModule = module {
     single { get<AppDatabase>().dietDao() }
     single { get<AppDatabase>().mealLogDao() }
     single { get<AppDatabase>().exerciseDao() }
+    single { get<AppDatabase>().routineDao() }
     single { get<AppDatabase>().sessionDao() }
     single { get<AppDatabase>().sessionExerciseDao() }
     single { get<AppDatabase>().setDao() }
-    single { get<AppDatabase>().routineDao() }
+
     single { get<AppDatabase>().routineExerciseDao() }
     single { get<AppDatabase>().routineSetDao() }
 
@@ -132,6 +134,7 @@ val dataModule = module {
     // Gym Repositories
     single<SessionRepository> { DefaultSessionRepository(sessionDao = get(), setDao = get()) }
     single<ExerciseRepository> { DefaultExerciseRepository(exerciseDao = get()) }
+
     single<SessionExerciseRepository> { DefaultSessionExerciseRepository(dao = get()) }
     single<SetRepository> { DefaultSetRepository(setDao = get()) }
     single<RoutineRepository> { DefaultRoutineRepository(dao = get()) }
@@ -210,6 +213,8 @@ val viewModels = module {
     viewModel {
         SessionViewModel(
             exerciseRepository = get(),
+            routineRepository = get(),
+            routineExerciseRepository = get(),
             gymSessionManager = get()
         )
     }

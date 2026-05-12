@@ -1,5 +1,4 @@
 <resources>
     <string name="app_name">MinimalFit</string>
-    <!-- Replace with your actual Web Client ID from Firebase Console -->
-    <string name="default_web_client_id">YOUR_WEB_CLIENT_ID.apps.googleusercontent.com</string>
+    <string name="default_web_client_id">329998532007-aan8v1p1vnsdcj628akat3p39pr99tg7.apps.googleusercontent.com</string>
 </resources>

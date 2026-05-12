@@ -6,6 +6,7 @@ import eric.bitria.minimalfit.data.entity.food.Meal
 import eric.bitria.minimalfit.data.entity.food.MeasurementUnit
 import eric.bitria.minimalfit.data.entity.food.relations.DietMealCrossRef
 import eric.bitria.minimalfit.data.entity.food.relations.MealIngredientCrossRef
+import eric.bitria.minimalfit.data.entity.gym.Exercise
 import eric.bitria.minimalfit.data.entity.track.Track
 import eric.bitria.minimalfit.data.entity.track.TrackPoint
 import eric.bitria.minimalfit.util.nowInstant
@@ -21,6 +22,7 @@ class DatabaseInitializer(private val db: AppDatabase) {
         val mealDao = db.mealDao()
         val dietDao = db.dietDao()
         val trackDao = db.trackDao()
+        val exerciseDao = db.exerciseDao()
 
         // 1. Initialize Ingredients
         val ingredients = listOf(
@@ -152,7 +154,85 @@ class DatabaseInitializer(private val db: AppDatabase) {
         )
         diets.forEach { dietDao.insertDiet(it) }
 
-        // 4. Initialize Tracks
+        // 4. Initialize Standard Exercises
+        val exercises = listOf(
+            Exercise(
+                id = "exercise-bench-press",
+                name = "Bench Press",
+                muscleGroup = "Chest",
+                restSeconds = 120,
+                isGlobal = true
+            ),
+            Exercise(
+                id = "exercise-squat",
+                name = "Squat",
+                muscleGroup = "Legs",
+                restSeconds = 150,
+                isGlobal = true
+            ),
+            Exercise(
+                id = "exercise-deadlift",
+                name = "Deadlift",
+                muscleGroup = "Back",
+                restSeconds = 180,
+                isGlobal = true
+            ),
+            Exercise(
+                id = "exercise-overhead-press",
+                name = "Overhead Press",
+                muscleGroup = "Shoulders",
+                restSeconds = 120,
+                isGlobal = true
+            ),
+            Exercise(
+                id = "exercise-pull-up",
+                name = "Pull-Up",
+                isBodyweight = true,
+                muscleGroup = "Back",
+                restSeconds = 120,
+                isGlobal = true
+            ),
+            Exercise(
+                id = "exercise-push-up",
+                name = "Push-Up",
+                isBodyweight = true,
+                muscleGroup = "Chest",
+                restSeconds = 90,
+                isGlobal = true
+            ),
+            Exercise(
+                id = "exercise-barbell-row",
+                name = "Barbell Row",
+                muscleGroup = "Back",
+                restSeconds = 120,
+                isGlobal = true
+            ),
+            Exercise(
+                id = "exercise-lunge",
+                name = "Lunge",
+                muscleGroup = "Legs",
+                restSeconds = 90,
+                isGlobal = true
+            ),
+            Exercise(
+                id = "exercise-plank",
+                name = "Plank",
+                isBodyweight = true,
+                muscleGroup = "Core",
+                restSeconds = 60,
+                isGlobal = true
+            ),
+            Exercise(
+                id = "exercise-biceps-curl",
+                name = "Biceps Curl",
+                muscleGroup = "Arms",
+                restSeconds = 75,
+                isGlobal = true
+            )
+        )
+        exercises.forEach { exerciseDao.insertExercise(it) }
+
+        // 5. Initialize Tracks
         val eveningRunStartTime = Instant.parse("2026-03-09T16:30:00Z")
         val eveningRunPoints = listOf(
             TrackPoint(41.38879, 2.18992, eveningRunStartTime),

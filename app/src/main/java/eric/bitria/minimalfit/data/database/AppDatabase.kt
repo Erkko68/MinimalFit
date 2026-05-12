@@ -49,7 +49,7 @@ import eric.bitria.minimalfit.data.entity.track.Track
         SessionExercise::class,
         Set::class
     ],
-    version = 2
+    version = 1
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
@@ -59,10 +59,10 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun dietDao(): DietDao
     abstract fun mealLogDao(): MealLogDao
     abstract fun exerciseDao(): ExerciseDao
+    abstract fun routineDao(): RoutineDao
     abstract fun sessionDao(): SessionDao
     abstract fun sessionExerciseDao(): SessionExerciseDao
     abstract fun setDao(): SetDao
-    abstract fun routineDao(): RoutineDao
     abstract fun routineExerciseDao(): RoutineExerciseDao
     abstract fun routineSetDao(): RoutineSetDao
 }

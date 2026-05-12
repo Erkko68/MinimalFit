@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -61,6 +62,8 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun GymSessionScreen(
     sessionId: String? = null,
+    routineId: String? = null,
+    replaceActiveWorkout: Boolean = false,
     viewModel: SessionViewModel = koinViewModel(),
     onNavigateBack: () -> Unit
 ) {
@@ -69,17 +72,18 @@ fun GymSessionScreen(
 
     var notificationPermissionGranted by remember { mutableStateOf(false) }
 
-    // True only after the user explicitly presses Start or Resume in this screen visit.
-    // Prevents the finish dialog from appearing when merely viewing a past session.
-    var sessionStarted by remember { mutableStateOf(false) }
-
-    LaunchedEffect(sessionId) {
-        viewModel.initialize(sessionId)
+    LaunchedEffect(sessionId, routineId, replaceActiveWorkout) {
+        viewModel.initialize(
+            sessionId = sessionId,
+            routineId = routineId,
+            replaceActiveWorkout = replaceActiveWorkout
+        )
     }
 
     var showFinishDialog by remember { mutableStateOf(false) }
     var showExerciseSearchDialog by remember { mutableStateOf(false) }
     var showRestDialog by remember { mutableStateOf(false) }
+    var saveAsRoutine by remember { mutableStateOf(false) }
     var editedTitle by remember(uiState.sessionTitle) { mutableStateOf(uiState.sessionTitle) }
     var collapsedExercises by remember { mutableStateOf(setOf<String>()) }
 
@@ -97,13 +101,13 @@ fun GymSessionScreen(
 
     val toolbarState = when {
         !uiState.isActive -> GymSessionState.IDLE
-        uiState.isPaused && !sessionStarted -> GymSessionState.VIEWING
+        uiState.isPaused && sessionId != null -> GymSessionState.VIEWING
         uiState.isPaused -> GymSessionState.PAUSED
         else -> GymSessionState.RUNNING
     }
 
-    BackHandler(enabled = sessionStarted) {
-        showFinishDialog = true
+    BackHandler(enabled = uiState.isActive) {
+        onNavigateBack()
     }
 
     if (!notificationPermissionGranted) {
@@ -148,7 +152,7 @@ fun GymSessionScreen(
                                 innerTextField()
                             }
                         )
-                        if (sessionStarted) {
+                        if (uiState.isActive) {
                             Text(
                                 text = formatDuration(uiState.elapsed),
                                 style = MaterialTheme.typography.bodyMedium,
@@ -162,9 +166,7 @@ fun GymSessionScreen(
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = {
-                        if (sessionStarted) showFinishDialog = true else onNavigateBack()
-                    }) {
+                    IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
@@ -179,12 +181,27 @@ fun GymSessionScreen(
         AlertDialog(
             onDismissRequest = { showFinishDialog = false },
             title = { Text("Finish session?") },
-            text = { Text("Do you want to finish and save this session?") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
+                    Text("Do you want to finish and save this session?")
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Checkbox(
+                            checked = saveAsRoutine,
+                            onCheckedChange = { saveAsRoutine = it },
+                            enabled = uiState.exerciseGroups.isNotEmpty()
+                        )
+                        Text("Save exercises as routine")
+                    }
+                }
+            },
             confirmButton = {
                 TextButton(onClick = {
                     showFinishDialog = false
-                    sessionStarted = false
-                    viewModel.finishSession()
+                    viewModel.finishSession(saveAsRoutine = saveAsRoutine)
+                    saveAsRoutine = false
                     onNavigateBack()
                 }) { Text("Finish") }
             },
@@ -221,6 +238,35 @@ fun GymSessionScreen(
             verticalArrangement = Arrangement.spacedBy(Spacing.m)
         ) {
             item { Spacer(modifier = Modifier.height(Spacing.xs)) }
+
+            if (uiState.isRestRunning) {
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.large
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = Spacing.m, vertical = Spacing.s),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Rest timer",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = formatDuration(uiState.restRemaining),
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Black,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                }
+            }
 
             if (uiState.exerciseGroups.isEmpty()) {
                 item {
@@ -280,12 +326,10 @@ fun GymSessionScreen(
         GymSessionToolbar(
             state = toolbarState,
             onStart = {
-                sessionStarted = true
                 viewModel.startSession()
             },
             onPause = { viewModel.pauseSession() },
             onResume = {
-                sessionStarted = true
                 viewModel.resumeSession()
             },
             onStop = { showFinishDialog = true },

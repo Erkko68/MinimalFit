@@ -4,6 +4,7 @@ import eric.bitria.minimalfit.data.entity.gym.Set
 import kotlinx.coroutines.flow.Flow
 
 interface SetRepository {
+    fun getAllSets(): Flow<List<Set>>
     fun getSetsForExercise(exerciseId: String): Flow<List<Set>>
     fun getSetsForSessionExercise(sessionExerciseId: String): Flow<List<Set>>
     fun getSetsForSession(sessionId: String): Flow<List<Set>>

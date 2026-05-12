@@ -10,32 +10,33 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import eric.bitria.minimalfit.data.entity.gym.Set
-import eric.bitria.minimalfit.ui.components.shared.WheelPicker
 import eric.bitria.minimalfit.ui.theme.Spacing
-import eric.bitria.minimalfit.util.GYM_WEIGHT_VALUES
 import eric.bitria.minimalfit.util.formatWeight
-import eric.bitria.minimalfit.util.weightToIndex
-
-private val WHEEL_ITEM_HEIGHT = 44.dp
-private val WHEEL_VISIBLE_ITEMS = 5
 
 @Composable
 fun ExerciseSetRow(
@@ -74,7 +75,7 @@ fun ExerciseSetRow(
 
             Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
                 Text(
-                    text = if (set.weight == 0f) "—" else formatWeight(set.weight),
+                    text = if (set.weight == 0f) "-" else formatWeight(set.weight),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = contentColor,
@@ -89,13 +90,21 @@ fun ExerciseSetRow(
 
             Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
                 Text(
-                    text = if (set.reps == 0) "—" else set.reps.toString(),
+                    text = if (set.reps == 0) "-" else set.reps.toString(),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = contentColor,
                     textAlign = TextAlign.Center
                 )
             }
+
+            Checkbox(
+                checked = set.isCompleted,
+                onCheckedChange = { checked ->
+                    if (isActive) onUpdate(set.copy(isCompleted = checked))
+                },
+                enabled = isActive
+            )
         }
     }
 
@@ -119,8 +128,24 @@ private fun SetEditDialog(
     onDismiss: () -> Unit,
     onConfirm: (Set) -> Unit
 ) {
-    var weightIndex by remember { mutableIntStateOf(weightToIndex(set.weight)) }
-    var repsIndex by remember { mutableIntStateOf((set.reps - 1).coerceAtLeast(0)) }
+    var weightText by remember(set.id, set.weight) {
+        mutableStateOf(if (set.weight == 0f) "" else formatWeight(set.weight))
+    }
+    var repsText by remember(set.id, set.reps) {
+        mutableStateOf(if (set.reps == 0) "" else set.reps.toString())
+    }
+    var isCompleted by remember(set.id, set.isCompleted) {
+        mutableStateOf(set.isCompleted)
+    }
+    val focusRequester = remember { FocusRequester() }
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val parsedWeight = weightText.replace(',', '.').toFloatOrNull()
+    val parsedReps = repsText.toIntOrNull()
+
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+        keyboardController?.show()
+    }
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -145,84 +170,53 @@ private fun SetEditDialog(
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.m)
                 ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        WheelPicker(
-                            count = GYM_WEIGHT_VALUES.size,
-                            initialIndex = weightIndex,
-                            onIndexChanged = { weightIndex = it },
-                            visibleItems = WHEEL_VISIBLE_ITEMS,
-                            itemHeight = WHEEL_ITEM_HEIGHT,
-                            modifier = Modifier.width(100.dp)
-                        ) { i, isSelected ->
-                            Text(
-                                text = formatWeight(GYM_WEIGHT_VALUES[i]),
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                color = if (isSelected)
-                                    MaterialTheme.colorScheme.onSecondaryContainer
-                                else
-                                    MaterialTheme.colorScheme.onSurface,
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                        Text(
-                            text = "kg",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-
-                    Box(
+                    OutlinedTextField(
+                        value = weightText,
+                        onValueChange = { value -> weightText = value.toWeightInput() },
+                        label = { Text("Weight") },
+                        suffix = { Text("kg") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         modifier = Modifier
-                            .height(WHEEL_ITEM_HEIGHT * WHEEL_VISIBLE_ITEMS)
-                            .padding(horizontal = Spacing.m),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "×",
-                            style = MaterialTheme.typography.headlineLarge,
-                            fontWeight = FontWeight.Bold,
-                        )
-                    }
+                            .weight(1f)
+                            .focusRequester(focusRequester)
+                    )
 
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        WheelPicker(
-                            count = 50,
-                            initialIndex = repsIndex,
-                            onIndexChanged = { repsIndex = it },
-                            visibleItems = WHEEL_VISIBLE_ITEMS,
-                            itemHeight = WHEEL_ITEM_HEIGHT,
-                            modifier = Modifier.width(80.dp)
-                        ) { i, isSelected ->
-                            Text(
-                                text = "${i + 1}",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                color = if (isSelected)
-                                    MaterialTheme.colorScheme.onSecondaryContainer
-                                else
-                                    MaterialTheme.colorScheme.onSurface,
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                        Text(
-                            text = "reps",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                    OutlinedTextField(
+                        value = repsText,
+                        onValueChange = { value ->
+                            repsText = value.filter { it.isDigit() }.take(3)
+                        },
+                        label = { Text("Reps") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Checkbox(
+                        checked = isCompleted,
+                        onCheckedChange = { isCompleted = it }
+                    )
+                    Text("Mark set as completed")
                 }
 
                 Spacer(modifier = Modifier.height(Spacing.l))
 
                 Button(
+                    enabled = parsedWeight != null || parsedReps != null,
                     onClick = {
                         onConfirm(
                             set.copy(
-                                weight = GYM_WEIGHT_VALUES[weightIndex],
-                                reps = repsIndex + 1
+                                weight = parsedWeight ?: 0f,
+                                reps = parsedReps ?: 0,
+                                isCompleted = isCompleted
                             )
                         )
                     },
@@ -232,5 +226,28 @@ private fun SetEditDialog(
                 }
             }
         }
+    }
+}
+
+private fun String.toWeightInput(): String {
+    val normalized = replace(',', '.')
+    val builder = StringBuilder()
+    var hasDecimalSeparator = false
+
+    normalized.forEach { char ->
+        when {
+            char.isDigit() -> builder.append(char)
+            char == '.' && !hasDecimalSeparator -> {
+                builder.append(char)
+                hasDecimalSeparator = true
+            }
+        }
+    }
+
+    val parts = builder.toString().split('.', limit = 2)
+    return if (parts.size == 2) {
+        "${parts[0].take(3)}.${parts[1].take(2)}"
+    } else {
+        parts[0].take(3)
     }
 }

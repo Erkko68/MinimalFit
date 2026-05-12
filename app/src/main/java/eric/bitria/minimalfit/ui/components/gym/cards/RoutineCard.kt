@@ -28,7 +28,8 @@ fun RoutineCard(
     routine: Routine,
     exercisesCount: Int,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onMoreClick: (() -> Unit)? = null
 ) {
     Card(
         modifier = modifier.clickable { onClick() },

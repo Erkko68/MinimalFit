@@ -16,6 +16,8 @@ interface GymSessionManager {
     val activeSession: StateFlow<Session?>
 
     fun start()
+    fun startFromRoutine(exercises: List<RoutineExercisePlan>, routineName: String)
+    fun replaceWithRoutine(exercises: List<RoutineExercisePlan>, routineName: String)
     fun loadSession(sessionId: String)
     fun finish()
     fun addExercise(exerciseId: String)

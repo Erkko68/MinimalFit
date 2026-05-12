@@ -164,6 +164,14 @@ fun AppNavHost(
                 onNavigateToSession = { sessionId ->
                     navController.navigate(Route.GymSession(sessionId = sessionId))
                 },
+                onNavigateToRoutineSession = { routineId, replaceActiveWorkout ->
+                    navController.navigate(
+                        Route.GymSession(
+                            routineId = routineId,
+                            replaceActiveWorkout = replaceActiveWorkout
+                        )
+                    )
+                },
                 onNavigateToExerciseProgression = { exerciseId ->
                     navController.navigate(Route.ExerciseProgression(exerciseId = exerciseId))
                 },
@@ -176,6 +184,8 @@ fun AppNavHost(
             val args = backStackEntry.toRoute<Route.GymSession>()
             GymSessionScreen(
                 sessionId = args.sessionId,
+                routineId = args.routineId,
+                replaceActiveWorkout = args.replaceActiveWorkout,
                 onNavigateBack = { navController.popBackStack() }
             )
         }

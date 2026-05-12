@@ -3,6 +3,11 @@ package eric.bitria.minimalfit.data.remote.sync
 import eric.bitria.minimalfit.data.entity.food.Ingredient
 import eric.bitria.minimalfit.data.entity.food.Meal
 import eric.bitria.minimalfit.data.entity.gym.Exercise
+import eric.bitria.minimalfit.data.entity.gym.Routine
+import eric.bitria.minimalfit.data.entity.gym.RoutineExercise
+import eric.bitria.minimalfit.data.entity.gym.Session
+import eric.bitria.minimalfit.data.entity.gym.SessionExercise
+import eric.bitria.minimalfit.data.entity.gym.Set
 
 interface SyncRepository {
     // Global data
@@ -18,4 +23,17 @@ interface SyncRepository {
 
     suspend fun uploadUserExercises(userId: String, exercises: List<Exercise>): Result<Unit>
     suspend fun downloadUserExercises(userId: String): Result<List<Exercise>>
+
+    suspend fun uploadUserRoutines(
+        userId: String,
+        routines: List<Routine>,
+        routineExercises: List<RoutineExercise>
+    ): Result<Unit>
+
+    suspend fun uploadUserGymSessions(
+        userId: String,
+        sessions: List<Session>,
+        sessionExercises: List<SessionExercise>,
+        sets: List<Set>
+    ): Result<Unit>
 }

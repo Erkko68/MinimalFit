@@ -76,15 +76,32 @@ class GymTrackingLogic(
 
     fun start() {
         scope.launch {
+            startSessionInternal()
+        }
+    }
+
+    fun startFromRoutine(exercises: List<RoutineExercisePlan>, routineName: String) {
+        scope.launch {
             if (_activeSession.value != null) return@launch
-            val sessionId = sessionRepository.startSession()
-            sessionRepository.getSession(sessionId).first()?.let { session ->
-                elapsedAtPause = Duration.ZERO
-                resumeWallMillis = System.currentTimeMillis()
-                _elapsed.value = Duration.ZERO
-                _isPaused.value = false
-                _activeSession.value = session
-                startTicker()
+            val session = startSessionInternal(routineName) ?: return@launch
+            exercises.distinctBy { it.exerciseId }.forEach { plan ->
+                addExerciseToSession(session, plan)
+            }
+        }
+    }
+
+    fun replaceWithRoutine(exercises: List<RoutineExercisePlan>, routineName: String) {
+        scope.launch {
+            val currentSession = _activeSession.value
+            tickerJob?.cancel()
+            stopRestInternal()
+            if (currentSession != null) {
+                sessionExerciseRepository.deleteForSession(currentSession.id)
+                sessionRepository.deleteSession(currentSession.id)
+            }
+            val session = createSessionInternal(routineName) ?: return@launch
+            exercises.distinctBy { it.exerciseId }.forEach { plan ->
+                addExerciseToSession(session, plan)
             }
         }
     }
@@ -121,16 +138,7 @@ class GymTrackingLogic(
     fun addExercise(exerciseId: String) {
         scope.launch {
             val session = _activeSession.value ?: return@launch
-            val sessionExercise = SessionExercise(sessionId = session.id, exerciseId = exerciseId)
-            sessionExerciseRepository.add(sessionExercise)
-            setRepository.addSet(
-                GymSet(
-                    sessionExerciseId = sessionExercise.id,
-                    sessionId = session.id,
-                    weight = 0f,
-                    reps = 0
-                )
-            )
+            addExerciseToSession(session, RoutineExercisePlan(exerciseId = exerciseId))
         }
     }
 
@@ -149,7 +157,18 @@ class GymTrackingLogic(
     }
 
     fun updateSet(set: GymSet) {
-        scope.launch { setRepository.updateSet(set) }
+        scope.launch {
+            val previous = setRepository.getSet(set.id).first()
+            setRepository.updateSet(set)
+
+            if (previous?.isCompleted == false && set.isCompleted) {
+                val sessionExercise = activeSessionExercises.value
+                    .firstOrNull { it.id == set.sessionExerciseId }
+                    ?: return@launch
+                val exercise = exerciseRepository.getExercise(sessionExercise.exerciseId).first()
+                restartRest(exercise?.restSeconds ?: 60)
+            }
+        }
     }
 
     fun deleteSet(setId: String) {
@@ -189,6 +208,17 @@ class GymTrackingLogic(
         }
     }
 
+    fun discard() {
+        scope.launch {
+            discardActiveSession()
+        }
+    }
+
+    private fun restartRest(seconds: Int) {
+        stopRestInternal()
+        startRestCountdown(seconds)
+    }
+
     fun stopRest() {
         stopRestInternal()
     }
@@ -199,6 +229,58 @@ class GymTrackingLogic(
             val updated = session.copy(title = title)
             sessionRepository.updateSession(updated)
             _activeSession.value = updated
+        }
+    }
+
+    private suspend fun startSessionInternal(title: String? = null): Session? {
+        if (_activeSession.value != null) return _activeSession.value
+        return createSessionInternal(title)
+    }
+
+    private suspend fun createSessionInternal(title: String? = null): Session? {
+        val sessionId = sessionRepository.startSession()
+        val session = sessionRepository.getSession(sessionId).first() ?: return null
+        val titledSession = title
+            ?.trim()
+            ?.takeIf { it.isNotBlank() }
+            ?.let { routineTitle ->
+                session.copy(title = routineTitle).also { sessionRepository.updateSession(it) }
+            }
+            ?: session
+        elapsedAtPause = Duration.ZERO
+        resumeWallMillis = System.currentTimeMillis()
+        _elapsed.value = Duration.ZERO
+        _isPaused.value = false
+        _activeSession.value = titledSession
+        startTicker()
+        return titledSession
+    }
+
+    private suspend fun discardActiveSession() {
+        val session = _activeSession.value ?: return
+        tickerJob?.cancel()
+        stopRestInternal()
+        _activeSession.value = null
+        _elapsed.value = Duration.ZERO
+        _isPaused.value = false
+        elapsedAtPause = Duration.ZERO
+        resumeWallMillis = 0L
+        sessionExerciseRepository.deleteForSession(session.id)
+        sessionRepository.deleteSession(session.id)
+    }
+
+    private suspend fun addExerciseToSession(session: Session, plan: RoutineExercisePlan) {
+        val sessionExercise = SessionExercise(sessionId = session.id, exerciseId = plan.exerciseId)
+        sessionExerciseRepository.add(sessionExercise)
+        repeat(plan.targetSets.coerceAtLeast(1)) {
+            setRepository.addSet(
+                GymSet(
+                    sessionExerciseId = sessionExercise.id,
+                    sessionId = session.id,
+                    weight = plan.targetWeight.coerceAtLeast(0f),
+                    reps = plan.targetReps.coerceAtLeast(0)
+                )
+            )
         }
     }
 

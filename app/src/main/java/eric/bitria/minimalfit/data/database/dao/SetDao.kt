@@ -11,6 +11,9 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface SetDao {
 
+    @Query("SELECT * FROM sets ORDER BY sessionId, createdAt ASC")
+    fun getAllSets(): Flow<List<Set>>
+
     @Query("""
         SELECT s.* FROM sets s
         JOIN session_exercises se ON s.sessionExerciseId = se.id

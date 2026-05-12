@@ -18,18 +18,27 @@ import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PageSize
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,6 +47,8 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import eric.bitria.minimalfit.navigation.ScreenConfiguration
+import eric.bitria.minimalfit.data.entity.gym.Routine
+import eric.bitria.minimalfit.ui.components.shared.animations.SwipeToDeleteCard
 import eric.bitria.minimalfit.ui.components.food.actions.PrimaryFloatingActionButton
 import eric.bitria.minimalfit.ui.components.gym.cards.ExerciseCard
 import eric.bitria.minimalfit.ui.components.gym.cards.GymSessionCard
@@ -55,6 +66,7 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun GymScreen(
     onNavigateToSession: (String?) -> Unit,
+    onNavigateToRoutineSession: (String, Boolean) -> Unit,
     onNavigateToExerciseProgression: (String) -> Unit,
     onNavigateToRoutine: (String?) -> Unit,
     viewModel: GymViewModel = koinViewModel()
@@ -62,7 +74,11 @@ fun GymScreen(
     val sessions by viewModel.pastSessions.collectAsState()
     val exercises by viewModel.userExercises.collectAsState()
     val routines by viewModel.routines.collectAsState()
+    val hasActiveWorkout by viewModel.hasActiveWorkout.collectAsState()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    var showAddExerciseDialog by remember { mutableStateOf(false) }
+    var routineToRename by remember { mutableStateOf<Routine?>(null) }
+    var routineToStart by remember { mutableStateOf<Routine?>(null) }
 
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
     val routineCardSize = screenHeight * 0.2f
@@ -182,7 +198,7 @@ fun GymScreen(
                     modifier = Modifier
                         .clip(MaterialTheme.shapes.small)
                         .background(MaterialTheme.colorScheme.secondaryContainer)
-                        .clickable { /* TODO: Show add exercise dialog */ }
+                        .clickable { showAddExerciseDialog = true }
                         .padding(Spacing.xs),
                     tint = MaterialTheme.colorScheme.onSecondaryContainer
                 )
@@ -285,4 +301,124 @@ fun GymScreen(
             }
         }
     }
+
+    if (showAddExerciseDialog) {
+        AddExerciseDialog(
+            onDismiss = { showAddExerciseDialog = false },
+            onCreate = { name, muscleGroup, isBodyweight, restSeconds ->
+                viewModel.addExercise(name, muscleGroup, isBodyweight, restSeconds)
+                showAddExerciseDialog = false
+            }
+        )
+    }
+
+    routineToStart?.let { routine ->
+        StartRoutineDialog(
+            routine = routine,
+            hasActiveWorkout = hasActiveWorkout,
+            onDismiss = { routineToStart = null },
+            onStart = { replaceActiveWorkout ->
+                onNavigateToRoutineSession(routine.id, replaceActiveWorkout)
+                routineToStart = null
+            }
+        )
+    }
 }
+
+@Composable
+private fun AddExerciseDialog(
+    onDismiss: () -> Unit,
+    onCreate: (name: String, muscleGroup: String?, isBodyweight: Boolean, restSeconds: Int) -> Unit
+) {
+    var name by remember { mutableStateOf("") }
+    var muscleGroup by remember { mutableStateOf("") }
+    var isBodyweight by remember { mutableStateOf(false) }
+    var restSecondsText by remember { mutableStateOf("120") }
+    val restSeconds = restSecondsText.toIntOrNull() ?: 120
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Create exercise") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Name") },
+                    singleLine = true
+                )
+                OutlinedTextField(
+                    value = muscleGroup,
+                    onValueChange = { muscleGroup = it },
+                    label = { Text("Muscle group") },
+                    singleLine = true
+                )
+                OutlinedTextField(
+                    value = restSecondsText,
+                    onValueChange = { value ->
+                        restSecondsText = value.filter { it.isDigit() }.take(4)
+                    },
+                    label = { Text("Rest seconds") },
+                    singleLine = true
+                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.s)
+                ) {
+                    Checkbox(
+                        checked = isBodyweight,
+                        onCheckedChange = { isBodyweight = it }
+                    )
+                    Text("Bodyweight exercise")
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                enabled = name.isNotBlank(),
+                onClick = { onCreate(name, muscleGroup, isBodyweight, restSeconds) }
+            ) {
+                Text("Create")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
+}
+
+@Composable
+private fun StartRoutineDialog(
+    routine: Routine,
+    hasActiveWorkout: Boolean,
+    onDismiss: () -> Unit,
+    onStart: (replaceActiveWorkout: Boolean) -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(if (hasActiveWorkout) "Replace current workout?" else "Start routine?") },
+        text = {
+            Text(
+                text = if (hasActiveWorkout) {
+                    "You already have a workout in progress. Starting ${routine.name} will discard the current workout and use this routine instead."
+                } else {
+                    "Start ${routine.name}?"
+                }
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = { onStart(hasActiveWorkout) }) {
+                Text(if (hasActiveWorkout) "Discard and start" else "Start")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
+}
+
+

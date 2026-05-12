@@ -6,6 +6,9 @@ import kotlinx.coroutines.flow.Flow
 
 class DefaultSetRepository(private val setDao: SetDao) : SetRepository {
 
+    override fun getAllSets(): Flow<List<Set>> =
+        setDao.getAllSets()
+
     override fun getSetsForExercise(exerciseId: String): Flow<List<Set>> =
         setDao.getSetsForExercise(exerciseId)
 

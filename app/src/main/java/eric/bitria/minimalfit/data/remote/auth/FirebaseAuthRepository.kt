@@ -1,5 +1,6 @@
 package eric.bitria.minimalfit.data.remote.auth
 
+import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
@@ -9,7 +10,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.tasks.await
 
 class FirebaseAuthRepository(
-    private val firebaseAuth: FirebaseAuth = FirebaseAuth.getInstance()
+    private val firebaseAuth: FirebaseAuth
 ) : AuthRepository {
 
     private val _currentUser = MutableStateFlow(firebaseAuth.currentUser)
@@ -95,6 +96,19 @@ class FirebaseAuthRepository(
     override suspend fun deleteAccount(): Result<Unit> {
         return try {
             firebaseAuth.currentUser?.delete()?.await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun reauthenticateAndDelete(password: String): Result<Unit> {
+        return try {
+            val user = firebaseAuth.currentUser ?: return Result.failure(Exception("Not signed in"))
+            val email = user.email ?: return Result.failure(Exception("No email on account"))
+            val credential = EmailAuthProvider.getCredential(email, password)
+            user.reauthenticate(credential).await()
+            user.delete().await()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

@@ -28,3 +28,9 @@ local.properties
 /.idea/deviceManager.xml
 /gradle/gradle-daemon-jvm.properties
 /app/schemas/eric.bitria.minimalfit.data.database.AppDatabase/
+
+# Firebase Functions (Python)
+functions/.venv/
+functions/**/__pycache__/
+functions/__pycache__/
+.firebase/

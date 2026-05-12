@@ -28,11 +28,10 @@ data class SettingsUiState(
     val isLoggedIn: Boolean = false,
     val userProfile: UserProfile? = null,
     val isSyncing: Boolean = false,
-    val isGoogleSignInLoading: Boolean = false,
-    val authError: String? = null,
     val isAutoSyncEnabled: Boolean = false,
     val verificationCooldown: Int = 0,
-    val showVerificationMessage: Boolean = false
+    val showVerificationMessage: Boolean = false,
+    val deleteError: String? = null
 )
 
 class SettingsViewModel(
@@ -46,29 +45,26 @@ class SettingsViewModel(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val _isSyncing = MutableStateFlow(false)
-    private val _isGoogleSignInLoading = MutableStateFlow(false)
-    private val _authError = MutableStateFlow<String?>(null)
     private val _verificationCooldown = MutableStateFlow(0)
     private val _showVerificationMessage = MutableStateFlow(false)
+    private val _deleteError = MutableStateFlow<String?>(null)
     private var verificationTimerJob: Job? = null
     private var autoReloadJob: Job? = null
 
     val uiState: StateFlow<SettingsUiState> = combine(
         authRepository.currentUser,
         _isSyncing,
-        _isGoogleSignInLoading,
-        _authError,
         userPreferencesRepository.isAutoSyncEnabled,
         _verificationCooldown,
-        _showVerificationMessage
+        _showVerificationMessage,
+        _deleteError
     ) { args: Array<Any?> ->
         val user = args[0] as? FirebaseUser
         val syncing = args[1] as Boolean
-        val googleLoading = args[2] as Boolean
-        val authError = args[3] as String?
-        val autoSync = args[4] as Boolean
-        val cooldown = args[5] as Int
-        val showMessage = args[6] as Boolean
+        val autoSync = args[2] as Boolean
+        val cooldown = args[3] as Int
+        val showMessage = args[4] as Boolean
+        val deleteError = args[5] as? String
 
         if (user != null && !user.isEmailVerified && autoReloadJob == null) {
             startAutoReload()
@@ -87,11 +83,10 @@ class SettingsViewModel(
                 )
             },
             isSyncing = syncing,
-            isGoogleSignInLoading = googleLoading,
-            authError = authError,
             isAutoSyncEnabled = autoSync,
             verificationCooldown = cooldown,
-            showVerificationMessage = showMessage
+            showVerificationMessage = showMessage,
+            deleteError = deleteError
         )
     }.stateIn(
         scope = viewModelScope,
@@ -103,7 +98,7 @@ class SettingsViewModel(
         autoReloadJob?.cancel()
         autoReloadJob = viewModelScope.launch {
             while (true) {
-                delay(5000) // Poll every 5 seconds if not verified
+                delay(5000)
                 authRepository.reloadUser()
             }
         }
@@ -118,22 +113,6 @@ class SettingsViewModel(
         viewModelScope.launch {
             authRepository.logout()
         }
-    }
-
-    fun onGoogleLoginSuccess(idToken: String) {
-        viewModelScope.launch {
-            _isGoogleSignInLoading.value = true
-            _authError.value = null
-            val result = authRepository.signInWithGoogle(idToken)
-            _isGoogleSignInLoading.value = false
-            result.onFailure { error ->
-                _authError.value = error.message ?: "Google sign-in failed"
-            }
-        }
-    }
-
-    fun onGoogleLoginError(message: String) {
-        _authError.value = message
     }
 
     fun uploadData() {
@@ -182,11 +161,21 @@ class SettingsViewModel(
         }
     }
 
-    fun deleteAccount() {
+    fun reauthenticateAndDelete(password: String) {
         viewModelScope.launch {
-            authRepository.deleteAccount()
+            _deleteError.value = null
+            authRepository.reauthenticateAndDelete(password).onFailure { e ->
+                _deleteError.value = when {
+                    e.message?.contains("password", ignoreCase = true) == true ||
+                    e.message?.contains("credential", ignoreCase = true) == true ||
+                    e.message?.contains("INVALID_LOGIN_CREDENTIALS") == true -> "Incorrect password."
+                    else -> "Failed to delete account. Please try again."
+                }
+            }
         }
     }
+
+    fun clearDeleteError() { _deleteError.value = null }
 
     fun sendPasswordReset() {
         uiState.value.userProfile?.email?.let { email ->

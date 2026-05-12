@@ -7,6 +7,7 @@ import eric.bitria.minimalfit.data.remote.firestore.dto.MealDocument
 import eric.bitria.minimalfit.data.remote.firestore.dto.MealLogDocument
 import kotlinx.coroutines.tasks.await
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonObject
 
@@ -28,8 +29,8 @@ class FoodFirestoreDataSource(
             .get().await()
         return snapshot.documents.mapNotNull { doc ->
             try {
-                val raw = Json.encodeToString(doc.data)
-                json.decodeFromString<IngredientDto>(raw).copy(id = doc.id, isGlobal = true)
+                val jsonObj = doc.data?.toJsonObject() ?: return@mapNotNull null
+                json.decodeFromJsonElement<IngredientDto>(jsonObj).copy(id = doc.id, isGlobal = true)
             } catch (_: Exception) { null }
         }
     }
@@ -51,8 +52,8 @@ class FoodFirestoreDataSource(
             .collection("ingredients").get().await()
         return snapshot.documents.mapNotNull { doc ->
             try {
-                val raw = Json.encodeToString(doc.data)
-                json.decodeFromString<IngredientDto>(raw).copy(id = doc.id)
+                val jsonObj = doc.data?.toJsonObject() ?: return@mapNotNull null
+                json.decodeFromJsonElement<IngredientDto>(jsonObj).copy(id = doc.id)
             } catch (_: Exception) { null }
         }
     }
@@ -79,8 +80,8 @@ class FoodFirestoreDataSource(
             .collection("meals").get().await()
         return snapshot.documents.mapNotNull { doc ->
             try {
-                val raw = Json.encodeToString(doc.data)
-                json.decodeFromString<MealDocument>(raw).copy(id = doc.id)
+                val jsonObj = doc.data?.toJsonObject() ?: return@mapNotNull null
+                json.decodeFromJsonElement<MealDocument>(jsonObj).copy(id = doc.id)
             } catch (_: Exception) { null }
         }
     }
@@ -107,8 +108,8 @@ class FoodFirestoreDataSource(
             .collection("diets").get().await()
         return snapshot.documents.mapNotNull { doc ->
             try {
-                val raw = Json.encodeToString(doc.data)
-                json.decodeFromString<DietDocument>(raw).copy(id = doc.id)
+                val jsonObj = doc.data?.toJsonObject() ?: return@mapNotNull null
+                json.decodeFromJsonElement<DietDocument>(jsonObj).copy(id = doc.id)
             } catch (_: Exception) { null }
         }
     }
@@ -137,8 +138,8 @@ class FoodFirestoreDataSource(
             .collection("meal_logs").get().await()
         return snapshot.documents.mapNotNull { doc ->
             try {
-                val raw = Json.encodeToString(doc.data)
-                json.decodeFromString<MealLogDocument>(raw).copy(id = doc.id)
+                val jsonObj = doc.data?.toJsonObject() ?: return@mapNotNull null
+                json.decodeFromJsonElement<MealLogDocument>(jsonObj).copy(id = doc.id)
             } catch (_: Exception) { null }
         }
     }

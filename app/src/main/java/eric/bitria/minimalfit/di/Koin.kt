@@ -2,7 +2,6 @@ package eric.bitria.minimalfit.di
 
 import androidx.room.Room
 import eric.bitria.minimalfit.data.database.AppDatabase
-import eric.bitria.minimalfit.data.database.DatabaseInitializer
 
 import eric.bitria.minimalfit.data.repository.food.DefaultDietRepository
 import eric.bitria.minimalfit.data.repository.food.DefaultFoodCatalogRepository
@@ -112,8 +111,6 @@ val dataModule = module {
     single { get<AppDatabase>().routineSetDao() }
     single { get<AppDatabase>().syncQueueDao() }
 
-    singleOf(::DatabaseInitializer)
-    
     // Food Catalog Repository
     single<FoodCatalogRepository> {
         DefaultFoodCatalogRepository(

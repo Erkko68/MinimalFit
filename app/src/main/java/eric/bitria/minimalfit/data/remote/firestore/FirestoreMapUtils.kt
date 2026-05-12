@@ -14,11 +14,29 @@ import kotlinx.serialization.json.longOrNull
 /**
  * Converts a [JsonObject] produced by kotlinx.serialization into a
  * `Map<String, Any?>` that Firestore can store directly.
- *
- * Handles nested objects, arrays, primitives, and null values.
  */
 fun JsonObject.toFirestoreMap(): Map<String, Any?> = entries.associate { (key, value) ->
     key to value.toFirestoreValue()
+}
+
+/**
+ * Converts a Firestore `Map<String, Any?>` into a [JsonObject] so it can be
+ * decoded via kotlinx.serialization.
+ */
+fun Map<String, Any?>.toJsonObject(): JsonObject =
+    JsonObject(entries.associate { (key, value) -> key to value.toJsonElement() })
+
+private fun Any?.toJsonElement(): JsonElement = when (this) {
+    null -> JsonNull
+    is Boolean -> JsonPrimitive(this)
+    is Number -> JsonPrimitive(this)
+    is String -> JsonPrimitive(this)
+    is Map<*, *> -> JsonObject(
+        @Suppress("UNCHECKED_CAST")
+        (this as Map<String, Any?>).entries.associate { (k, v) -> k to v.toJsonElement() }
+    )
+    is List<*> -> JsonArray(map { it.toJsonElement() })
+    else -> JsonPrimitive(toString())
 }
 
 private fun JsonElement.toFirestoreValue(): Any? = when (this) {

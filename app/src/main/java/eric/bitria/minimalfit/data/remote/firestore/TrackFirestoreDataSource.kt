@@ -4,6 +4,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import eric.bitria.minimalfit.data.remote.firestore.dto.TrackDocument
 import kotlinx.coroutines.tasks.await
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonObject
 
@@ -33,8 +34,8 @@ class TrackFirestoreDataSource(
             .collection("tracks").get().await()
         return snapshot.documents.mapNotNull { doc ->
             try {
-                val raw = Json.encodeToString(doc.data)
-                json.decodeFromString<TrackDocument>(raw).copy(id = doc.id)
+                val jsonObj = doc.data?.toJsonObject() ?: return@mapNotNull null
+                json.decodeFromJsonElement<TrackDocument>(jsonObj).copy(id = doc.id)
             } catch (_: Exception) { null }
         }
     }

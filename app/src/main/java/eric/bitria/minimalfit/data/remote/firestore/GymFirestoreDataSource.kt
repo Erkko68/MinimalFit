@@ -28,8 +28,8 @@ class GymFirestoreDataSource(
             .get().await()
         return snapshot.documents.mapNotNull { doc ->
             try {
-                val raw = Json.encodeToString(doc.data)
-                json.decodeFromString<ExerciseDto>(raw).copy(id = doc.id, isGlobal = true)
+                val jsonObj = doc.data?.toJsonObject() ?: return@mapNotNull null
+                json.decodeFromJsonElement<ExerciseDto>(jsonObj).copy(id = doc.id, isGlobal = true)
             } catch (_: Exception) { null }
         }
     }
@@ -51,8 +51,8 @@ class GymFirestoreDataSource(
             .collection("exercises").get().await()
         return snapshot.documents.mapNotNull { doc ->
             try {
-                val raw = Json.encodeToString(doc.data)
-                json.decodeFromString<ExerciseDto>(raw).copy(id = doc.id)
+                val jsonObj = doc.data?.toJsonObject() ?: return@mapNotNull null
+                json.decodeFromJsonElement<ExerciseDto>(jsonObj).copy(id = doc.id)
             } catch (_: Exception) { null }
         }
     }
@@ -79,8 +79,8 @@ class GymFirestoreDataSource(
             .collection("routines").get().await()
         return snapshot.documents.mapNotNull { doc ->
             try {
-                val raw = Json.encodeToString(doc.data)
-                json.decodeFromString<RoutineDocument>(raw).copy(id = doc.id)
+                val jsonObj = doc.data?.toJsonObject() ?: return@mapNotNull null
+                json.decodeFromJsonElement<RoutineDocument>(jsonObj).copy(id = doc.id)
             } catch (_: Exception) { null }
         }
     }
@@ -110,8 +110,8 @@ class GymFirestoreDataSource(
             .collection("sessions").get().await()
         return snapshot.documents.mapNotNull { doc ->
             try {
-                val raw = Json.encodeToString(doc.data)
-                json.decodeFromString<SessionDocument>(raw).copy(id = doc.id)
+                val jsonObj = doc.data?.toJsonObject() ?: return@mapNotNull null
+                json.decodeFromJsonElement<SessionDocument>(jsonObj).copy(id = doc.id)
             } catch (_: Exception) { null }
         }
     }

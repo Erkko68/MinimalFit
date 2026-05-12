@@ -46,8 +46,11 @@ class FirebaseAuthRepository(
         return try {
             val credential = GoogleAuthProvider.getCredential(idToken, null)
             val result = firebaseAuth.signInWithCredential(credential).await()
-            result.user?.email?.let { setDisplayNameFromEmail(it) }
-            Result.success(result.user)
+            val user = result.user
+            if (user != null && user.displayName.isNullOrBlank()) {
+                user.email?.let { setDisplayNameFromEmail(it) }
+            }
+            Result.success(user)
         } catch (e: Exception) {
             Result.failure(e)
         }

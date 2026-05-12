@@ -4,7 +4,6 @@ import android.app.Application
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
-import eric.bitria.minimalfit.data.database.DatabaseInitializer
 import eric.bitria.minimalfit.data.remote.auth.AuthRepository
 import eric.bitria.minimalfit.data.remote.sync.SyncOrchestrator
 import eric.bitria.minimalfit.data.remote.sync.SyncScheduler
@@ -28,13 +27,6 @@ class MinimalFitApp : Application() {
             androidContext(this@MinimalFitApp)
         }
 
-        val dbInitializer: DatabaseInitializer by inject()
-
-        // Initialize mock data on startup
-        appScope.launch {
-            dbInitializer.initializeMockData()
-        }
-
         // Observe auth state and trigger sync when user logs in
         val authRepository: AuthRepository by inject()
         val syncOrchestrator: SyncOrchestrator by inject()
@@ -46,7 +38,7 @@ class MinimalFitApp : Application() {
                 .distinctUntilChanged()
                 .collect { uid ->
                     if (uid != null) {
-                        syncOrchestrator.syncAll()
+                        syncOrchestrator.restoreAll()
                     }
                 }
         }

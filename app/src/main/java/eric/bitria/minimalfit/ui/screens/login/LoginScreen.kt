@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -46,6 +47,7 @@ import androidx.credentials.exceptions.GetCredentialException
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import android.util.Log
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import eric.bitria.minimalfit.R
 import androidx.compose.ui.text.input.KeyboardType
@@ -71,21 +73,19 @@ fun LoginScreen(
     val isLoginEnabled by viewModel.isLoginEnabled.collectAsState()
     val error by viewModel.error.collectAsState()
     val message by viewModel.message.collectAsState()
+    val showPasswordResetDialog by viewModel.showPasswordResetDialog.collectAsState()
     val context = LocalContext.current
     val credentialManager = remember(context) { CredentialManager.create(context) }
     var googleSignInRequest by remember { mutableIntStateOf(0) }
-
     var passwordVisible by remember { mutableStateOf(false) }
+    val serverClientId = stringResource(id = R.string.default_web_client_id)
 
     LaunchedEffect(googleSignInRequest) {
         if (googleSignInRequest == 0) return@LaunchedEffect
-        val googleIdOption = GetSignInWithGoogleOption.Builder(
-            context.getString(R.string.default_web_client_id)
-        )
-            .build()
+        val signInWithGoogleOption = GetSignInWithGoogleOption.Builder(serverClientId).build()
 
         val request = GetCredentialRequest.Builder()
-            .addCredentialOption(googleIdOption)
+            .addCredentialOption(signInWithGoogleOption)
             .build()
 
         try {
@@ -111,6 +111,19 @@ fun LoginScreen(
             Log.e("LoginScreen", "An unexpected error occurred", e)
             viewModel.onGoogleLoginError(e.message ?: "Google sign-in failed")
         }
+    }
+
+    if (showPasswordResetDialog) {
+        AlertDialog(
+            onDismissRequest = viewModel::dismissPasswordResetDialog,
+            title = { Text("Check your inbox") },
+            text = { Text("A password reset email has been sent to ${email}. Follow the link in the email to reset your password.") },
+            confirmButton = {
+                TextButton(onClick = viewModel::dismissPasswordResetDialog) {
+                    Text("Got it")
+                }
+            }
+        )
     }
 
     ScreenConfiguration(
@@ -238,23 +251,27 @@ fun LoginScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(Spacing.l))
-
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = Spacing.s),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            HorizontalDivider(modifier = Modifier.weight(1f))
-            Text(
-                text = "OR",
-                modifier = Modifier.padding(horizontal = Spacing.m),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+            HorizontalDivider(
+                modifier = Modifier.weight(1f),
+                color = MaterialTheme.colorScheme.outlineVariant
             )
-            HorizontalDivider(modifier = Modifier.weight(1f))
+            Text(
+                text = "or",
+                modifier = Modifier.padding(horizontal = Spacing.l),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.outline
+            )
+            HorizontalDivider(
+                modifier = Modifier.weight(1f),
+                color = MaterialTheme.colorScheme.outlineVariant
+            )
         }
-
-        Spacer(modifier = Modifier.height(Spacing.l))
 
         OutlinedButton(
             onClick = { googleSignInRequest++ },
@@ -268,9 +285,6 @@ fun LoginScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
             ) {
-                // Assuming you have a google logo or using a generic one
-                // Icon(painter = painterResource(id = R.drawable.ic_google), contentDescription = null, modifier = Modifier.size(24.dp))
-                // For now just a placeholder text if icon not available
                 Text(
                     text = "Continue with Google",
                     style = MaterialTheme.typography.titleMedium,

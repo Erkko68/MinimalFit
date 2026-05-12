@@ -4,6 +4,7 @@ import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.auth.UserProfileChangeRequest
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -34,6 +35,7 @@ class FirebaseAuthRepository(
     override suspend fun register(email: String, password: String): Result<FirebaseUser?> {
         return try {
             val result = firebaseAuth.createUserWithEmailAndPassword(email, password).await()
+            setDisplayNameFromEmail(email)
             Result.success(result.user)
         } catch (e: Exception) {
             Result.failure(e)
@@ -44,10 +46,18 @@ class FirebaseAuthRepository(
         return try {
             val credential = GoogleAuthProvider.getCredential(idToken, null)
             val result = firebaseAuth.signInWithCredential(credential).await()
+            result.user?.email?.let { setDisplayNameFromEmail(it) }
             Result.success(result.user)
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    private suspend fun setDisplayNameFromEmail(email: String) {
+        val profileUpdates = UserProfileChangeRequest.Builder()
+            .setDisplayName(email.substringBefore("@"))
+            .build()
+        firebaseAuth.currentUser?.updateProfile(profileUpdates)?.await()
     }
 
     override suspend fun logout() {

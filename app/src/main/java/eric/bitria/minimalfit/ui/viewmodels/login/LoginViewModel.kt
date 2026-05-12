@@ -30,6 +30,9 @@ class LoginViewModel(
     private val _message = MutableStateFlow<String?>(null)
     val message: StateFlow<String?> = _message.asStateFlow()
 
+    private val _showPasswordResetDialog = MutableStateFlow(false)
+    val showPasswordResetDialog: StateFlow<Boolean> = _showPasswordResetDialog.asStateFlow()
+
     private val emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[a-z]{2,}$".toRegex()
 
     val isLoginEnabled: StateFlow<Boolean> = combine(_email, _password, _isLoading) { email, password, loading ->
@@ -83,7 +86,7 @@ class LoginViewModel(
                 val result = authRepository.sendPasswordResetEmail(_email.value)
                 _isLoading.value = false
                 result.onSuccess {
-                    _message.value = "Password reset email sent!"
+                    _showPasswordResetDialog.value = true
                 }
                 result.onFailure { error ->
                     _error.value = error.message ?: "Failed to send reset email"
@@ -92,6 +95,10 @@ class LoginViewModel(
         } else {
             _error.value = "Please enter a valid email address first"
         }
+    }
+
+    fun dismissPasswordResetDialog() {
+        _showPasswordResetDialog.value = false
     }
 
     fun clearMessages() {

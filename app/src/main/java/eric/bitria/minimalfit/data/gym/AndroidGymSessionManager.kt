@@ -86,8 +86,8 @@ class AndroidGymSessionManager(
         gymTrackingLogic.addExercise(exerciseId)
     }
 
-    override fun addSet(sessionExerciseId: String, weight: Float, reps: Int) {
-        gymTrackingLogic.addSet(sessionExerciseId, weight, reps)
+    override fun addSet(sessionExerciseId: String, weight: Float, reps: Int, isCompleted: Boolean) {
+        gymTrackingLogic.addSet(sessionExerciseId, weight, reps, isCompleted)
     }
 
     override fun updateSet(set: Set) {

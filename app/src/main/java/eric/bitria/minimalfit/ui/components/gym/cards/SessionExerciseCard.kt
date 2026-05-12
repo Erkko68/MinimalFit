@@ -46,7 +46,7 @@ fun SessionExerciseCard(
     onToggleCollapse: () -> Unit,
     onUpdateSet: (Set) -> Unit,
     onDeleteSet: (String) -> Unit,
-    onAddSet: (weight: Float, reps: Int) -> Unit,
+    onAddSet: (weight: Float, reps: Int, isCompleted: Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var showAddSetDialog by remember { mutableStateOf(false) }
@@ -188,10 +188,11 @@ fun SessionExerciseCard(
             weight = lastSet?.weight ?: 0f,
             reps = lastSet?.reps ?: 0,
             onDismiss = { showAddSetDialog = false },
-            onConfirm = { w, r ->
-                onAddSet(w, r)
+            onConfirm = { w, r, completed ->
+                onAddSet(w, r, completed)
                 showAddSetDialog = false
-            }
+            },
+            showCompleted = true
         )
     }
 }

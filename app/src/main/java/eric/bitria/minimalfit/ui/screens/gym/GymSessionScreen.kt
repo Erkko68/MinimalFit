@@ -320,7 +320,7 @@ fun GymSessionScreen(
                         },
                         onUpdateSet = { viewModel.updateSet(it) },
                         onDeleteSet = { viewModel.deleteSet(it) },
-                        onAddSet = { w, r -> viewModel.addSet(group.sessionExerciseId, w, r) }
+                        onAddSet = { w, r, completed -> viewModel.addSet(group.sessionExerciseId, w, r, completed) }
                     )
                 }
                 if (canEdit) {

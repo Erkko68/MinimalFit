@@ -92,7 +92,7 @@ fun RoutineSetRow(
             weight = set.weight,
             reps = set.reps,
             onDismiss = { showEditDialog = false },
-            onConfirm = { w, r ->
+            onConfirm = { w, r, _ ->
                 onUpdate(set.copy(weight = w, reps = r))
                 showEditDialog = false
             }

@@ -41,7 +41,8 @@ class SessionViewModel(
         val exerciseId: String,
         val exerciseName: String,
         val sets: List<Set>,
-        val createdAt: Instant
+        val createdAt: Instant,
+        val restSeconds: Int = 120
     )
 
     data class SessionUiState(
@@ -86,12 +87,14 @@ class SessionViewModel(
         val exercisesById = catalogExercises.associateBy { it.id }
 
         val groups = sessionExercises.map { se ->
+            val exercise = exercisesById[se.exerciseId]
             SessionExerciseGroup(
                 sessionExerciseId = se.id,
                 exerciseId = se.exerciseId,
-                exerciseName = exercisesById[se.exerciseId]?.name ?: "Exercise",
+                exerciseName = exercise?.name ?: "Exercise",
                 sets = sets.filter { it.sessionExerciseId == se.id }.sortedBy { it.createdAt },
-                createdAt = se.createdAt
+                createdAt = se.createdAt,
+                restSeconds = exercise?.restSeconds ?: 120
             )
         }
 
@@ -166,12 +169,25 @@ class SessionViewModel(
         gymSessionManager.addExercise(exerciseId)
     }
 
-    fun addSet(sessionExerciseId: String, weight: Float, reps: Int) {
-        gymSessionManager.addSet(sessionExerciseId, weight, reps)
+    fun addSet(sessionExerciseId: String, weight: Float, reps: Int, isCompleted: Boolean = false) {
+        gymSessionManager.addSet(sessionExerciseId, weight, reps, isCompleted)
+        if (isCompleted) triggerRestForExercise(sessionExerciseId)
     }
 
     fun updateSet(set: Set) {
+        val wasCompleted = uiState.value.exerciseGroups
+            .flatMap { it.sets }
+            .firstOrNull { it.id == set.id }
+            ?.isCompleted == true
         gymSessionManager.updateSet(set)
+        if (set.isCompleted && !wasCompleted) triggerRestForExercise(set.sessionExerciseId)
+    }
+
+    private fun triggerRestForExercise(sessionExerciseId: String) {
+        val restSeconds = uiState.value.exerciseGroups
+            .firstOrNull { it.sessionExerciseId == sessionExerciseId }
+            ?.restSeconds ?: 120
+        gymSessionManager.startRest(restSeconds)
     }
 
     fun deleteSet(setId: String) {

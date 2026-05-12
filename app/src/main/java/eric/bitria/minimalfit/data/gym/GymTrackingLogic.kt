@@ -142,7 +142,7 @@ class GymTrackingLogic(
         }
     }
 
-    fun addSet(sessionExerciseId: String, weight: Float, reps: Int) {
+    fun addSet(sessionExerciseId: String, weight: Float, reps: Int, isCompleted: Boolean = false) {
         scope.launch {
             val session = _activeSession.value ?: return@launch
             setRepository.addSet(
@@ -150,7 +150,8 @@ class GymTrackingLogic(
                     sessionExerciseId = sessionExerciseId,
                     sessionId = session.id,
                     weight = weight,
-                    reps = reps
+                    reps = reps,
+                    isCompleted = isCompleted
                 )
             )
         }

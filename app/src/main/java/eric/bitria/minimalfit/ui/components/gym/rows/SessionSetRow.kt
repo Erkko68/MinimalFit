@@ -102,41 +102,17 @@ fun SessionSetRow(
     }
 
     if (showEditDialog) {
-        SetEditDialog(
-            set = set,
-            index = index,
+        SetPickerDialog(
+            title = "Set ${index + 1}",
+            weight = set.weight,
+            reps = set.reps,
             onDismiss = { showEditDialog = false },
-            onConfirm = { updated ->
-                onUpdate(updated)
+            onConfirm = { w, r, completed ->
+                onUpdate(set.copy(weight = w, reps = r, isCompleted = completed))
                 showEditDialog = false
-            }
+            },
+            showCompleted = true,
+            initialCompleted = set.isCompleted
         )
     }
-}
-
-@Composable
-private fun SetEditDialog(
-    set: Set,
-    index: Int,
-    onDismiss: () -> Unit,
-    onConfirm: (Set) -> Unit
-) {
-    var isCompleted by remember { mutableStateOf(set.isCompleted) }
-
-    SetPickerDialog(
-        title = "Set ${index + 1}",
-        weight = set.weight,
-        reps = set.reps,
-        onDismiss = onDismiss,
-        onConfirm = { w, r -> onConfirm(set.copy(weight = w, reps = r, isCompleted = isCompleted)) },
-        extraContent = {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Checkbox(checked = isCompleted, onCheckedChange = { isCompleted = it })
-                Text("Mark set as completed")
-            }
-        }
-    )
 }

@@ -35,7 +35,6 @@ class GymSessionService : LifecycleService() {
         const val ACTION_START_REST = "ACTION_START_REST"
         const val ACTION_STOP_REST = "ACTION_STOP_REST"
 
-        const val EXTRA_EXERCISE_ID = "extra_exercise_id"
         const val EXTRA_EXERCISE_IDS = "extra_exercise_ids"
         const val EXTRA_TARGET_SETS = "extra_target_sets"
         const val EXTRA_TARGET_REPS = "extra_target_reps"

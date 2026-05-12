@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -55,8 +56,9 @@ fun SetPickerDialog(
     weight: Float,
     reps: Int,
     onDismiss: () -> Unit,
-    onConfirm: (weight: Float, reps: Int) -> Unit,
-    extraContent: @Composable () -> Unit = {}
+    onConfirm: (weight: Float, reps: Int, isCompleted: Boolean) -> Unit,
+    showCompleted: Boolean = false,
+    initialCompleted: Boolean = false
 ) {
     val wheelHeight = PICKER_ITEM_HEIGHT * PICKER_VISIBLE_ITEMS
     val focusManager = LocalFocusManager.current
@@ -77,6 +79,8 @@ fun SetPickerDialog(
     // activates text mode — before focus resolution fires onFocusChanged(false) on the
     // newly-composed TextField. A plain remember {} would hold the stale true value from
     // the previous text-mode session and immediately trigger the revert-to-wheel logic.
+    var isCompleted by remember { mutableStateOf(initialCompleted) }
+
     var weightEverFocused by remember(weightTextMode) { mutableStateOf(false) }
     var repsEverFocused by remember(repsTextMode) { mutableStateOf(false) }
 
@@ -274,7 +278,24 @@ fun SetPickerDialog(
                     }
                 }
 
-                extraContent()
+                if (showCompleted) {
+                    Spacer(modifier = Modifier.height(Spacing.m))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Checkbox(
+                            checked = isCompleted,
+                            onCheckedChange = { isCompleted = it }
+                        )
+                        Text(
+                            text = "Mark as completed",
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(start = Spacing.xs)
+                        )
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(Spacing.m))
 
@@ -288,7 +309,7 @@ fun SetPickerDialog(
                             repsText.toIntOrNull()?.coerceAtLeast(1) ?: (repsIndex + 1)
                         else
                             repsIndex + 1
-                        onConfirm(finalWeight, finalReps)
+                        onConfirm(finalWeight, finalReps, isCompleted)
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {

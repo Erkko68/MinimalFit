@@ -16,6 +16,7 @@ import eric.bitria.minimalfit.ui.screens.food.MealDetailScreen
 import eric.bitria.minimalfit.ui.screens.gym.GymScreen
 import eric.bitria.minimalfit.ui.screens.gym.GymSessionScreen
 import eric.bitria.minimalfit.ui.screens.gym.ExerciseProgressionScreen
+import eric.bitria.minimalfit.ui.screens.gym.RoutineDetailScreen
 import eric.bitria.minimalfit.ui.screens.login.LoginScreen
 import eric.bitria.minimalfit.ui.screens.login.RegisterScreen
 import eric.bitria.minimalfit.ui.screens.profile.ProfileScreen
@@ -165,6 +166,9 @@ fun AppNavHost(
                 },
                 onNavigateToExerciseProgression = { exerciseId ->
                     navController.navigate(Route.ExerciseProgression(exerciseId = exerciseId))
+                },
+                onNavigateToRoutine = { routineId ->
+                    navController.navigate(Route.RoutineDetail(routineId = routineId))
                 }
             )
         }
@@ -186,6 +190,13 @@ fun AppNavHost(
             val args = backStackEntry.toRoute<Route.ExerciseProgression>()
             ExerciseProgressionScreen(
                 exerciseId = args.exerciseId,
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+        composable<Route.RoutineDetail> { backStackEntry ->
+            val args = backStackEntry.toRoute<Route.RoutineDetail>()
+            RoutineDetailScreen(
+                routineId = args.routineId,
                 onNavigateBack = { navController.popBackStack() }
             )
         }

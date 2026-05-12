@@ -26,4 +26,12 @@ class Converters {
     @TypeConverter
     fun toTrackPointList(value: String?): List<TrackPoint>? = value?.let { Json.decodeFromString(it) }
 
+    @TypeConverter
+    fun fromIntSet(value: Set<Int>?): String = value?.joinToString(",") ?: ""
+
+    @TypeConverter
+    fun toIntSet(value: String?): Set<Int> =
+        if (value.isNullOrEmpty()) emptySet()
+        else value.split(",").mapNotNull { it.toIntOrNull() }.toSet()
+
 }

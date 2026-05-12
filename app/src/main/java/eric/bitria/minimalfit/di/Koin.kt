@@ -14,10 +14,16 @@ import eric.bitria.minimalfit.data.repository.track.LocationRepository
 import eric.bitria.minimalfit.data.repository.track.TrackRepository
 import eric.bitria.minimalfit.data.repository.track.TrackingLocationRepository
 import eric.bitria.minimalfit.data.repository.gym.DefaultExerciseRepository
+import eric.bitria.minimalfit.data.repository.gym.DefaultRoutineExerciseRepository
+import eric.bitria.minimalfit.data.repository.gym.DefaultRoutineRepository
+import eric.bitria.minimalfit.data.repository.gym.DefaultRoutineSetRepository
 import eric.bitria.minimalfit.data.repository.gym.DefaultSessionExerciseRepository
 import eric.bitria.minimalfit.data.repository.gym.DefaultSessionRepository
 import eric.bitria.minimalfit.data.repository.gym.DefaultSetRepository
 import eric.bitria.minimalfit.data.repository.gym.ExerciseRepository
+import eric.bitria.minimalfit.data.repository.gym.RoutineExerciseRepository
+import eric.bitria.minimalfit.data.repository.gym.RoutineRepository
+import eric.bitria.minimalfit.data.repository.gym.RoutineSetRepository
 import eric.bitria.minimalfit.data.repository.gym.SessionExerciseRepository
 import eric.bitria.minimalfit.data.repository.gym.SessionRepository
 import eric.bitria.minimalfit.data.repository.gym.SetRepository
@@ -46,6 +52,7 @@ import eric.bitria.minimalfit.ui.viewmodels.food.MealDetailViewModel
 import eric.bitria.minimalfit.ui.viewmodels.login.LoginViewModel
 import eric.bitria.minimalfit.ui.viewmodels.login.RegisterViewModel
 import eric.bitria.minimalfit.ui.viewmodels.gym.GymViewModel
+import eric.bitria.minimalfit.ui.viewmodels.gym.RoutineViewModel
 import eric.bitria.minimalfit.ui.viewmodels.gym.SessionViewModel
 import eric.bitria.minimalfit.ui.viewmodels.gym.ExerciseProgressionViewModel
 import eric.bitria.minimalfit.ui.viewmodels.profile.ProfileViewModel
@@ -88,6 +95,9 @@ val dataModule = module {
     single { get<AppDatabase>().sessionDao() }
     single { get<AppDatabase>().sessionExerciseDao() }
     single { get<AppDatabase>().setDao() }
+    single { get<AppDatabase>().routineDao() }
+    single { get<AppDatabase>().routineExerciseDao() }
+    single { get<AppDatabase>().routineSetDao() }
 
     singleOf(::DatabaseInitializer)
     
@@ -124,6 +134,9 @@ val dataModule = module {
     single<ExerciseRepository> { DefaultExerciseRepository(exerciseDao = get()) }
     single<SessionExerciseRepository> { DefaultSessionExerciseRepository(dao = get()) }
     single<SetRepository> { DefaultSetRepository(setDao = get()) }
+    single<RoutineRepository> { DefaultRoutineRepository(dao = get()) }
+    single<RoutineExerciseRepository> { DefaultRoutineExerciseRepository(dao = get()) }
+    single<RoutineSetRepository> { DefaultRoutineSetRepository(dao = get()) }
     singleOf(::GymTrackingLogic)
     single<GymSessionManager> { AndroidGymSessionManager(androidContext(), get()) }
 
@@ -193,6 +206,7 @@ val viewModels = module {
 
     // Gym
     viewModelOf(::GymViewModel)
+    viewModelOf(::RoutineViewModel)
     viewModel {
         SessionViewModel(
             exerciseRepository = get(),

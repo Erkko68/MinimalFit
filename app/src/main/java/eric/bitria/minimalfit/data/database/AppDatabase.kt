@@ -8,6 +8,9 @@ import eric.bitria.minimalfit.data.database.dao.ExerciseDao
 import eric.bitria.minimalfit.data.database.dao.IngredientDao
 import eric.bitria.minimalfit.data.database.dao.MealDao
 import eric.bitria.minimalfit.data.database.dao.MealLogDao
+import eric.bitria.minimalfit.data.database.dao.RoutineDao
+import eric.bitria.minimalfit.data.database.dao.RoutineExerciseDao
+import eric.bitria.minimalfit.data.database.dao.RoutineSetDao
 import eric.bitria.minimalfit.data.database.dao.SessionDao
 import eric.bitria.minimalfit.data.database.dao.SessionExerciseDao
 import eric.bitria.minimalfit.data.database.dao.SetDao
@@ -20,6 +23,9 @@ import eric.bitria.minimalfit.data.entity.food.relations.DietMealCrossRef
 import eric.bitria.minimalfit.data.entity.food.relations.MealIngredientCrossRef
 import eric.bitria.minimalfit.data.entity.food.relations.MealLogMealCrossRef
 import eric.bitria.minimalfit.data.entity.gym.Exercise
+import eric.bitria.minimalfit.data.entity.gym.Routine
+import eric.bitria.minimalfit.data.entity.gym.RoutineExercise
+import eric.bitria.minimalfit.data.entity.gym.RoutineSet
 import eric.bitria.minimalfit.data.entity.gym.Session
 import eric.bitria.minimalfit.data.entity.gym.SessionExercise
 import eric.bitria.minimalfit.data.entity.gym.Set
@@ -36,11 +42,14 @@ import eric.bitria.minimalfit.data.entity.track.Track
         DietMealCrossRef::class,
         MealLogMealCrossRef::class,
         Exercise::class,
+        Routine::class,
+        RoutineExercise::class,
+        RoutineSet::class,
         Session::class,
         SessionExercise::class,
         Set::class
     ],
-    version = 1
+    version = 2
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
@@ -53,4 +62,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun sessionDao(): SessionDao
     abstract fun sessionExerciseDao(): SessionExerciseDao
     abstract fun setDao(): SetDao
+    abstract fun routineDao(): RoutineDao
+    abstract fun routineExerciseDao(): RoutineExerciseDao
+    abstract fun routineSetDao(): RoutineSetDao
 }

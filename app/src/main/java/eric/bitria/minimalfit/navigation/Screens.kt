@@ -17,4 +17,5 @@ sealed class Route {
     @Serializable data class MealDetail(val mealId: String) : Route()
     @Serializable data class GymSession(val sessionId: String? = null) : Route()
     @Serializable data class ExerciseProgression(val exerciseId: String) : Route()
+    @Serializable data class RoutineDetail(val routineId: String? = null) : Route()
 }

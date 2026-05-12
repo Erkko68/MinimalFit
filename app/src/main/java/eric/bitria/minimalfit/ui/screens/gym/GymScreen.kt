@@ -12,9 +12,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
-import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
+import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PageSize
 import androidx.compose.foundation.pager.rememberPagerState
@@ -35,20 +35,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalConfiguration
-import kotlinx.datetime.toLocalDateTime
-import kotlinx.datetime.TimeZone
-import eric.bitria.minimalfit.util.shortMonthDay
-import eric.bitria.minimalfit.util.hourMinute
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import eric.bitria.minimalfit.navigation.ScreenConfiguration
-import eric.bitria.minimalfit.ui.components.shared.animations.SwipeToDeleteCard
 import eric.bitria.minimalfit.ui.components.food.actions.PrimaryFloatingActionButton
 import eric.bitria.minimalfit.ui.components.gym.cards.ExerciseCard
 import eric.bitria.minimalfit.ui.components.gym.cards.GymSessionCard
 import eric.bitria.minimalfit.ui.components.gym.cards.RoutineCard
+import eric.bitria.minimalfit.ui.components.shared.animations.SwipeToDeleteCard
 import eric.bitria.minimalfit.ui.theme.Spacing
 import eric.bitria.minimalfit.ui.viewmodels.gym.GymViewModel
+import eric.bitria.minimalfit.util.hourMinute
+import eric.bitria.minimalfit.util.shortMonthDay
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -56,17 +56,17 @@ import org.koin.androidx.compose.koinViewModel
 fun GymScreen(
     onNavigateToSession: (String?) -> Unit,
     onNavigateToExerciseProgression: (String) -> Unit,
+    onNavigateToRoutine: (String?) -> Unit,
     viewModel: GymViewModel = koinViewModel()
 ) {
     val sessions by viewModel.pastSessions.collectAsState()
     val exercises by viewModel.userExercises.collectAsState()
+    val routines by viewModel.routines.collectAsState()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
-    // Routine elements are bigger
     val routineCardSize = screenHeight * 0.2f
-
-    // Deletion confirmation dialog removed; exercises can be deleted with a swipe gesture.
+    val exerciseCardSize = screenHeight * 0.15f
 
     ScreenConfiguration(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -107,27 +107,58 @@ fun GymScreen(
         // Routines carousel (full width)
         item(span = StaggeredGridItemSpan.FullLine) {
             Column(verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
-                Text(
-                    text = "Your Routines",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.ExtraBold,
-                )
-
-                val routinePagerState = rememberPagerState(pageCount = { 3 })
-                HorizontalPager(
-                    state = routinePagerState,
+                Row(
                     modifier = Modifier.fillMaxWidth(),
-                    pageSize = PageSize.Fixed(routineCardSize),
-                    pageSpacing = Spacing.m,
-                    beyondViewportPageCount = 1
-                ) { page ->
-                    RoutineCard(
-                        name = "Routine ${page + 1}",
-                        exercisesCount = 4 + page,
-                        onClick = { /* TODO: Navigate to routine detail */ },
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Your Routines",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.ExtraBold,
+                    )
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "New Routine",
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .aspectRatio(1.4f)
+                            .clip(MaterialTheme.shapes.small)
+                            .background(MaterialTheme.colorScheme.secondaryContainer)
+                            .clickable { onNavigateToRoutine(null) }
+                            .padding(Spacing.xs),
+                        tint = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                }
+
+                if (routines.isNotEmpty()) {
+                    val routinePagerState = rememberPagerState(pageCount = { routines.size })
+                    HorizontalPager(
+                        state = routinePagerState,
+                        modifier = Modifier.fillMaxWidth(),
+                        pageSize = PageSize.Fixed(routineCardSize),
+                        pageSpacing = Spacing.m,
+                        beyondViewportPageCount = 1
+                    ) { page ->
+                        val routine = routines[page]
+                        SwipeToDeleteCard(
+                            onDismiss = {},
+                            onDeleteRequested = { viewModel.deleteRoutine(routine.id) },
+                            modifier = Modifier.clip(MaterialTheme.shapes.extraLarge)
+                        ) {
+                            RoutineCard(
+                                routine = routine,
+                                exercisesCount = 0,
+                                onClick = { onNavigateToRoutine(routine.id) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .aspectRatio(1.4f)
+                            )
+                        }
+                    }
+                } else {
+                    Text(
+                        text = "No routines yet. Create your first one!",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -136,8 +167,7 @@ fun GymScreen(
         // Exercises title (full width)
         item(span = StaggeredGridItemSpan.FullLine) {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -159,26 +189,33 @@ fun GymScreen(
             }
         }
 
-        // Exercises grid items
-        if (exercises.isNotEmpty()) {
-            items(items = exercises, key = { it.id }) { exercise ->
-                SwipeToDeleteCard(
-                    onDismiss = { /* no-op; we use onDeleteRequested to avoid auto-dismiss */ },
-                    onDeleteRequested = { viewModel.deleteExercise(exercise.id) },
-                    modifier = Modifier
-                        .clip(MaterialTheme.shapes.extraLarge)
-                ) {
-                    ExerciseCard(
-                        exercise = exercise,
-                        onClick = { onNavigateToExerciseProgression(exercise.id) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .aspectRatio(1.4f)
-                    )
+        // Exercises pager (full width)
+        item(span = StaggeredGridItemSpan.FullLine) {
+            if (exercises.isNotEmpty()) {
+                val exercisePagerState = rememberPagerState(pageCount = { exercises.size })
+                HorizontalPager(
+                    state = exercisePagerState,
+                    modifier = Modifier.fillMaxWidth(),
+                    pageSize = PageSize.Fixed(exerciseCardSize),
+                    pageSpacing = Spacing.m,
+                    beyondViewportPageCount = 1
+                ) { page ->
+                    val exercise = exercises[page]
+                    SwipeToDeleteCard(
+                        onDismiss = {},
+                        onDeleteRequested = { viewModel.deleteExercise(exercise.id) },
+                        modifier = Modifier.clip(MaterialTheme.shapes.extraLarge)
+                    ) {
+                        ExerciseCard(
+                            exercise = exercise,
+                            onClick = { onNavigateToExerciseProgression(exercise.id) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .aspectRatio(1.4f)
+                        )
+                    }
                 }
-            }
-        } else {
-            item(span = StaggeredGridItemSpan.FullLine) {
+            } else {
                 Text(
                     text = "No exercises yet",
                     style = MaterialTheme.typography.bodyMedium,
@@ -209,7 +246,6 @@ fun GymScreen(
         }
 
         if (sessions.isNotEmpty()) {
-            // Render each session as a full-line item
             sessions.forEach { session ->
                 item(span = StaggeredGridItemSpan.FullLine) {
                     val sess = session.session
@@ -225,8 +261,7 @@ fun GymScreen(
 
                     SwipeToDeleteCard(
                         onDismiss = { viewModel.deleteSession(sess.id) },
-                        modifier = Modifier
-                            .clip(MaterialTheme.shapes.extraLarge)
+                        modifier = Modifier.clip(MaterialTheme.shapes.extraLarge)
                     ) {
                         GymSessionCard(
                             dateString = dateString,

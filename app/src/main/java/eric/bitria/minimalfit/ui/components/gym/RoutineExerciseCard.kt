@@ -1,0 +1,113 @@
+package eric.bitria.minimalfit.ui.components.gym
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import eric.bitria.minimalfit.data.entity.gym.RoutineSet
+import eric.bitria.minimalfit.ui.components.shared.animations.SwipeToDeleteCard
+import eric.bitria.minimalfit.ui.theme.Spacing
+
+@Composable
+fun RoutineExerciseCard(
+    exerciseName: String,
+    sets: List<RoutineSet>,
+    onUpdateSet: (RoutineSet) -> Unit,
+    onDeleteSet: (String) -> Unit,
+    onAddSet: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.extraLarge,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        Column(modifier = Modifier.padding(Spacing.m)) {
+            Text(
+                text = exerciseName,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.ExtraBold
+            )
+
+            Spacer(modifier = Modifier.height(Spacing.m))
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = Spacing.m),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Spacing.s)
+            ) {
+                Spacer(modifier = Modifier.width(Spacing.m))
+                Text(
+                    text = "KG",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.weight(1f)
+                )
+                Spacer(modifier = Modifier.width(Spacing.s))
+                Text(
+                    text = "REPS",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(Spacing.xs))
+
+            Column(modifier = Modifier.fillMaxWidth()) {
+                sets.forEachIndexed { index, set ->
+                    if (index > 0) {
+                        HorizontalDivider(
+                            modifier = Modifier.padding(horizontal = Spacing.xs),
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                        )
+                    }
+                    SwipeToDeleteCard(
+                        onDismiss = {},
+                        onDeleteRequested = { onDeleteSet(set.id) },
+                        modifier = Modifier.clip(MaterialTheme.shapes.medium)
+                    ) {
+                        RoutineSetRow(
+                            index = index,
+                            set = set,
+                            onUpdate = onUpdateSet
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(Spacing.s))
+            Button(
+                onClick = onAddSet,
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.medium
+            ) {
+                Text("Add Set")
+            }
+        }
+    }
+}

@@ -231,7 +231,12 @@ class SessionViewModel(
         gymSessionManager.stopRest()
     }
 
-    fun createNewExerciseAndAdd(name: String) {
+    fun createExerciseAndAdd(
+        name: String,
+        muscleGroup: String?,
+        isBodyweight: Boolean,
+        restSeconds: Int
+    ) {
         val trimmed = name.trim()
         if (trimmed.isBlank()) return
         viewModelScope.launch {
@@ -242,7 +247,12 @@ class SessionViewModel(
             val exerciseId = if (existing != null) {
                 existing.id
             } else {
-                val exercise = Exercise(name = trimmed)
+                val exercise = Exercise(
+                    name = trimmed,
+                    muscleGroup = muscleGroup,
+                    isBodyweight = isBodyweight,
+                    restSeconds = restSeconds
+                )
                 exerciseRepository.addExercise(exercise)
                 exercise.id
             }

@@ -16,14 +16,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -35,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import eric.bitria.minimalfit.ui.components.gym.cards.RoutineListItem
+import eric.bitria.minimalfit.ui.components.gym.dialogs.CreateExerciseDialog
 import eric.bitria.minimalfit.ui.components.gym.rows.ExerciseListItem
 import eric.bitria.minimalfit.ui.components.shared.animations.SwipeToDeleteCard
 import eric.bitria.minimalfit.ui.theme.Spacing
@@ -168,7 +165,7 @@ fun CollectionTab(
     }
 
     if (showAddExerciseDialog) {
-        AddExerciseDialog(
+        CreateExerciseDialog(
             onDismiss = { showAddExerciseDialog = false },
             onCreate = { name, muscleGroup, isBodyweight, restSeconds ->
                 viewModel.addExercise(name, muscleGroup, isBodyweight, restSeconds)
@@ -178,73 +175,3 @@ fun CollectionTab(
     }
 }
 
-@Composable
-private fun AddExerciseDialog(
-    onDismiss: () -> Unit,
-    onCreate: (name: String, muscleGroup: String?, isBodyweight: Boolean, restSeconds: Int) -> Unit
-) {
-    var name by remember { mutableStateOf("") }
-    var muscleGroup by remember { mutableStateOf("") }
-    var isBodyweight by remember { mutableStateOf(false) }
-    var restSecondsText by remember { mutableStateOf("120") }
-    val restSeconds = restSecondsText.toIntOrNull() ?: 120
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Create exercise") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text("Name") },
-                    singleLine = true
-                )
-                OutlinedTextField(
-                    value = muscleGroup,
-                    onValueChange = { muscleGroup = it },
-                    label = { Text("Muscle group") },
-                    singleLine = true
-                )
-                OutlinedTextField(
-                    value = restSecondsText,
-                    onValueChange = { value ->
-                        restSecondsText = value.filter { it.isDigit() }.take(4)
-                    },
-                    label = { Text("Rest seconds") },
-                    singleLine = true
-                )
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(Spacing.s)
-                ) {
-                    Checkbox(
-                        checked = isBodyweight,
-                        onCheckedChange = { isBodyweight = it }
-                    )
-                    Text("Bodyweight exercise")
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(
-                enabled = name.isNotBlank(),
-                onClick = {
-                    onCreate(
-                        name,
-                        muscleGroup.trim().takeIf { it.isNotBlank() },
-                        isBodyweight,
-                        restSeconds
-                    )
-                }
-            ) {
-                Text("Create")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
-            }
-        }
-    )
-}

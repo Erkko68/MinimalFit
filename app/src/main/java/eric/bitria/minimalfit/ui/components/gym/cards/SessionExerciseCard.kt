@@ -43,6 +43,7 @@ fun SessionExerciseCard(
     isCollapsed: Boolean,
     canEdit: Boolean,
     createdAt: Instant,
+    restSeconds: Int = 120,
     onToggleCollapse: () -> Unit,
     onUpdateSet: (Set) -> Unit,
     onDeleteSet: (String) -> Unit,
@@ -55,6 +56,7 @@ fun SessionExerciseCard(
         .toLocalDateTime(TimeZone.currentSystemDefault())
         .time
         .hourMinute()
+    val restLabel = "%d:%02d rest".format(restSeconds / 60, restSeconds % 60)
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.extraLarge,
@@ -79,11 +81,26 @@ fun SessionExerciseCard(
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.ExtraBold
                     )
-                    Text(
-                        text = addedTime,
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-                    )
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.s),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = addedTime,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                        )
+                        Text(
+                            text = "·",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+                        )
+                        Text(
+                            text = restLabel,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
+                        )
+                    }
                 }
                 if (isCollapsed) {
                     val totalWeight = sets.sumOf { (it.weight * it.reps).toDouble() }

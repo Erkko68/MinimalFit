@@ -44,6 +44,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.em
 import eric.bitria.minimalfit.navigation.ScreenConfiguration
 import eric.bitria.minimalfit.ui.components.food.dialogs.SearchableItemDialog
+import eric.bitria.minimalfit.ui.components.gym.dialogs.CreateExerciseDialog
 import eric.bitria.minimalfit.ui.components.gym.SessionState
 import eric.bitria.minimalfit.ui.components.gym.SessionToolbar
 import eric.bitria.minimalfit.ui.components.gym.cards.SessionExerciseCard
@@ -82,6 +83,8 @@ fun GymSessionScreen(
 
     var showFinishDialog by remember { mutableStateOf(false) }
     var showExerciseSearchDialog by remember { mutableStateOf(false) }
+    var showCreateExerciseDialog by remember { mutableStateOf(false) }
+    var pendingExerciseName by remember { mutableStateOf("") }
     var showRestDialog by remember { mutableStateOf(false) }
     var showSaveAsRoutineDialog by remember { mutableStateOf(false) }
     var editedTitle by remember(uiState.sessionTitle) { mutableStateOf(uiState.sessionTitle) }
@@ -312,6 +315,7 @@ fun GymSessionScreen(
                         isCollapsed = isCollapsed,
                         canEdit = canEdit,
                         createdAt = group.createdAt,
+                        restSeconds = group.restSeconds,
                         onToggleCollapse = {
                             collapsedExercises = if (isCollapsed)
                                 collapsedExercises - group.sessionExerciseId
@@ -365,7 +369,9 @@ fun GymSessionScreen(
             filter = { item, query -> item.name.contains(query, ignoreCase = true) },
             onDismiss = { showExerciseSearchDialog = false },
             onCreateNew = { newName ->
-                viewModel.createNewExerciseAndAdd(newName)
+                pendingExerciseName = newName
+                showExerciseSearchDialog = false
+                showCreateExerciseDialog = true
             }
         ) { exercise ->
             Row(
@@ -382,5 +388,16 @@ fun GymSessionScreen(
                 )
             }
         }
+    }
+
+    if (showCreateExerciseDialog) {
+        CreateExerciseDialog(
+            initialName = pendingExerciseName,
+            onDismiss = { showCreateExerciseDialog = false },
+            onCreate = { name, muscleGroup, isBodyweight, restSeconds ->
+                viewModel.createExerciseAndAdd(name, muscleGroup, isBodyweight, restSeconds)
+                showCreateExerciseDialog = false
+            }
+        )
     }
 }

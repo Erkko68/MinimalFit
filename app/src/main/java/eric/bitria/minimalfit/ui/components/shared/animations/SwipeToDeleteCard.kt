@@ -43,10 +43,7 @@ private fun SwipeDeleteBackground(
     val progress = (abs(offsetX) / threshold.coerceAtLeast(1f)).coerceIn(0f, 1f)
     val alignment = if (offsetX > 0) Alignment.CenterStart else Alignment.CenterEnd
 
-    // Dynamic background color that intensifies as user drags closer to threshold
-    val backgroundColor = MaterialTheme.colorScheme.errorContainer.copy(
-        alpha = 0.6f + (progress * 0.4f)
-    )
+    val backgroundColor = MaterialTheme.colorScheme.errorContainer
 
     val iconScale by animateFloatAsState(
         targetValue = when {
@@ -100,12 +97,6 @@ fun SwipeToDeleteCard(
     var showDeleteConfirmation by remember { mutableStateOf(false) }
     var pendingDismissDirection by remember { mutableFloatStateOf(0f) }
 
-    val dragProgress by remember {
-        derivedStateOf {
-            (abs(offsetX.value) / cardWidth.coerceAtLeast(1)).coerceIn(0f, 1f)
-        }
-    }
-
     // Background alpha animates to 0 when the card is fully dismissed
     val backgroundAlpha by animateFloatAsState(
         targetValue = if (isDismissed) 0f else 1f,
@@ -140,9 +131,6 @@ fun SwipeToDeleteCard(
                 .fillMaxWidth()
                 .graphicsLayer {
                     translationX = offsetX.value
-                    alpha = 1f - dragProgress * 0.3f
-                    scaleX = 1f - dragProgress * 0.04f
-                    scaleY = 1f - dragProgress * 0.04f
                 }
                 .pointerInput(Unit) {
                     val velocityTracker = VelocityTracker()

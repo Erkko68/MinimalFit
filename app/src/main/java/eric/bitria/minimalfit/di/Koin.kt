@@ -52,6 +52,8 @@ import eric.bitria.minimalfit.ui.viewmodels.food.FoodViewModel
 import eric.bitria.minimalfit.ui.viewmodels.food.MealDetailViewModel
 import eric.bitria.minimalfit.ui.viewmodels.login.LoginViewModel
 import eric.bitria.minimalfit.ui.viewmodels.login.RegisterViewModel
+import eric.bitria.minimalfit.ui.viewmodels.gym.GymCollectionViewModel
+import eric.bitria.minimalfit.ui.viewmodels.gym.GymHistoryViewModel
 import eric.bitria.minimalfit.ui.viewmodels.gym.GymViewModel
 import eric.bitria.minimalfit.ui.viewmodels.gym.RoutineViewModel
 import eric.bitria.minimalfit.ui.viewmodels.gym.SessionViewModel
@@ -210,6 +212,8 @@ val viewModels = module {
 
     // Gym
     viewModelOf(::GymViewModel)
+    viewModelOf(::GymCollectionViewModel)
+    viewModelOf(::GymHistoryViewModel)
     viewModelOf(::RoutineViewModel)
     viewModel {
         SessionViewModel(

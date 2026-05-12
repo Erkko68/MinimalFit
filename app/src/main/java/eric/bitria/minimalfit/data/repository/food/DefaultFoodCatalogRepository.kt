@@ -6,6 +6,7 @@ import eric.bitria.minimalfit.data.entity.food.Ingredient
 import eric.bitria.minimalfit.data.entity.food.Meal
 import eric.bitria.minimalfit.data.entity.food.MeasurementUnit
 import eric.bitria.minimalfit.data.entity.food.relations.MealIngredientCrossRef
+import eric.bitria.minimalfit.data.remote.sync.SyncScheduler
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -18,7 +19,8 @@ import kotlinx.coroutines.flow.map
  */
 class DefaultFoodCatalogRepository(
     private val mealDao: MealDao,
-    private val ingredientDao: IngredientDao
+    private val ingredientDao: IngredientDao,
+    private val syncScheduler: SyncScheduler
 ) : FoodCatalogRepository {
 
     override fun getMeals(query: String, limit: Int): Flow<List<Meal>> =
@@ -27,14 +29,20 @@ class DefaultFoodCatalogRepository(
     override fun getMeal(id: String): Flow<Meal?> =
         mealDao.getMeal(id)
 
-    override suspend fun addMeal(meal: Meal) =
+    override suspend fun addMeal(meal: Meal) {
         mealDao.insertMeal(meal)
+        syncScheduler.enqueue("meal", meal.id, "upsert")
+    }
 
-    override suspend fun updateMeal(meal: Meal) =
+    override suspend fun updateMeal(meal: Meal) {
         mealDao.updateMeal(meal)
+        syncScheduler.enqueue("meal", meal.id, "upsert")
+    }
 
-    override suspend fun deleteMeal(id: String) =
+    override suspend fun deleteMeal(id: String) {
         mealDao.deleteMeal(id)
+        syncScheduler.enqueue("meal", id, "delete")
+    }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun getIngredientsForMeal(mealId: String): Flow<List<Ingredient>> =
@@ -76,14 +84,17 @@ class DefaultFoodCatalogRepository(
 
     override suspend fun addIngredientToMeal(mealId: String, ingredientId: String, amount: Float) {
         mealDao.insertMealIngredientCrossRef(MealIngredientCrossRef(mealId, ingredientId, amount))
+        syncScheduler.enqueue("meal", mealId, "upsert")
     }
 
     override suspend fun removeIngredientsFromMeal(mealId: String) {
         mealDao.deleteIngredientsForMeal(mealId)
+        syncScheduler.enqueue("meal", mealId, "upsert")
     }
 
     override suspend fun removeIngredientFromMeal(mealId: String, ingredientId: String) {
         mealDao.deleteIngredientFromMeal(mealId, ingredientId)
+        syncScheduler.enqueue("meal", mealId, "upsert")
     }
 
     override fun getIngredients(query: String, limit: Int): Flow<List<Ingredient>> =
@@ -92,12 +103,18 @@ class DefaultFoodCatalogRepository(
     override fun getIngredient(id: String): Flow<Ingredient?> =
         ingredientDao.getIngredient(id)
 
-    override suspend fun addIngredient(ingredient: Ingredient) =
+    override suspend fun addIngredient(ingredient: Ingredient) {
         ingredientDao.insertIngredient(ingredient)
+        if (!ingredient.isGlobal) syncScheduler.enqueue("ingredient", ingredient.id, "upsert")
+    }
 
-    override suspend fun updateIngredient(ingredient: Ingredient) =
+    override suspend fun updateIngredient(ingredient: Ingredient) {
         ingredientDao.updateIngredient(ingredient)
+        if (!ingredient.isGlobal) syncScheduler.enqueue("ingredient", ingredient.id, "upsert")
+    }
 
-    override suspend fun deleteIngredient(id: String) =
+    override suspend fun deleteIngredient(id: String) {
         ingredientDao.deleteIngredient(id)
+        syncScheduler.enqueue("ingredient", id, "delete")
+    }
 }

@@ -22,6 +22,16 @@ interface RoutineSetDao {
     """)
     fun getForRoutine(routineId: String): Flow<List<RoutineSet>>
 
+    @Query("""
+        SELECT re.routineId FROM routine_sets rs
+        JOIN routine_exercises re ON rs.routineExerciseId = re.id
+        WHERE rs.id = :routineSetId LIMIT 1
+    """)
+    suspend fun getRoutineIdForSet(routineSetId: String): String?
+
+    @Query("SELECT routineId FROM routine_exercises WHERE id = :routineExerciseId LIMIT 1")
+    suspend fun getRoutineIdByRoutineExerciseId(routineExerciseId: String): String?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(routineSet: RoutineSet)
 

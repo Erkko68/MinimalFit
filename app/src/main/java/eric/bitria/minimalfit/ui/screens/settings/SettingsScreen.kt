@@ -51,6 +51,7 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val syncLogs by viewModel.syncLogs.collectAsState()
     val isConnected = rememberInternetConnection(showDialogOnLost = false)
     val context = LocalContext.current
     val credentialManager = remember(context) { CredentialManager.create(context) }
@@ -142,7 +143,9 @@ fun SettingsScreen(
                 isSyncing = uiState.isSyncing,
                 isAutoSyncEnabled = uiState.isAutoSyncEnabled,
                 onSyncClick = { viewModel.uploadData() },
-                onAutoSyncToggle = { viewModel.toggleAutoSync(it) }
+                onAutoSyncToggle = { viewModel.toggleAutoSync(it) },
+                syncLogs = syncLogs,
+                onClearLogs = { viewModel.clearSyncLogs() }
             )
 
             AccountManagementCard(
@@ -171,7 +174,9 @@ fun SettingsScreen(
                 isSyncing = uiState.isSyncing,
                 isAutoSyncEnabled = uiState.isAutoSyncEnabled,
                 onSyncClick = { viewModel.uploadData() },
-                onAutoSyncToggle = { viewModel.toggleAutoSync(it) }
+                onAutoSyncToggle = { viewModel.toggleAutoSync(it) },
+                syncLogs = syncLogs,
+                onClearLogs = { viewModel.clearSyncLogs() }
             )
         }
     }

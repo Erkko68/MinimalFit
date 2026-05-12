@@ -5,6 +5,7 @@ import eric.bitria.minimalfit.data.database.dao.MealLogDao
 import eric.bitria.minimalfit.data.entity.food.Meal
 import eric.bitria.minimalfit.data.entity.food.MealLog
 import eric.bitria.minimalfit.data.entity.food.relations.MealLogMealCrossRef
+import eric.bitria.minimalfit.data.remote.sync.SyncScheduler
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -16,7 +17,8 @@ import kotlin.time.Instant
 class DefaultJournalRepository(
     private val mealLogDao: MealLogDao,
     private val mealDao: MealDao,
-    private val foodCatalog: FoodCatalogRepository
+    private val foodCatalog: FoodCatalogRepository,
+    private val syncScheduler: SyncScheduler
 ) : JournalRepository {
 
     override fun getMealLogs(
@@ -27,10 +29,12 @@ class DefaultJournalRepository(
 
     override suspend fun addMealLog(mealLog: MealLog) {
         mealLogDao.insertMealLog(mealLog)
+        syncScheduler.enqueue("meal_log", mealLog.id, "upsert")
     }
 
     override suspend fun removeMealLog(id: String) {
         mealLogDao.deleteMealLog(id)
+        syncScheduler.enqueue("meal_log", id, "delete")
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -69,5 +73,6 @@ class DefaultJournalRepository(
 
     override suspend fun addMealToLog(mealLogId: String, mealId: String, amount: Float) {
         mealLogDao.insertMealLogMealCrossRef(MealLogMealCrossRef(mealLogId, mealId, amount))
+        syncScheduler.enqueue("meal_log", mealLogId, "upsert")
     }
 }

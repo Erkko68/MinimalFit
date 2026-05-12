@@ -2,6 +2,7 @@ package eric.bitria.minimalfit.data.entity.track
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import eric.bitria.minimalfit.util.nowInstant
 import kotlinx.serialization.Serializable
 import kotlin.time.Instant
 import kotlin.time.Duration
@@ -17,6 +18,7 @@ data class Track(
     val name: String,
     val distance: Double, // in km
     val pace: String, // e.g., "5:30 min/km"
-    val routePoints: List<TrackPoint> = emptyList()
+    val routePoints: List<TrackPoint> = emptyList(),
+    val updatedAt: Instant = nowInstant()
 )
 

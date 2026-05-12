@@ -21,4 +21,7 @@ interface RoutineExerciseDao {
 
     @Query("DELETE FROM routine_exercises WHERE routineId = :routineId")
     suspend fun deleteForRoutine(routineId: String)
+
+    @Query("SELECT routineId FROM routine_exercises WHERE id = :routineExerciseId LIMIT 1")
+    suspend fun getRoutineIdForExercise(routineExerciseId: String): String?
 }

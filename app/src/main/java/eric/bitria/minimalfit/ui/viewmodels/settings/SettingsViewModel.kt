@@ -4,14 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseUser
 import eric.bitria.minimalfit.data.remote.auth.AuthRepository
-import eric.bitria.minimalfit.data.remote.sync.SyncRepository
-import eric.bitria.minimalfit.data.repository.food.FoodCatalogRepository
-import eric.bitria.minimalfit.data.repository.gym.ExerciseRepository
-import eric.bitria.minimalfit.data.repository.gym.RoutineExerciseRepository
-import eric.bitria.minimalfit.data.repository.gym.RoutineRepository
-import eric.bitria.minimalfit.data.repository.gym.SessionExerciseRepository
-import eric.bitria.minimalfit.data.repository.gym.SessionRepository
-import eric.bitria.minimalfit.data.repository.gym.SetRepository
+import eric.bitria.minimalfit.data.remote.sync.SyncLogEntry
+import eric.bitria.minimalfit.data.remote.sync.SyncLogStore
+import eric.bitria.minimalfit.data.remote.sync.SyncOrchestrator
 import eric.bitria.minimalfit.data.repository.user.UserPreferencesRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -19,7 +14,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -44,15 +38,12 @@ data class SettingsUiState(
 class SettingsViewModel(
     private val authRepository: AuthRepository,
     private val userPreferencesRepository: UserPreferencesRepository,
-    private val syncRepository: SyncRepository,
-    private val foodCatalogRepository: FoodCatalogRepository,
-    private val exerciseRepository: ExerciseRepository,
-    private val routineRepository: RoutineRepository,
-    private val routineExerciseRepository: RoutineExerciseRepository,
-    private val sessionRepository: SessionRepository,
-    private val sessionExerciseRepository: SessionExerciseRepository,
-    private val setRepository: SetRepository
+    private val syncOrchestrator: SyncOrchestrator,
+    private val syncLogStore: SyncLogStore
 ) : ViewModel() {
+
+    val syncLogs: StateFlow<List<SyncLogEntry>> = syncLogStore.entries
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val _isSyncing = MutableStateFlow(false)
     private val _isGoogleSignInLoading = MutableStateFlow(false)
@@ -146,50 +137,17 @@ class SettingsViewModel(
     }
 
     fun uploadData() {
-        val currentState = uiState.value
         val user = authRepository.currentUser.value
         if (user != null && user.isEmailVerified) {
             viewModelScope.launch {
                 _isSyncing.value = true
-                
-                // 1. Sync Global Data (Get latest from Firestore)
-                syncRepository.getGlobalIngredients().onSuccess { globals ->
-                    globals.forEach { foodCatalogRepository.addIngredient(it) }
-                }
-                syncRepository.getGlobalExercises().onSuccess { globals ->
-                    globals.forEach { exerciseRepository.addExercise(it) }
-                }
-
-                // 2. Backup User Data (Upload local to Firestore)
-                val localIngredients = foodCatalogRepository.getIngredients().first()
-                syncRepository.uploadUserIngredients(user.uid, localIngredients)
-
-                val localMeals = foodCatalogRepository.getMeals().first()
-                syncRepository.uploadUserMeals(user.uid, localMeals)
-
-                val localExercises = exerciseRepository.getExercises().first()
-                syncRepository.uploadUserExercises(user.uid, localExercises)
-
-                val localRoutines = routineRepository.getAll().first()
-                val localRoutineExercises = localRoutines.flatMap { routine ->
-                    routineExerciseRepository.getForRoutine(routine.id).first()
-                }
-                syncRepository.uploadUserRoutines(user.uid, localRoutines, localRoutineExercises)
-
-                val localSessions = sessionRepository.getSessions(limit = -1).first()
-                val localSessionExercises = sessionExerciseRepository.getAllSessionExercises().first()
-                val localSets = setRepository.getAllSets().first()
-                syncRepository.uploadUserGymSessions(
-                    user.uid,
-                    localSessions,
-                    localSessionExercises,
-                    localSets
-                )
-
+                syncOrchestrator.syncAll()
                 _isSyncing.value = false
             }
         }
     }
+
+    fun clearSyncLogs() { syncLogStore.clear() }
 
     fun toggleAutoSync(enabled: Boolean) {
         viewModelScope.launch {

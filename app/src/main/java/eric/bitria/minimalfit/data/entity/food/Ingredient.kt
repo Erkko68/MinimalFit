@@ -2,7 +2,9 @@ package eric.bitria.minimalfit.data.entity.food
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import eric.bitria.minimalfit.util.nowInstant
 import kotlinx.serialization.Serializable
+import kotlin.time.Instant
 import java.util.UUID
 
 @Serializable
@@ -15,5 +17,6 @@ data class Ingredient(
     val measurementUnit: MeasurementUnit = MeasurementUnit.GRAMS,
     val imageUrl: String? = null,
     val isGlobal: Boolean = false,
-    val creatorId: String? = null
+    val creatorId: String? = null,
+    val updatedAt: Instant = nowInstant()
 )

@@ -3,6 +3,7 @@ package eric.bitria.minimalfit.data.repository.gym
 import eric.bitria.minimalfit.data.database.dao.SessionDao
 import eric.bitria.minimalfit.data.database.dao.SetDao
 import eric.bitria.minimalfit.data.entity.gym.Session
+import eric.bitria.minimalfit.data.remote.sync.SyncScheduler
 import eric.bitria.minimalfit.util.nowInstant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -14,7 +15,8 @@ import kotlin.time.Instant
 
 class DefaultSessionRepository(
     private val sessionDao: SessionDao,
-    private val setDao: SetDao
+    private val setDao: SetDao,
+    private val syncScheduler: SyncScheduler
 ) : SessionRepository {
 
     override fun getSessions(
@@ -38,6 +40,7 @@ class DefaultSessionRepository(
     override suspend fun deleteSession(id: String) {
         setDao.deleteSetsForSession(id)
         sessionDao.deleteSession(id)
+        syncScheduler.enqueue("session", id, "delete")
     }
 
     override suspend fun startSession(): String {
@@ -55,5 +58,6 @@ class DefaultSessionRepository(
     override suspend fun finishSession(id: String, durationSeconds: Long) {
         val session = sessionDao.getSession(id).firstOrNull() ?: return
         sessionDao.updateSession(session.copy(durationSeconds = durationSeconds, isFinished = true))
+        syncScheduler.enqueue("session", id, "upsert")
     }
 }

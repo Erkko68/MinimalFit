@@ -5,6 +5,7 @@ import eric.bitria.minimalfit.data.database.dao.MealDao
 import eric.bitria.minimalfit.data.entity.food.Diet
 import eric.bitria.minimalfit.data.entity.food.Meal
 import eric.bitria.minimalfit.data.entity.food.relations.DietMealCrossRef
+import eric.bitria.minimalfit.data.remote.sync.SyncScheduler
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -15,7 +16,8 @@ import kotlinx.coroutines.flow.map
 class DefaultDietRepository(
     private val dietDao: DietDao,
     private val mealDao: MealDao,
-    private val foodCatalog: FoodCatalogRepository
+    private val foodCatalog: FoodCatalogRepository,
+    private val syncScheduler: SyncScheduler
 ) : DietRepository {
 
     override fun getDiet(id: String): Flow<Diet?> =
@@ -24,14 +26,20 @@ class DefaultDietRepository(
     override fun getDiets(query: String, limit: Int): Flow<List<Diet>> =
         dietDao.getDiets(query, limit)
 
-    override suspend fun addDiet(diet: Diet) =
+    override suspend fun addDiet(diet: Diet) {
         dietDao.insertDiet(diet)
+        syncScheduler.enqueue("diet", diet.id, "upsert")
+    }
 
-    override suspend fun updateDiet(diet: Diet) =
+    override suspend fun updateDiet(diet: Diet) {
         dietDao.updateDiet(diet)
+        syncScheduler.enqueue("diet", diet.id, "upsert")
+    }
 
-    override suspend fun deleteDiet(id: String) =
+    override suspend fun deleteDiet(id: String) {
         dietDao.deleteDiet(id)
+        syncScheduler.enqueue("diet", id, "delete")
+    }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun getMealsForDiet(dietId: String): Flow<List<Meal>> =
@@ -64,9 +72,11 @@ class DefaultDietRepository(
 
     override suspend fun addMealToDiet(dietId: String, mealId: String, amount: Float) {
         dietDao.insertDietMealCrossRef(DietMealCrossRef(dietId, mealId, amount))
+        syncScheduler.enqueue("diet", dietId, "upsert")
     }
 
     override suspend fun removeMealFromDiet(dietId: String, mealId: String) {
         dietDao.deleteMealFromDiet(dietId, mealId)
+        syncScheduler.enqueue("diet", dietId, "upsert")
     }
 }

@@ -15,5 +15,6 @@ import java.util.UUID
 data class MealLog(
     @PrimaryKey
     val id: String = UUID.randomUUID().toString(),
-    val createdAt: Instant = nowInstant()
+    val createdAt: Instant = nowInstant(),
+    val updatedAt: Instant = nowInstant()
 )

@@ -25,6 +25,9 @@ interface MealLogDao {
         limit: Int = -1
     ): Flow<List<MealLog>>
 
+    @Query("SELECT * FROM meal_logs WHERE id = :id LIMIT 1")
+    fun getMealLog(id: String): Flow<MealLog?>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertMealLog(mealLog: MealLog)
 

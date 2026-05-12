@@ -16,6 +16,9 @@ interface SessionExerciseDao {
     @Query("SELECT * FROM session_exercises WHERE sessionId = :sessionId ORDER BY createdAt ASC")
     fun getSessionExercises(sessionId: String): Flow<List<SessionExercise>>
 
+    @Query("SELECT sessionId FROM session_exercises WHERE id = :id LIMIT 1")
+    suspend fun getSessionIdForExercise(id: String): String?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(sessionExercise: SessionExercise)
 

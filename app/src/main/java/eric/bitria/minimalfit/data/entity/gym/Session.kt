@@ -2,6 +2,7 @@ package eric.bitria.minimalfit.data.entity.gym
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import eric.bitria.minimalfit.util.nowInstant
 import kotlinx.serialization.Serializable
 import kotlin.time.Instant
 import java.util.UUID
@@ -15,5 +16,6 @@ data class Session(
     val title: String = "",
     val durationSeconds: Long = 0L,
     val notes: String = "",
-    val isFinished: Boolean = false
+    val isFinished: Boolean = false,
+    val updatedAt: Instant = nowInstant()
 )

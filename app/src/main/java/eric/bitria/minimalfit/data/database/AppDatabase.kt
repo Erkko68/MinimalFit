@@ -14,7 +14,9 @@ import eric.bitria.minimalfit.data.database.dao.RoutineSetDao
 import eric.bitria.minimalfit.data.database.dao.SessionDao
 import eric.bitria.minimalfit.data.database.dao.SessionExerciseDao
 import eric.bitria.minimalfit.data.database.dao.SetDao
+import eric.bitria.minimalfit.data.database.dao.SyncQueueDao
 import eric.bitria.minimalfit.data.database.dao.TrackDao
+import eric.bitria.minimalfit.data.database.entity.SyncQueueEntry
 import eric.bitria.minimalfit.data.entity.food.Diet
 import eric.bitria.minimalfit.data.entity.food.Ingredient
 import eric.bitria.minimalfit.data.entity.food.Meal
@@ -47,9 +49,10 @@ import eric.bitria.minimalfit.data.entity.track.Track
         RoutineSet::class,
         Session::class,
         SessionExercise::class,
-        Set::class
+        Set::class,
+        SyncQueueEntry::class
     ],
-    version = 5
+    version = 7
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
@@ -65,4 +68,5 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun setDao(): SetDao
     abstract fun routineExerciseDao(): RoutineExerciseDao
     abstract fun routineSetDao(): RoutineSetDao
+    abstract fun syncQueueDao(): SyncQueueDao
 }

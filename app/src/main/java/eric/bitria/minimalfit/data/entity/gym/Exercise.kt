@@ -2,7 +2,9 @@ package eric.bitria.minimalfit.data.entity.gym
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import eric.bitria.minimalfit.util.nowInstant
 import kotlinx.serialization.Serializable
+import kotlin.time.Instant
 import java.util.UUID
 
 @Serializable
@@ -15,6 +17,7 @@ data class Exercise(
     val muscleGroup: String? = null,
     val restSeconds: Int = 120,
     val isGlobal: Boolean = false,
-    val creatorId: String? = null
+    val creatorId: String? = null,
+    val updatedAt: Instant = nowInstant()
 )
 

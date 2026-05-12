@@ -32,8 +32,15 @@ import eric.bitria.minimalfit.data.repository.user.DataStoreUserPreferencesRepos
 import eric.bitria.minimalfit.data.repository.user.UserPreferencesRepository
 import eric.bitria.minimalfit.data.remote.auth.AuthRepository
 import eric.bitria.minimalfit.data.remote.auth.FirebaseAuthRepository
-import eric.bitria.minimalfit.data.remote.sync.FirestoreSyncRepository
-import eric.bitria.minimalfit.data.remote.sync.SyncRepository
+import eric.bitria.minimalfit.data.remote.firestore.FoodFirestoreDataSource
+import eric.bitria.minimalfit.data.remote.firestore.GymFirestoreDataSource
+import eric.bitria.minimalfit.data.remote.firestore.TrackFirestoreDataSource
+import eric.bitria.minimalfit.data.remote.sync.FoodSyncService
+import eric.bitria.minimalfit.data.remote.sync.GymSyncService
+import eric.bitria.minimalfit.data.remote.sync.SyncLogStore
+import eric.bitria.minimalfit.data.remote.sync.SyncOrchestrator
+import eric.bitria.minimalfit.data.remote.sync.SyncScheduler
+import eric.bitria.minimalfit.data.remote.sync.TrackSyncService
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import eric.bitria.minimalfit.data.gym.AndroidGymSessionManager
@@ -103,6 +110,7 @@ val dataModule = module {
 
     single { get<AppDatabase>().routineExerciseDao() }
     single { get<AppDatabase>().routineSetDao() }
+    single { get<AppDatabase>().syncQueueDao() }
 
     singleOf(::DatabaseInitializer)
     
@@ -110,7 +118,8 @@ val dataModule = module {
     single<FoodCatalogRepository> {
         DefaultFoodCatalogRepository(
             mealDao = get(),
-            ingredientDao = get()
+            ingredientDao = get(),
+            syncScheduler = get()
         )
     }
 
@@ -119,7 +128,8 @@ val dataModule = module {
         DefaultJournalRepository(
             mealLogDao = get(),
             mealDao = get(),
-            foodCatalog = get()
+            foodCatalog = get(),
+            syncScheduler = get()
         )
     }
 
@@ -128,21 +138,24 @@ val dataModule = module {
         DefaultDietRepository(
             dietDao = get(),
             mealDao = get(),
-            foodCatalog = get()
+            foodCatalog = get(),
+            syncScheduler = get()
         )
     }
 
-    singleOf(::DefaultTrackRepository) bind TrackRepository::class
+    single<TrackRepository> {
+        DefaultTrackRepository(trackDao = get(), syncScheduler = get())
+    }
 
     // Gym Repositories
-    single<SessionRepository> { DefaultSessionRepository(sessionDao = get(), setDao = get()) }
-    single<ExerciseRepository> { DefaultExerciseRepository(exerciseDao = get()) }
+    single<SessionRepository> { DefaultSessionRepository(sessionDao = get(), setDao = get(), syncScheduler = get()) }
+    single<ExerciseRepository> { DefaultExerciseRepository(exerciseDao = get(), syncScheduler = get()) }
 
-    single<SessionExerciseRepository> { DefaultSessionExerciseRepository(dao = get()) }
-    single<SetRepository> { DefaultSetRepository(setDao = get()) }
-    single<RoutineRepository> { DefaultRoutineRepository(dao = get()) }
-    single<RoutineExerciseRepository> { DefaultRoutineExerciseRepository(dao = get()) }
-    single<RoutineSetRepository> { DefaultRoutineSetRepository(dao = get()) }
+    single<SessionExerciseRepository> { DefaultSessionExerciseRepository(dao = get(), syncScheduler = get()) }
+    single<SetRepository> { DefaultSetRepository(setDao = get(), syncScheduler = get()) }
+    single<RoutineRepository> { DefaultRoutineRepository(dao = get(), syncScheduler = get()) }
+    single<RoutineExerciseRepository> { DefaultRoutineExerciseRepository(dao = get(), syncScheduler = get()) }
+    single<RoutineSetRepository> { DefaultRoutineSetRepository(dao = get(), syncScheduler = get()) }
     singleOf(::GymTrackingLogic)
     single<GymSessionManager> { AndroidGymSessionManager(androidContext(), get()) }
 
@@ -171,7 +184,19 @@ val dataModule = module {
 
     // Firestore
     single { FirebaseFirestore.getInstance() }
-    single<SyncRepository> { FirestoreSyncRepository(get()) }
+
+    // Firestore Data Sources
+    singleOf(::GymFirestoreDataSource)
+    singleOf(::FoodFirestoreDataSource)
+    singleOf(::TrackFirestoreDataSource)
+
+    // Sync Services
+    singleOf(::SyncLogStore)
+    singleOf(::GymSyncService)
+    singleOf(::FoodSyncService)
+    singleOf(::TrackSyncService)
+    singleOf(::SyncOrchestrator)
+    singleOf(::SyncScheduler)
 
     // DataStore
     single<UserPreferencesRepository> { DataStoreUserPreferencesRepository(androidContext()) }

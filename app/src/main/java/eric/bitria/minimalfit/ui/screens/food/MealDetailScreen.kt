@@ -1,30 +1,44 @@
 package eric.bitria.minimalfit.ui.screens.food
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import eric.bitria.minimalfit.navigation.ScreenConfiguration
 import eric.bitria.minimalfit.ui.components.shared.animations.SwipeToDeleteCard
@@ -49,6 +63,36 @@ fun MealDetailScreen(
     val meal = uiState.meal
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
+    var editedName by remember(meal?.name) { mutableStateOf(meal?.name ?: "") }
+    var editedDescription by remember(meal?.id) { mutableStateOf(meal?.description ?: "") }
+    var showEditImageDialog by remember { mutableStateOf(false) }
+    var editedImageUrl by remember { mutableStateOf("") }
+
+    if (showEditImageDialog) {
+        AlertDialog(
+            onDismissRequest = { showEditImageDialog = false },
+            title = { Text("Edit Image URL") },
+            text = {
+                OutlinedTextField(
+                    value = editedImageUrl,
+                    onValueChange = { editedImageUrl = it },
+                    label = { Text("Image URL") },
+                    placeholder = { Text("https://...") },
+                    singleLine = true
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    meal?.let { viewModel.updateMeal(it.copy(imageUrl = editedImageUrl.ifBlank { null })) }
+                    showEditImageDialog = false
+                }) { Text("Save") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showEditImageDialog = false }) { Text("Cancel") }
+            }
+        )
+    }
+
     ScreenConfiguration(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
@@ -64,28 +108,63 @@ fun MealDetailScreen(
                     }
                 },
                 title = {
-                    Text(
-                        text = meal?.name ?: "",
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.ExtraBold)
+                    BasicTextField(
+                        value = editedName,
+                        onValueChange = { newName ->
+                            editedName = newName
+                            meal?.let { viewModel.updateMeal(it.copy(name = newName)) }
+                        },
+                        singleLine = true,
+                        textStyle = MaterialTheme.typography.displaySmall.copy(
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        ),
+                        cursorBrush = SolidColor(MaterialTheme.colorScheme.onSurface),
+                        decorationBox = { innerTextField ->
+                            if (editedName.isBlank()) {
+                                Text(
+                                    text = "Meal name",
+                                    style = MaterialTheme.typography.displaySmall.copy(
+                                        fontWeight = FontWeight.ExtraBold
+                                    ),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                            innerTextField()
+                        }
                     )
                 },
                 subtitle = {
-                    Column {
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text(
                             text = "${uiState.totalCalories} kcal",
                             style = MaterialTheme.typography.titleLarge,
                             color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.Bold
                         )
-                        if (meal != null && meal.description.isNotEmpty()) {
-                            Text(
-                                text = meal.description,
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
+                        BasicTextField(
+                            value = editedDescription,
+                            onValueChange = { newDesc ->
+                                editedDescription = newDesc
+                                meal?.let { viewModel.updateMeal(it.copy(description = newDesc)) }
+                            },
+                            textStyle = MaterialTheme.typography.bodyLarge.copy(
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            ),
+                            cursorBrush = SolidColor(MaterialTheme.colorScheme.onSurfaceVariant),
+                            decorationBox = { innerTextField ->
+                                if (editedDescription.isBlank()) {
+                                    Text(
+                                        text = "Add a description...",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                                    )
+                                }
+                                innerTextField()
+                            }
+                        )
                     }
                 },
                 navigationIcon = {
@@ -100,6 +179,21 @@ fun MealDetailScreen(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Navigate back"
                         )
+                    }
+                },
+                actions = {
+                    if (meal != null) {
+                        IconButton(
+                            onClick = {
+                                editedImageUrl = meal.imageUrl ?: ""
+                                showEditImageDialog = true
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Edit,
+                                contentDescription = "Edit image"
+                            )
+                        }
                     }
                 },
                 scrollBehavior = scrollBehavior

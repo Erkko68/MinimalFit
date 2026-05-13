@@ -14,6 +14,7 @@ import eric.bitria.minimalfit.ui.theme.Spacing
 import kotlinx.serialization.json.JsonObject
 import org.maplibre.compose.camera.CameraState
 import org.maplibre.compose.expressions.dsl.const
+import org.maplibre.compose.layers.CircleLayer
 import org.maplibre.compose.layers.LineLayer
 import org.maplibre.compose.map.MapOptions
 import org.maplibre.compose.map.MaplibreMap
@@ -26,13 +27,15 @@ import org.maplibre.compose.style.rememberStyleState
 import org.maplibre.spatialk.geojson.Feature
 import org.maplibre.spatialk.geojson.FeatureCollection
 import org.maplibre.spatialk.geojson.LineString
+import org.maplibre.spatialk.geojson.Point
 import org.maplibre.spatialk.geojson.Position
 
 @Composable
 fun TrackMap(
     cameraState: CameraState,
     routePoints: List<TrackPoint>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    currentLocation: Position? = null,
 ) {
     val styleState = rememberStyleState()
 
@@ -67,6 +70,33 @@ fun TrackMap(
                     source = routeSource,
                     color = const(MaterialTheme.colorScheme.primary),
                     width = const(8.dp)
+                )
+            }
+
+            if (currentLocation != null) {
+                val userFeature = Feature(
+                    geometry = Point(currentLocation),
+                    properties = JsonObject(emptyMap())
+                )
+                val userSource = rememberGeoJsonSource(
+                    data = GeoJsonData.Features(FeatureCollection(features = listOf(userFeature)))
+                )
+
+                // Outer halo
+                CircleLayer(
+                    id = "user-location-halo",
+                    source = userSource,
+                    radius = const(14.dp),
+                    color = const(MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)),
+                )
+                // Inner filled dot
+                CircleLayer(
+                    id = "user-location-dot",
+                    source = userSource,
+                    radius = const(7.dp),
+                    color = const(MaterialTheme.colorScheme.primary),
+                    strokeColor = const(MaterialTheme.colorScheme.surface),
+                    strokeWidth = const(2.dp),
                 )
             }
         }

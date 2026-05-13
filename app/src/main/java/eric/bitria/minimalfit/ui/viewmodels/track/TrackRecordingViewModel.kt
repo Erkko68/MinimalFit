@@ -22,7 +22,8 @@ data class TrackRecordingUiState(
     val distanceKm: Double = 0.0,
     val duration: Duration = Duration.ZERO,
     val pace: String = "0:00",
-    val currentLocation: Location? = null
+    val currentLocation: Location? = null,
+    val savedTrackId: String? = null
 )
 
 class TrackRecordingViewModel(
@@ -38,7 +39,8 @@ class TrackRecordingViewModel(
         trackingManager.distanceKm,
         trackingManager.duration,
         trackingManager.pace,
-        _currentLocation
+        _currentLocation,
+        trackingManager.savedTrackId
     ) { args: Array<Any?> ->
         TrackRecordingUiState(
             recordingState = args[0] as RecordingState,
@@ -46,7 +48,8 @@ class TrackRecordingViewModel(
             distanceKm = args[2] as Double,
             duration = args[3] as Duration,
             pace = args[4] as String,
-            currentLocation = args[5] as (Location?)
+            currentLocation = args[5] as (Location?),
+            savedTrackId = args[6] as String?
         )
     }.stateIn(
         scope = viewModelScope,

@@ -50,6 +50,7 @@ import org.maplibre.spatialk.geojson.Position
 @Composable
 fun TrackRecordingScreen(
     onNavigateBack: () -> Unit,
+    onNavigateToDetail: (String) -> Unit,
     viewModel: TrackRecordingViewModel = koinViewModel()
 ) {
     ScreenConfiguration(
@@ -136,6 +137,12 @@ fun TrackRecordingScreen(
                 }
             }
 
+            LaunchedEffect(uiState.savedTrackId) {
+                uiState.savedTrackId?.let { trackId ->
+                    onNavigateToDetail(trackId)
+                }
+            }
+
             BackHandler(enabled = isActive) {
                 showFinishDialog = true
             }
@@ -144,6 +151,9 @@ fun TrackRecordingScreen(
 
                 TrackMap(
                     routePoints = uiState.routePoints,
+                    currentLocation = uiState.currentLocation?.let {
+                        Position(it.longitude, it.latitude)
+                    },
                     cameraState = cameraState,
                     modifier = Modifier.fillMaxSize()
                 )
@@ -205,7 +215,6 @@ fun TrackRecordingScreen(
                         TextButton(onClick = {
                             showFinishDialog = false
                             viewModel.stop()
-                            onNavigateBack()
                         }) { Text("Finish") }
                     },
                     dismissButton = {

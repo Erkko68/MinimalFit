@@ -14,6 +14,7 @@ interface TrackingManager {
     val distanceKm: StateFlow<Double>
     val duration: StateFlow<Duration>
     val pace: StateFlow<String>
+    val savedTrackId: StateFlow<String?>
 
     fun start()
     fun pause()

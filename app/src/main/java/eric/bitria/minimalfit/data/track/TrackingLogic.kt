@@ -50,6 +50,9 @@ class TrackingLogic(
     private val _pace = MutableStateFlow("--:--")
     val pace: StateFlow<String> = _pace.asStateFlow()
 
+    private val _savedTrackId = MutableStateFlow<String?>(null)
+    val savedTrackId: StateFlow<String?> = _savedTrackId.asStateFlow()
+
     private var timerJob: Job? = null
     private var locationCollectJob: Job? = null
     private var elapsedSeconds = 0L
@@ -149,6 +152,7 @@ class TrackingLogic(
         )
         scope.launch {
             trackRepository.addTrack(track)
+            _savedTrackId.value = id
         }
     }
 

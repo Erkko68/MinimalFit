@@ -18,6 +18,7 @@ class AndroidTrackingManager(
     override val distanceKm = trackingLogic.distanceKm
     override val duration = trackingLogic.duration
     override val pace = trackingLogic.pace
+    override val savedTrackId = trackingLogic.savedTrackId
 
     override fun start() {
         sendCommand(LocationService.ACTION_START)

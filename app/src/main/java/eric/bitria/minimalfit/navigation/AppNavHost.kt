@@ -156,7 +156,12 @@ fun AppNavHost(
         }
         composable<Route.TrackRecording> {
             TrackRecordingScreen(
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToDetail = { trackId ->
+                    navController.navigate(Route.TrackDetail(trackId = trackId)) {
+                        popUpTo(Route.TrackRecording) { inclusive = true }
+                    }
+                }
             )
         }
         composable<Route.IndoorActivities> {

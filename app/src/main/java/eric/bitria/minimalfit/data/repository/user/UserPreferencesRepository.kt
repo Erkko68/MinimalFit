@@ -7,9 +7,13 @@ interface UserPreferencesRepository {
     val userName: Flow<String?>
     val themeMode: Flow<String>
     val isAutoSyncEnabled: Flow<Boolean>
+    val isDailyRunReminderEnabled: Flow<Boolean>
+    val isWeightMilestoneEnabled: Flow<Boolean>
 
     suspend fun setOnboardingCompleted(completed: Boolean)
     suspend fun updateUserName(name: String)
     suspend fun updateThemeMode(mode: String)
     suspend fun setAutoSyncEnabled(enabled: Boolean)
+    suspend fun setDailyRunReminderEnabled(enabled: Boolean)
+    suspend fun setWeightMilestoneEnabled(enabled: Boolean)
 }

@@ -13,4 +13,5 @@ interface SetRepository {
     suspend fun updateSet(set: Set)
     suspend fun deleteSet(id: String)
     suspend fun deleteSetsForSessionExercise(sessionExerciseId: String)
+    suspend fun getTodayTotalWeightKg(): Double
 }

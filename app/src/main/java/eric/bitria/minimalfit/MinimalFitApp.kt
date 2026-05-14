@@ -5,6 +5,7 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import eric.bitria.minimalfit.data.remote.auth.AuthRepository
+import eric.bitria.minimalfit.data.remote.fcm.FcmRepository
 import eric.bitria.minimalfit.data.remote.sync.SyncOrchestrator
 import eric.bitria.minimalfit.data.remote.sync.SyncScheduler
 import eric.bitria.minimalfit.di.initKoin
@@ -31,6 +32,7 @@ class MinimalFitApp : Application() {
         val authRepository: AuthRepository by inject()
         val syncOrchestrator: SyncOrchestrator by inject()
         val syncScheduler: SyncScheduler by inject()
+        val fcmRepository: FcmRepository by inject()
 
         appScope.launch {
             authRepository.currentUser
@@ -39,6 +41,7 @@ class MinimalFitApp : Application() {
                 .collect { uid ->
                     if (uid != null) {
                         syncOrchestrator.restoreAll()
+                        fcmRepository.saveFcmToken()
                     }
                 }
         }

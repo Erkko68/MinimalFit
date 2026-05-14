@@ -42,6 +42,8 @@ import eric.bitria.minimalfit.data.remote.sync.SyncScheduler
 import eric.bitria.minimalfit.data.remote.sync.TrackSyncService
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.functions.FirebaseFunctions
+import eric.bitria.minimalfit.data.remote.fcm.FcmRepository
 import eric.bitria.minimalfit.data.gym.AndroidGymSessionManager
 import eric.bitria.minimalfit.data.gym.GymSessionManager
 import eric.bitria.minimalfit.data.gym.GymTrackingLogic
@@ -197,6 +199,10 @@ val dataModule = module {
 
     // DataStore
     single<UserPreferencesRepository> { DataStoreUserPreferencesRepository(androidContext()) }
+
+    // Firebase Functions & FCM
+    single { FirebaseFunctions.getInstance() }
+    singleOf(::FcmRepository)
 }
 
 val viewModels = module {

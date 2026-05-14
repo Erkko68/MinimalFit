@@ -22,6 +22,8 @@ class DataStoreUserPreferencesRepository(private val context: Context) : UserPre
         val USER_NAME = stringPreferencesKey("user_name")
         val THEME_MODE = stringPreferencesKey("theme_mode")
         val AUTO_SYNC_ENABLED = booleanPreferencesKey("auto_sync_enabled")
+        val DAILY_RUN_REMINDER = booleanPreferencesKey("daily_run_reminder")
+        val WEIGHT_MILESTONE = booleanPreferencesKey("weight_milestone")
     }
 
     override val onboardingCompleted: Flow<Boolean> = context.dataStore.data
@@ -40,6 +42,12 @@ class DataStoreUserPreferencesRepository(private val context: Context) : UserPre
 
     override val isAutoSyncEnabled: Flow<Boolean> = context.dataStore.data
         .map { preferences -> preferences[PreferencesKeys.AUTO_SYNC_ENABLED] ?: false }
+
+    override val isDailyRunReminderEnabled: Flow<Boolean> = context.dataStore.data
+        .map { preferences -> preferences[PreferencesKeys.DAILY_RUN_REMINDER] ?: false }
+
+    override val isWeightMilestoneEnabled: Flow<Boolean> = context.dataStore.data
+        .map { preferences -> preferences[PreferencesKeys.WEIGHT_MILESTONE] ?: false }
 
     override suspend fun setOnboardingCompleted(completed: Boolean) {
         context.dataStore.edit { preferences ->
@@ -62,6 +70,18 @@ class DataStoreUserPreferencesRepository(private val context: Context) : UserPre
     override suspend fun setAutoSyncEnabled(enabled: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.AUTO_SYNC_ENABLED] = enabled
+        }
+    }
+
+    override suspend fun setDailyRunReminderEnabled(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.DAILY_RUN_REMINDER] = enabled
+        }
+    }
+
+    override suspend fun setWeightMilestoneEnabled(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.WEIGHT_MILESTONE] = enabled
         }
     }
 }

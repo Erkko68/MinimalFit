@@ -44,4 +44,12 @@ class DefaultSetRepository(
 
     override suspend fun deleteSetsForSessionExercise(sessionExerciseId: String) =
         setDao.deleteSetsForSessionExercise(sessionExerciseId)
+
+    override suspend fun getTodayTotalWeightKg(): Double {
+        val zoneId = java.time.ZoneId.systemDefault()
+        val today = java.time.LocalDate.now(zoneId)
+        val startMs = today.atStartOfDay(zoneId).toInstant().toEpochMilli()
+        val endMs = today.plusDays(1).atStartOfDay(zoneId).toInstant().toEpochMilli()
+        return setDao.getTodayTotalWeightKg(startMs, endMs)
+    }
 }

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseUser
 import eric.bitria.minimalfit.data.remote.auth.AuthRepository
+import eric.bitria.minimalfit.data.remote.fcm.FcmRepository
 import eric.bitria.minimalfit.data.remote.sync.SyncLogEntry
 import eric.bitria.minimalfit.data.remote.sync.SyncLogStore
 import eric.bitria.minimalfit.data.remote.sync.SyncOrchestrator
@@ -29,6 +30,8 @@ data class SettingsUiState(
     val userProfile: UserProfile? = null,
     val isSyncing: Boolean = false,
     val isAutoSyncEnabled: Boolean = false,
+    val isDailyRunReminderEnabled: Boolean = false,
+    val isWeightMilestoneEnabled: Boolean = false,
     val verificationCooldown: Int = 0,
     val showVerificationMessage: Boolean = false,
     val deleteError: String? = null
@@ -38,7 +41,8 @@ class SettingsViewModel(
     private val authRepository: AuthRepository,
     private val userPreferencesRepository: UserPreferencesRepository,
     private val syncOrchestrator: SyncOrchestrator,
-    private val syncLogStore: SyncLogStore
+    private val syncLogStore: SyncLogStore,
+    private val fcmRepository: FcmRepository,
 ) : ViewModel() {
 
     val syncLogs: StateFlow<List<SyncLogEntry>> = syncLogStore.entries
@@ -55,6 +59,8 @@ class SettingsViewModel(
         authRepository.currentUser,
         _isSyncing,
         userPreferencesRepository.isAutoSyncEnabled,
+        userPreferencesRepository.isDailyRunReminderEnabled,
+        userPreferencesRepository.isWeightMilestoneEnabled,
         _verificationCooldown,
         _showVerificationMessage,
         _deleteError
@@ -62,9 +68,11 @@ class SettingsViewModel(
         val user = args[0] as? FirebaseUser
         val syncing = args[1] as Boolean
         val autoSync = args[2] as Boolean
-        val cooldown = args[3] as Int
-        val showMessage = args[4] as Boolean
-        val deleteError = args[5] as? String
+        val dailyRun = args[3] as Boolean
+        val weightMilestone = args[4] as Boolean
+        val cooldown = args[5] as Int
+        val showMessage = args[6] as Boolean
+        val deleteError = args[7] as? String
 
         if (user != null && !user.isEmailVerified && autoReloadJob == null) {
             startAutoReload()
@@ -84,6 +92,8 @@ class SettingsViewModel(
             },
             isSyncing = syncing,
             isAutoSyncEnabled = autoSync,
+            isDailyRunReminderEnabled = dailyRun,
+            isWeightMilestoneEnabled = weightMilestone,
             verificationCooldown = cooldown,
             showVerificationMessage = showMessage,
             deleteError = deleteError
@@ -176,6 +186,26 @@ class SettingsViewModel(
     }
 
     fun clearDeleteError() { _deleteError.value = null }
+
+    fun toggleDailyRunReminder(enabled: Boolean) {
+        viewModelScope.launch {
+            userPreferencesRepository.setDailyRunReminderEnabled(enabled)
+            fcmRepository.syncNotificationPreferences(
+                dailyRun = enabled,
+                weightMilestone = uiState.value.isWeightMilestoneEnabled
+            )
+        }
+    }
+
+    fun toggleWeightMilestone(enabled: Boolean) {
+        viewModelScope.launch {
+            userPreferencesRepository.setWeightMilestoneEnabled(enabled)
+            fcmRepository.syncNotificationPreferences(
+                dailyRun = uiState.value.isDailyRunReminderEnabled,
+                weightMilestone = enabled
+            )
+        }
+    }
 
     fun sendPasswordReset() {
         uiState.value.userProfile?.email?.let { email ->

@@ -1,9 +1,8 @@
 package eric.bitria.minimalfit.ui.screens.settings
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -15,13 +14,13 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import eric.bitria.minimalfit.navigation.ScreenConfiguration
 import eric.bitria.minimalfit.ui.components.requirements.settings.rememberInternetConnection
 import eric.bitria.minimalfit.ui.components.settings.AccountManagementCard
 import eric.bitria.minimalfit.ui.components.settings.LoginCard
 import eric.bitria.minimalfit.ui.components.settings.NoInternetCard
+import eric.bitria.minimalfit.ui.components.settings.NotificationsCard
 import eric.bitria.minimalfit.ui.components.settings.ProfileCard
 import eric.bitria.minimalfit.ui.components.settings.SyncCard
 import eric.bitria.minimalfit.ui.components.settings.VerificationAlertCard
@@ -64,57 +63,72 @@ fun SettingsScreen(
         quickActions = false
     )
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(Spacing.m),
+    LazyColumn(
+        contentPadding = PaddingValues(Spacing.m),
         verticalArrangement = Arrangement.spacedBy(Spacing.m)
     ) {
         if (!isConnected) {
-            NoInternetCard()
+            item { NoInternetCard() }
         } else if (uiState.isLoggedIn && uiState.userProfile != null) {
-            ProfileCard(userProfile = uiState.userProfile!!)
+            item { ProfileCard(userProfile = uiState.userProfile!!) }
 
             if (!uiState.userProfile!!.isEmailVerified) {
-                VerificationAlertCard(
-                    onVerifyClick = { viewModel.sendVerificationEmail() },
-                    onReloadClick = { viewModel.reloadUser() },
-                    verificationCooldown = uiState.verificationCooldown,
-                    showVerificationMessage = uiState.showVerificationMessage
+                item {
+                    VerificationAlertCard(
+                        onVerifyClick = { viewModel.sendVerificationEmail() },
+                        onReloadClick = { viewModel.reloadUser() },
+                        verificationCooldown = uiState.verificationCooldown,
+                        showVerificationMessage = uiState.showVerificationMessage
+                    )
+                }
+            }
+
+            item {
+                NotificationsCard(
+                    isDailyRunReminderEnabled = uiState.isDailyRunReminderEnabled,
+                    isWeightMilestoneEnabled = uiState.isWeightMilestoneEnabled,
+                    onDailyRunReminderToggle = { viewModel.toggleDailyRunReminder(it) },
+                    onWeightMilestoneToggle = { viewModel.toggleWeightMilestone(it) }
                 )
             }
 
-            SyncCard(
-                isLoggedIn = uiState.isLoggedIn,
-                isEmailVerified = uiState.userProfile?.isEmailVerified == true,
-                isSyncing = uiState.isSyncing,
-                isAutoSyncEnabled = uiState.isAutoSyncEnabled,
-                onSyncClick = { viewModel.uploadData() },
-                onAutoSyncToggle = { viewModel.toggleAutoSync(it) },
-                syncLogs = syncLogs,
-                onClearLogs = { viewModel.clearSyncLogs() }
-            )
+            item {
+                SyncCard(
+                    isLoggedIn = uiState.isLoggedIn,
+                    isEmailVerified = uiState.userProfile?.isEmailVerified == true,
+                    isSyncing = uiState.isSyncing,
+                    isAutoSyncEnabled = uiState.isAutoSyncEnabled,
+                    onSyncClick = { viewModel.uploadData() },
+                    onAutoSyncToggle = { viewModel.toggleAutoSync(it) },
+                    syncLogs = syncLogs,
+                    onClearLogs = { viewModel.clearSyncLogs() }
+                )
+            }
 
-            AccountManagementCard(
-                onLogoutClick = { viewModel.logout() },
-                onReauthenticateAndDelete = { viewModel.reauthenticateAndDelete(it) },
-                onResetPasswordClick = { viewModel.sendPasswordReset() },
-                deleteError = uiState.deleteError,
-                onClearDeleteError = { viewModel.clearDeleteError() }
-            )
+            item {
+                AccountManagementCard(
+                    onLogoutClick = { viewModel.logout() },
+                    onReauthenticateAndDelete = { viewModel.reauthenticateAndDelete(it) },
+                    onResetPasswordClick = { viewModel.sendPasswordReset() },
+                    deleteError = uiState.deleteError,
+                    onClearDeleteError = { viewModel.clearDeleteError() }
+                )
+            }
         } else {
-            LoginCard(onLoginClick = onLoginClick)
+            item { LoginCard(onLoginClick = onLoginClick) }
 
-            SyncCard(
-                isLoggedIn = uiState.isLoggedIn,
-                isEmailVerified = uiState.userProfile?.isEmailVerified == true,
-                isSyncing = uiState.isSyncing,
-                isAutoSyncEnabled = uiState.isAutoSyncEnabled,
-                onSyncClick = { viewModel.uploadData() },
-                onAutoSyncToggle = { viewModel.toggleAutoSync(it) },
-                syncLogs = syncLogs,
-                onClearLogs = { viewModel.clearSyncLogs() }
-            )
+            item {
+                SyncCard(
+                    isLoggedIn = uiState.isLoggedIn,
+                    isEmailVerified = uiState.userProfile?.isEmailVerified == true,
+                    isSyncing = uiState.isSyncing,
+                    isAutoSyncEnabled = uiState.isAutoSyncEnabled,
+                    onSyncClick = { viewModel.uploadData() },
+                    onAutoSyncToggle = { viewModel.toggleAutoSync(it) },
+                    syncLogs = syncLogs,
+                    onClearLogs = { viewModel.clearSyncLogs() }
+                )
+            }
         }
     }
 }

@@ -3,6 +3,7 @@ package eric.bitria.minimalfit.data.gym
 import eric.bitria.minimalfit.data.entity.gym.Session
 import eric.bitria.minimalfit.data.entity.gym.SessionExercise
 import eric.bitria.minimalfit.data.entity.gym.Set as GymSet
+import eric.bitria.minimalfit.data.remote.fcm.FcmRepository
 import eric.bitria.minimalfit.data.repository.gym.ExerciseRepository
 import eric.bitria.minimalfit.data.repository.gym.SessionExerciseRepository
 import eric.bitria.minimalfit.data.repository.gym.SessionRepository
@@ -30,7 +31,8 @@ class GymTrackingLogic(
     private val sessionRepository: SessionRepository,
     private val exerciseRepository: ExerciseRepository,
     private val setRepository: SetRepository,
-    private val sessionExerciseRepository: SessionExerciseRepository
+    private val sessionExerciseRepository: SessionExerciseRepository,
+    private val fcmRepository: FcmRepository,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
@@ -194,6 +196,10 @@ class GymTrackingLogic(
         resumeWallMillis = 0L
         scope.launch {
             sessionRepository.finishSession(session.id, finalElapsed.inWholeSeconds)
+            val totalKg = setRepository.getTodayTotalWeightKg()
+            if (totalKg >= 1000.0) {
+                runCatching { fcmRepository.checkWeightMilestone(totalKg) }
+            }
         }
     }
 

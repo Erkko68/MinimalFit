@@ -45,4 +45,7 @@ interface SetDao {
 
     @Query("DELETE FROM sets WHERE sessionId = :sessionId")
     suspend fun deleteSetsForSession(sessionId: String)
+
+    @Query("SELECT COALESCE(SUM(weight * reps), 0.0) FROM sets WHERE createdAt >= :startMs AND createdAt < :endMs")
+    suspend fun getTodayTotalWeightKg(startMs: Long, endMs: Long): Double
 }

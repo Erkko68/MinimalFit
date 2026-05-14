@@ -33,7 +33,7 @@ class SessionViewModel(
     private val routineRepository: RoutineRepository,
     private val routineExerciseRepository: RoutineExerciseRepository,
     private val routineSetRepository: RoutineSetRepository,
-    private val gymSessionManager: GymSessionManager
+    private val gymSessionManager: GymSessionManager,
 ) : ViewModel() {
 
     data class SessionExerciseGroup(

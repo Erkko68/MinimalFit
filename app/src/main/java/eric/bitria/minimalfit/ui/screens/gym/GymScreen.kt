@@ -75,6 +75,7 @@ fun GymScreen(
             when (page) {
                 0 -> CollectionTab(
                     onNavigateToRoutine = onNavigateToRoutine,
+                    onNavigateToRoutineSession = onNavigateToRoutineSession,
                     onNavigateToExerciseProgression = onNavigateToExerciseProgression
                 )
                 1 -> HistoryTab(

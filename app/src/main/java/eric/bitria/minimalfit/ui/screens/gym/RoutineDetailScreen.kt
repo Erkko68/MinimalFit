@@ -19,6 +19,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -59,6 +60,7 @@ private val DAY_NUMBERS = listOf(1, 2, 3, 4, 5, 6, 7)
 fun RoutineDetailScreen(
     routineId: String? = null,
     viewModel: RoutineViewModel = koinViewModel(),
+    onStartRoutine: (String) -> Unit,
     onNavigateBack: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -111,6 +113,14 @@ fun RoutineDetailScreen(
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    val routine = uiState.routine
+                    if (routine != null && uiState.exerciseGroups.isNotEmpty()) {
+                        IconButton(onClick = { onStartRoutine(routine.id) }) {
+                            Icon(Icons.Filled.PlayArrow, contentDescription = "Start routine")
+                        }
                     }
                 },
                 scrollBehavior = scrollBehavior

@@ -1,6 +1,5 @@
 package eric.bitria.minimalfit.ui.screens.gym
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -109,12 +108,6 @@ fun GymSessionScreen(
         else -> SessionState.RUNNING
     }
 
-    val interceptBack = toolbarState == SessionState.RUNNING || toolbarState == SessionState.PAUSED
-
-    BackHandler(enabled = interceptBack) {
-        showFinishDialog = true
-    }
-
     if (!notificationPermissionGranted) {
         RequireNotificationPermission(onPermissionResult = { isGranted ->
             if (isGranted) {
@@ -171,9 +164,7 @@ fun GymSessionScreen(
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = {
-                        if (interceptBack) showFinishDialog = true else onNavigateBack()
-                    }) {
+                    IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },

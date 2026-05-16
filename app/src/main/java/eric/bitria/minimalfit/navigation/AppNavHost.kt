@@ -212,6 +212,14 @@ fun AppNavHost(
             val args = backStackEntry.toRoute<Route.RoutineDetail>()
             RoutineDetailScreen(
                 routineId = args.routineId,
+                onStartRoutine = { routineId ->
+                    navController.navigate(
+                        Route.GymSession(
+                            routineId = routineId,
+                            replaceActiveWorkout = false
+                        )
+                    )
+                },
                 onNavigateBack = { navController.popBackStack() }
             )
         }

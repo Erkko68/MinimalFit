@@ -41,6 +41,7 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun CollectionTab(
     onNavigateToRoutine: (String?) -> Unit,
+    onNavigateToRoutineSession: (String, Boolean) -> Unit,
     onNavigateToExerciseProgression: (String) -> Unit,
     viewModel: GymCollectionViewModel = koinViewModel()
 ) {
@@ -98,7 +99,10 @@ fun CollectionTab(
                         routine = item.routine,
                         exerciseCount = item.exerciseCount,
                         setCount = item.setCount,
-                        onClick = { onNavigateToRoutine(item.routine.id) }
+                        onClick = { onNavigateToRoutine(item.routine.id) },
+                        onPlayClick = {
+                            onNavigateToRoutineSession(item.routine.id, false)
+                        }
                     )
                 }
             }

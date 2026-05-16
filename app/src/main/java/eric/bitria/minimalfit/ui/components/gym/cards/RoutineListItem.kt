@@ -12,9 +12,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -33,6 +35,7 @@ fun RoutineListItem(
     exerciseCount: Int,
     setCount: Int,
     onClick: () -> Unit,
+    onPlayClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -79,6 +82,14 @@ fun RoutineListItem(
                     text = "$exerciseCount exercises • $setCount sets",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            IconButton(onClick = onPlayClick) {
+                Icon(
+                    imageVector = Icons.Filled.PlayArrow,
+                    contentDescription = "Start routine",
+                    tint = MaterialTheme.colorScheme.primary
                 )
             }
         }

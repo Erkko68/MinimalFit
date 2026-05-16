@@ -15,5 +15,11 @@ data class RoutineSet(
     @PrimaryKey val id: String = UUID.randomUUID().toString(),
     val routineExerciseId: String,
     val weight: Float = 0f,
-    val reps: Int = 0
-)
+    val reps: Int = 0,
+    val type: String = SetType.Reps,
+    val durationSeconds: Int = 0,
+    val preparationSeconds: Int = 5
+) {
+    val isTimed: Boolean
+        get() = type == SetType.Timed
+}

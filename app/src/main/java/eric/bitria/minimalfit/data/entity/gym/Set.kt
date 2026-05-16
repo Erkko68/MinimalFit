@@ -22,7 +22,13 @@ data class Set(
     val sessionId: String,
     val weight: Float,
     val reps: Int,
+    val type: String = SetType.Reps,
+    val durationSeconds: Int = 0,
+    val preparationSeconds: Int = 5,
     val notes: String = "",
     val isCompleted: Boolean = false,
     val createdAt: Instant = nowInstant()
-)
+) {
+    val isTimed: Boolean
+        get() = type == SetType.Timed
+}

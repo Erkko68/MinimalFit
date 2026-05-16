@@ -52,7 +52,7 @@ import eric.bitria.minimalfit.data.entity.track.Track
         Set::class,
         SyncQueueEntry::class
     ],
-    version = 7
+    version = 8
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {

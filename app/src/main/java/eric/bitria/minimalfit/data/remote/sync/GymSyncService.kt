@@ -88,7 +88,7 @@ class GymSyncService(
                 exerciseDao.insertExercise(reDto.exercise.toEntity())
                 routineExerciseDao.insert(RoutineExercise(id = reDto.routineExerciseId, routineId = doc.id, exerciseId = reDto.exercise.id, createdAt = parseInstant(reDto.createdAt)))
                 reDto.sets.forEach { setDto ->
-                    routineSetDao.insert(RoutineSet(id = setDto.id, routineExerciseId = reDto.routineExerciseId, weight = setDto.weight, reps = setDto.reps))
+                    routineSetDao.insert(RoutineSet(id = setDto.id, routineExerciseId = reDto.routineExerciseId, weight = setDto.weight, reps = setDto.reps, type = setDto.type, durationSeconds = setDto.durationSeconds, preparationSeconds = setDto.preparationSeconds))
                 }
             }
         }
@@ -115,7 +115,7 @@ class GymSyncService(
                 exerciseDao.insertExercise(seDto.exercise.toEntity())
                 sessionExerciseDao.insert(SessionExercise(id = seDto.sessionExerciseId, sessionId = doc.id, exerciseId = seDto.exercise.id, createdAt = parseInstant(seDto.createdAt)))
                 seDto.sets.forEach { setDto ->
-                    setDao.insertSet(Set(id = setDto.id, sessionExerciseId = seDto.sessionExerciseId, sessionId = doc.id, weight = setDto.weight, reps = setDto.reps, notes = setDto.notes, isCompleted = setDto.isCompleted, createdAt = parseInstant(setDto.createdAt)))
+                    setDao.insertSet(Set(id = setDto.id, sessionExerciseId = seDto.sessionExerciseId, sessionId = doc.id, weight = setDto.weight, reps = setDto.reps, type = setDto.type, durationSeconds = setDto.durationSeconds, preparationSeconds = setDto.preparationSeconds, notes = setDto.notes, isCompleted = setDto.isCompleted, createdAt = parseInstant(setDto.createdAt)))
                 }
             }
         }
@@ -193,8 +193,8 @@ class GymSyncService(
 
     private fun Exercise.toDto() = ExerciseDto(id = id, name = name, isBodyweight = isBodyweight, muscleGroup = muscleGroup, restSeconds = restSeconds, isGlobal = isGlobal, creatorId = creatorId, updatedAt = updatedAt.toString())
     private fun ExerciseDto.toEntity() = Exercise(id = id, name = name, isBodyweight = isBodyweight, muscleGroup = muscleGroup, restSeconds = restSeconds, isGlobal = isGlobal, creatorId = creatorId, updatedAt = parseInstant(updatedAt))
-    private fun RoutineSet.toDto() = RoutineSetDto(id = id, weight = weight, reps = reps)
-    private fun Set.toDto() = SetDto(id = id, weight = weight, reps = reps, notes = notes, isCompleted = isCompleted, createdAt = createdAt.toString())
+    private fun RoutineSet.toDto() = RoutineSetDto(id = id, weight = weight, reps = reps, type = type, durationSeconds = durationSeconds, preparationSeconds = preparationSeconds)
+    private fun Set.toDto() = SetDto(id = id, weight = weight, reps = reps, type = type, durationSeconds = durationSeconds, preparationSeconds = preparationSeconds, notes = notes, isCompleted = isCompleted, createdAt = createdAt.toString())
 
     private fun requireUid(): String = authRepository.currentUser.value?.uid ?: throw IllegalStateException("User not authenticated")
     private fun parseInstant(value: String): Instant = if (value.isBlank()) nowInstant() else try { Instant.parse(value) } catch (_: Exception) { nowInstant() }

@@ -16,17 +16,18 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import eric.bitria.minimalfit.data.entity.gym.Set
+import eric.bitria.minimalfit.data.entity.gym.SetType
 import eric.bitria.minimalfit.ui.components.gym.dialogs.SetPickerDialog
 import eric.bitria.minimalfit.ui.components.gym.rows.SessionSetRow
 import eric.bitria.minimalfit.ui.components.shared.animations.SwipeToDeleteCard
@@ -48,15 +49,18 @@ fun SessionExerciseCard(
     onUpdateSet: (Set) -> Unit,
     onDeleteSet: (String) -> Unit,
     onAddSet: (weight: Float, reps: Int, isCompleted: Boolean) -> Unit,
+    onAddTimedSet: (weight: Float, durationSeconds: Int, preparationSeconds: Int, isCompleted: Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var showAddSetDialog by remember { mutableStateOf(false) }
+    var addDialogType by remember { mutableStateOf(SetType.Reps) }
 
     val addedTime = createdAt
         .toLocalDateTime(TimeZone.currentSystemDefault())
         .time
         .hourMinute()
     val restLabel = "%d:%02d rest".format(restSeconds / 60, restSeconds % 60)
+
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.extraLarge,
@@ -91,7 +95,7 @@ fun SessionExerciseCard(
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                         )
                         Text(
-                            text = "·",
+                            text = ".",
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
                         )
@@ -103,9 +107,16 @@ fun SessionExerciseCard(
                     }
                 }
                 if (isCollapsed) {
-                    val totalWeight = sets.sumOf { (it.weight * it.reps).toDouble() }
+                    val totalWeight = sets
+                        .filter { !it.isTimed }
+                        .sumOf { (it.weight * it.reps).toDouble() }
+                    val timedCount = sets.count { it.isTimed }
                     Text(
-                        text = "${sets.size} sets • ${totalWeight.toInt()} kg",
+                        text = if (timedCount > 0) {
+                            "${sets.size} sets - $timedCount timed"
+                        } else {
+                            "${sets.size} sets - ${totalWeight.toInt()} kg"
+                        },
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -133,7 +144,7 @@ fun SessionExerciseCard(
                     )
                     Spacer(modifier = Modifier.width(1.dp))
                     Text(
-                        text = "REPS",
+                        text = "REPS/TIME",
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
@@ -186,12 +197,30 @@ fun SessionExerciseCard(
 
                 if (canEdit) {
                     Spacer(modifier = Modifier.height(Spacing.s))
-                    Button(
-                        onClick = { showAddSetDialog = true },
+                    Row(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = MaterialTheme.shapes.medium
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.s)
                     ) {
-                        Text("Add Set")
+                        Button(
+                            onClick = {
+                                addDialogType = SetType.Reps
+                                showAddSetDialog = true
+                            },
+                            modifier = Modifier.weight(1f),
+                            shape = MaterialTheme.shapes.medium
+                        ) {
+                            Text("Add Set")
+                        }
+                        Button(
+                            onClick = {
+                                addDialogType = SetType.Timed
+                                showAddSetDialog = true
+                            },
+                            modifier = Modifier.weight(1f),
+                            shape = MaterialTheme.shapes.medium
+                        ) {
+                            Text("Add Timed")
+                        }
                     }
                 }
             }
@@ -205,11 +234,18 @@ fun SessionExerciseCard(
             weight = lastSet?.weight ?: 0f,
             reps = lastSet?.reps ?: 0,
             onDismiss = { showAddSetDialog = false },
-            onConfirm = { w, r, completed ->
-                onAddSet(w, r, completed)
+            onConfirm = { w, r, type, duration, prep, completed ->
+                if (type == SetType.Timed) {
+                    onAddTimedSet(w, duration, prep, completed)
+                } else {
+                    onAddSet(w, r, completed)
+                }
                 showAddSetDialog = false
             },
-            showCompleted = true
+            showCompleted = true,
+            type = addDialogType,
+            durationSeconds = lastSet?.durationSeconds?.takeIf { it > 0 } ?: 30,
+            preparationSeconds = lastSet?.preparationSeconds ?: 5
         )
     }
 }

@@ -214,7 +214,8 @@ fun RoutineDetailScreen(
                         sets = group.sets,
                         onUpdateSet = { viewModel.updateSet(it) },
                         onDeleteSet = { viewModel.deleteSet(it) },
-                        onAddSet = { viewModel.addSet(group.routineExerciseId) }
+                        onAddSet = { viewModel.addSet(group.routineExerciseId) },
+                        onAddTimedSet = { viewModel.addTimedSet(group.routineExerciseId) }
                     )
                 }
             }

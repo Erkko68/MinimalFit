@@ -2,6 +2,7 @@ package eric.bitria.minimalfit.data.gym
 
 import eric.bitria.minimalfit.data.entity.gym.Session
 import eric.bitria.minimalfit.data.entity.gym.SessionExercise
+import eric.bitria.minimalfit.data.entity.gym.SetType
 import eric.bitria.minimalfit.data.entity.gym.Set as GymSet
 import eric.bitria.minimalfit.data.remote.fcm.FcmRepository
 import eric.bitria.minimalfit.data.repository.gym.ExerciseRepository
@@ -159,6 +160,30 @@ class GymTrackingLogic(
         }
     }
 
+    fun addTimedSet(
+        sessionExerciseId: String,
+        weight: Float,
+        durationSeconds: Int,
+        preparationSeconds: Int = 5,
+        isCompleted: Boolean = false
+    ) {
+        scope.launch {
+            val session = _activeSession.value ?: return@launch
+            setRepository.addSet(
+                GymSet(
+                    sessionExerciseId = sessionExerciseId,
+                    sessionId = session.id,
+                    weight = weight,
+                    reps = 0,
+                    type = SetType.Timed,
+                    durationSeconds = durationSeconds.coerceAtLeast(1),
+                    preparationSeconds = preparationSeconds.coerceAtLeast(0),
+                    isCompleted = isCompleted
+                )
+            )
+        }
+    }
+
     fun updateSet(set: GymSet) {
         scope.launch {
             val previous = setRepository.getSet(set.id).first()
@@ -278,13 +303,27 @@ class GymTrackingLogic(
     private suspend fun addExerciseToSession(session: Session, plan: RoutineExercisePlan) {
         val sessionExercise = SessionExercise(sessionId = session.id, exerciseId = plan.exerciseId)
         sessionExerciseRepository.add(sessionExercise)
-        repeat(plan.targetSets) {
+        val plannedSets = plan.plannedSets.ifEmpty {
+            List(plan.targetSets.coerceAtLeast(0)) {
+                PlannedSetPlan(
+                    weight = plan.targetWeight,
+                    reps = plan.targetReps,
+                    type = plan.targetType,
+                    durationSeconds = plan.targetDurationSeconds,
+                    preparationSeconds = plan.targetPreparationSeconds
+                )
+            }
+        }
+        plannedSets.forEach { plannedSet ->
             setRepository.addSet(
                 GymSet(
                     sessionExerciseId = sessionExercise.id,
                     sessionId = session.id,
-                    weight = plan.targetWeight.coerceAtLeast(0f),
-                    reps = plan.targetReps.coerceAtLeast(0)
+                    weight = plannedSet.weight.coerceAtLeast(0f),
+                    reps = plannedSet.reps.coerceAtLeast(0),
+                    type = plannedSet.type,
+                    durationSeconds = plannedSet.durationSeconds.coerceAtLeast(0),
+                    preparationSeconds = plannedSet.preparationSeconds.coerceAtLeast(0)
                 )
             )
         }

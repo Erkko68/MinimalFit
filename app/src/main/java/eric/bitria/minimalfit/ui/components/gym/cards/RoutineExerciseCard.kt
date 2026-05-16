@@ -32,6 +32,7 @@ fun RoutineExerciseCard(
     onUpdateSet: (RoutineSet) -> Unit,
     onDeleteSet: (String) -> Unit,
     onAddSet: () -> Unit,
+    onAddTimedSet: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -68,7 +69,7 @@ fun RoutineExerciseCard(
                 )
                 Spacer(modifier = Modifier.width(Spacing.s))
                 Text(
-                    text = "REPS",
+                    text = "REPS/TIME",
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
@@ -102,12 +103,24 @@ fun RoutineExerciseCard(
             }
 
             Spacer(modifier = Modifier.height(Spacing.s))
-            Button(
-                onClick = onAddSet,
+            Row(
                 modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.medium
+                horizontalArrangement = Arrangement.spacedBy(Spacing.s)
             ) {
-                Text("Add Set")
+                Button(
+                    onClick = onAddSet,
+                    modifier = Modifier.weight(1f),
+                    shape = MaterialTheme.shapes.medium
+                ) {
+                    Text("Add Set")
+                }
+                Button(
+                    onClick = onAddTimedSet,
+                    modifier = Modifier.weight(1f),
+                    shape = MaterialTheme.shapes.medium
+                ) {
+                    Text("Add Timed")
+                }
             }
         }
     }

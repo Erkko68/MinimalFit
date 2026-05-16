@@ -6,6 +6,7 @@ import eric.bitria.minimalfit.data.entity.gym.Exercise
 import eric.bitria.minimalfit.data.entity.gym.Routine
 import eric.bitria.minimalfit.data.entity.gym.RoutineExercise
 import eric.bitria.minimalfit.data.entity.gym.RoutineSet
+import eric.bitria.minimalfit.data.entity.gym.SetType
 import eric.bitria.minimalfit.data.repository.gym.ExerciseRepository
 import eric.bitria.minimalfit.data.repository.gym.RoutineExerciseRepository
 import eric.bitria.minimalfit.data.repository.gym.RoutineRepository
@@ -138,6 +139,19 @@ class RoutineViewModel(
     fun addSet(routineExerciseId: String) {
         viewModelScope.launch {
             routineSetRepository.add(RoutineSet(routineExerciseId = routineExerciseId))
+        }
+    }
+
+    fun addTimedSet(routineExerciseId: String) {
+        viewModelScope.launch {
+            routineSetRepository.add(
+                RoutineSet(
+                    routineExerciseId = routineExerciseId,
+                    type = SetType.Timed,
+                    durationSeconds = 30,
+                    preparationSeconds = 5
+                )
+            )
         }
     }
 

@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.Intent
 import eric.bitria.minimalfit.data.entity.gym.Set
 import eric.bitria.minimalfit.service.GymSessionService
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 class AndroidGymSessionManager(
     private val context: Context,
@@ -45,6 +47,7 @@ class AndroidGymSessionManager(
     ) {
         val intent = Intent(context, GymSessionService::class.java).apply {
             this.action = action
+            putExtra(GymSessionService.EXTRA_ROUTINE_PLANS_JSON, Json.encodeToString(exercises))
             putStringArrayListExtra(
                 GymSessionService.EXTRA_EXERCISE_IDS,
                 ArrayList(exercises.map { it.exerciseId })
@@ -56,6 +59,18 @@ class AndroidGymSessionManager(
             putIntegerArrayListExtra(
                 GymSessionService.EXTRA_TARGET_REPS,
                 ArrayList(exercises.map { it.targetReps })
+            )
+            putStringArrayListExtra(
+                GymSessionService.EXTRA_TARGET_TYPES,
+                ArrayList(exercises.map { it.targetType })
+            )
+            putIntegerArrayListExtra(
+                GymSessionService.EXTRA_TARGET_DURATIONS,
+                ArrayList(exercises.map { it.targetDurationSeconds })
+            )
+            putIntegerArrayListExtra(
+                GymSessionService.EXTRA_PREPARATION_SECONDS,
+                ArrayList(exercises.map { it.targetPreparationSeconds })
             )
             putExtra(
                 GymSessionService.EXTRA_TARGET_WEIGHTS,
@@ -88,6 +103,22 @@ class AndroidGymSessionManager(
 
     override fun addSet(sessionExerciseId: String, weight: Float, reps: Int, isCompleted: Boolean) {
         gymTrackingLogic.addSet(sessionExerciseId, weight, reps, isCompleted)
+    }
+
+    override fun addTimedSet(
+        sessionExerciseId: String,
+        weight: Float,
+        durationSeconds: Int,
+        preparationSeconds: Int,
+        isCompleted: Boolean
+    ) {
+        gymTrackingLogic.addTimedSet(
+            sessionExerciseId = sessionExerciseId,
+            weight = weight,
+            durationSeconds = durationSeconds,
+            preparationSeconds = preparationSeconds,
+            isCompleted = isCompleted
+        )
     }
 
     override fun updateSet(set: Set) {

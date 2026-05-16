@@ -23,7 +23,10 @@ data class ExerciseDto(
 data class RoutineSetDto(
     val id: String = "",
     val weight: Float = 0f,
-    val reps: Int = 0
+    val reps: Int = 0,
+    val type: String = "REPS",
+    val durationSeconds: Int = 0,
+    val preparationSeconds: Int = 5
 )
 
 /** An exercise within a routine, bundled with its planned sets. */
@@ -53,6 +56,9 @@ data class SetDto(
     val id: String = "",
     val weight: Float = 0f,
     val reps: Int = 0,
+    val type: String = "REPS",
+    val durationSeconds: Int = 0,
+    val preparationSeconds: Int = 5,
     val notes: String = "",
     val isCompleted: Boolean = false,
     val createdAt: String = ""

@@ -12,12 +12,14 @@ import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.lifecycleScope
 import eric.bitria.minimalfit.MainActivity
 import eric.bitria.minimalfit.R
+import eric.bitria.minimalfit.data.entity.gym.SetType
 import eric.bitria.minimalfit.data.entity.gym.Set as GymSet
 import eric.bitria.minimalfit.data.gym.GymTrackingLogic
 import eric.bitria.minimalfit.data.gym.RoutineExercisePlan
 import eric.bitria.minimalfit.data.repository.gym.ExerciseRepository
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
 import org.koin.android.ext.android.inject
 import kotlin.time.Duration
 
@@ -36,9 +38,13 @@ class GymSessionService : LifecycleService() {
         const val ACTION_STOP_REST = "ACTION_STOP_REST"
 
         const val EXTRA_EXERCISE_IDS = "extra_exercise_ids"
+        const val EXTRA_ROUTINE_PLANS_JSON = "extra_routine_plans_json"
         const val EXTRA_TARGET_SETS = "extra_target_sets"
         const val EXTRA_TARGET_REPS = "extra_target_reps"
         const val EXTRA_TARGET_WEIGHTS = "extra_target_weights"
+        const val EXTRA_TARGET_TYPES = "extra_target_types"
+        const val EXTRA_TARGET_DURATIONS = "extra_target_durations"
+        const val EXTRA_PREPARATION_SECONDS = "extra_preparation_seconds"
         const val EXTRA_SESSION_TITLE = "extra_session_title"
         const val EXTRA_SECONDS = "extra_seconds"
 
@@ -115,16 +121,30 @@ class GymSessionService : LifecycleService() {
     }
 
     private fun Intent.toRoutineExercisePlans(): List<RoutineExercisePlan> {
+        getStringExtra(EXTRA_ROUTINE_PLANS_JSON)
+            ?.takeIf { it.isNotBlank() }
+            ?.let { json ->
+                runCatching { Json.decodeFromString<List<RoutineExercisePlan>>(json) }
+                    .getOrNull()
+            }
+            ?.let { return it }
+
         val exerciseIds = getStringArrayListExtra(EXTRA_EXERCISE_IDS).orEmpty()
         val targetSets = getIntegerArrayListExtra(EXTRA_TARGET_SETS).orEmpty()
         val targetReps = getIntegerArrayListExtra(EXTRA_TARGET_REPS).orEmpty()
         val targetWeights = getFloatArrayExtra(EXTRA_TARGET_WEIGHTS) ?: FloatArray(0)
+        val targetTypes = getStringArrayListExtra(EXTRA_TARGET_TYPES).orEmpty()
+        val targetDurations = getIntegerArrayListExtra(EXTRA_TARGET_DURATIONS).orEmpty()
+        val preparationSeconds = getIntegerArrayListExtra(EXTRA_PREPARATION_SECONDS).orEmpty()
         return exerciseIds.mapIndexed { index, exerciseId ->
             RoutineExercisePlan(
                 exerciseId = exerciseId,
                 targetSets = targetSets.getOrNull(index) ?: 1,
                 targetReps = targetReps.getOrNull(index) ?: 0,
-                targetWeight = targetWeights.getOrNull(index) ?: 0f
+                targetWeight = targetWeights.getOrNull(index) ?: 0f,
+                targetType = targetTypes.getOrNull(index) ?: SetType.Reps,
+                targetDurationSeconds = targetDurations.getOrNull(index) ?: 0,
+                targetPreparationSeconds = preparationSeconds.getOrNull(index) ?: 5
             )
         }
     }
@@ -309,7 +329,11 @@ class GymSessionService : LifecycleService() {
         } else {
             "%g kg".format(set.weight)
         }
-        return "$weightText x ${set.reps}"
+        return if (set.isTimed) {
+            "$weightText for ${set.durationSeconds}s"
+        } else {
+            "$weightText x ${set.reps}"
+        }
     }
 
     private fun buildOpenAppIntent(): PendingIntent =

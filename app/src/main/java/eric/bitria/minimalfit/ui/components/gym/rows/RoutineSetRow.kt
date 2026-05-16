@@ -3,6 +3,7 @@ package eric.bitria.minimalfit.ui.components.gym.rows
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -61,7 +62,7 @@ fun RoutineSetRow(
 
             Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
                 Text(
-                    text = if (set.weight == 0f) "—" else formatWeight(set.weight),
+                    text = if (set.weight == 0f) "-" else formatWeight(set.weight),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = contentColor,
@@ -75,13 +76,23 @@ fun RoutineSetRow(
             )
 
             Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                Text(
-                    text = if (set.reps == 0) "—" else set.reps.toString(),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = contentColor,
-                    textAlign = TextAlign.Center
-                )
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = if (set.isTimed) "${set.durationSeconds}s" else if (set.reps == 0) "-" else set.reps.toString(),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = contentColor,
+                        textAlign = TextAlign.Center
+                    )
+                    if (set.isTimed && set.preparationSeconds > 0) {
+                        Text(
+                            text = "${set.preparationSeconds}s prep",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = contentColor.copy(alpha = 0.65f),
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
             }
         }
     }
@@ -92,10 +103,21 @@ fun RoutineSetRow(
             weight = set.weight,
             reps = set.reps,
             onDismiss = { showEditDialog = false },
-            onConfirm = { w, r, _ ->
-                onUpdate(set.copy(weight = w, reps = r))
+            onConfirm = { w, r, type, duration, prep, _ ->
+                onUpdate(
+                    set.copy(
+                        weight = w,
+                        reps = r,
+                        type = type,
+                        durationSeconds = duration,
+                        preparationSeconds = prep
+                    )
+                )
                 showEditDialog = false
-            }
+            },
+            type = set.type,
+            durationSeconds = set.durationSeconds.takeIf { it > 0 } ?: 30,
+            preparationSeconds = set.preparationSeconds
         )
     }
 }

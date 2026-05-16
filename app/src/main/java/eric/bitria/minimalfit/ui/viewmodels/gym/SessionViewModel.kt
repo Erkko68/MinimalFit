@@ -12,6 +12,7 @@ import eric.bitria.minimalfit.data.entity.gym.Routine
 import eric.bitria.minimalfit.data.entity.gym.RoutineExercise
 import eric.bitria.minimalfit.data.entity.gym.RoutineSet
 import eric.bitria.minimalfit.data.repository.gym.ExerciseRepository
+import eric.bitria.minimalfit.data.gym.PlannedSetPlan
 import eric.bitria.minimalfit.data.repository.gym.RoutineExerciseRepository
 import eric.bitria.minimalfit.data.repository.gym.RoutineRepository
 import eric.bitria.minimalfit.data.repository.gym.RoutineSetRepository
@@ -128,15 +129,27 @@ class SessionViewModel(
 
     private fun startRoutineSession(routineId: String, replaceActiveWorkout: Boolean) {
         viewModelScope.launch {
+            val routineSets = routineSetRepository.getForRoutine(routineId).first()
             val exercises = routineExerciseRepository.getForRoutine(routineId)
                 .first()
                 .map { ref ->
-                    RoutineExercisePlan(
-                        exerciseId = ref.exerciseId,
-                        targetSets = 3,
-                        targetReps = 10,
-                        targetWeight = 0f
-                    )
+                    val plannedSets = routineSets.filter { it.routineExerciseId == ref.id }
+                    if (plannedSets.isEmpty()) {
+                        RoutineExercisePlan(exerciseId = ref.exerciseId, targetSets = 1)
+                    } else {
+                        RoutineExercisePlan(
+                            exerciseId = ref.exerciseId,
+                            plannedSets = plannedSets.map { set ->
+                                PlannedSetPlan(
+                                    weight = set.weight,
+                                    reps = set.reps,
+                                    type = set.type,
+                                    durationSeconds = set.durationSeconds,
+                                    preparationSeconds = set.preparationSeconds
+                                )
+                            }
+                        )
+                    }
                 }
             val routineName = routineRepository.getAll()
                 .first()
@@ -171,6 +184,23 @@ class SessionViewModel(
 
     fun addSet(sessionExerciseId: String, weight: Float, reps: Int, isCompleted: Boolean = false) {
         gymSessionManager.addSet(sessionExerciseId, weight, reps, isCompleted)
+        if (isCompleted) triggerRestForExercise(sessionExerciseId)
+    }
+
+    fun addTimedSet(
+        sessionExerciseId: String,
+        weight: Float,
+        durationSeconds: Int,
+        preparationSeconds: Int,
+        isCompleted: Boolean = false
+    ) {
+        gymSessionManager.addTimedSet(
+            sessionExerciseId = sessionExerciseId,
+            weight = weight,
+            durationSeconds = durationSeconds,
+            preparationSeconds = preparationSeconds,
+            isCompleted = isCompleted
+        )
         if (isCompleted) triggerRestForExercise(sessionExerciseId)
     }
 
@@ -218,7 +248,16 @@ class SessionViewModel(
             val routineExercise = RoutineExercise(routineId = routine.id, exerciseId = group.exerciseId)
             routineExerciseRepository.add(routineExercise)
             group.sets.forEach { set ->
-                routineSetRepository.add(RoutineSet(routineExerciseId = routineExercise.id, weight = set.weight, reps = set.reps))
+                routineSetRepository.add(
+                    RoutineSet(
+                        routineExerciseId = routineExercise.id,
+                        weight = set.weight,
+                        reps = set.reps,
+                        type = set.type,
+                        durationSeconds = set.durationSeconds,
+                        preparationSeconds = set.preparationSeconds
+                    )
+                )
             }
         }
     }

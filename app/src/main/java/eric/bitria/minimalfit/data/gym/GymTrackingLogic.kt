@@ -123,6 +123,18 @@ class GymTrackingLogic(
         }
     }
 
+    fun closeSessionView() {
+        val session = _activeSession.value ?: return
+        if (!session.isFinished) return
+        tickerJob?.cancel()
+        stopRestInternal()
+        _activeSession.value = null
+        _elapsed.value = Duration.ZERO
+        _isPaused.value = false
+        elapsedAtPause = Duration.ZERO
+        resumeWallMillis = 0L
+    }
+
     fun pause() {
         if (_activeSession.value == null || _isPaused.value) return
         elapsedAtPause = _elapsed.value

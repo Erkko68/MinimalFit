@@ -19,6 +19,7 @@ interface GymSessionManager {
     fun startFromRoutine(exercises: List<RoutineExercisePlan>, routineName: String)
     fun replaceWithRoutine(exercises: List<RoutineExercisePlan>, routineName: String)
     fun loadSession(sessionId: String)
+    fun closeSessionView()
     fun finish()
     fun addExercise(exerciseId: String)
     fun addSet(sessionExerciseId: String, weight: Float, reps: Int, isCompleted: Boolean = false)

@@ -26,6 +26,6 @@ class GymViewModel(
 ) : ViewModel() {
 
     val hasActiveWorkout: StateFlow<Boolean> = gymSessionManager.activeSession
-        .map { it != null }
+        .map { it != null && !it.isFinished }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 }

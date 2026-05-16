@@ -28,6 +28,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -78,6 +79,12 @@ fun GymSessionScreen(
             routineId = routineId,
             replaceActiveWorkout = replaceActiveWorkout
         )
+    }
+
+    DisposableEffect(sessionId) {
+        onDispose {
+            if (sessionId != null) viewModel.closeSessionView()
+        }
     }
 
     var showFinishDialog by remember { mutableStateOf(false) }

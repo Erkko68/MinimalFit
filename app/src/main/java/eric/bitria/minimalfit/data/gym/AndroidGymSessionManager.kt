@@ -85,6 +85,10 @@ class AndroidGymSessionManager(
         gymTrackingLogic.loadSession(sessionId)
     }
 
+    override fun closeSessionView() {
+        gymTrackingLogic.closeSessionView()
+    }
+
     override fun finish() {
         sendCommand(GymSessionService.ACTION_FINISH)
     }

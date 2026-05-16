@@ -232,6 +232,10 @@ class SessionViewModel(
         gymSessionManager.finish()
     }
 
+    fun closeSessionView() {
+        gymSessionManager.closeSessionView()
+    }
+
     fun saveSessionAsRoutine() {
         viewModelScope.launch { saveCurrentSessionAsRoutine() }
     }
